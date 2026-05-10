@@ -261,7 +261,7 @@ tr:hover td{background:var(--s2)}
     </div>
 
     <label class="setup-lbl">URL do Supabase</label>
-    <input class="setup-inp" id="sb-url" type="text" placeholder="https://xxxxx.supabase.com" autocomplete="off">
+    <input class="setup-inp" id="sb-url" type="text" placeholder="https://xxxxx.supabase.co" autocomplete="off">
     <label class="setup-lbl">Chave (Publishable key ou anon key)</label>
     <input class="setup-inp" id="sb-key" type="password" placeholder="sb_publishable_... ou eyJhbGci...">
     <button class="setup-btn" onclick="connectSB()">Conectar ao Supabase</button>
@@ -621,8 +621,8 @@ async function connectSB(url,key){
   let u=url||document.getElementById('sb-url').value.trim();
   const k=key||document.getElementById('sb-key').value.trim();
   if(!u||!k){showToast('Preencha URL e chave',true);return;}
-  // Normalize URL: ensure .supabase.com (not .co)
-  u=u.replace(/supabase\.co$/,'supabase.com').replace(/\/$/,'');
+  // Clean URL: remove trailing slash only
+  u=u.replace(/\/$/,'');
   if(!u.startsWith('https://')) u='https://'+u;
   document.getElementById('setup').style.display='none';
   document.getElementById('loader').style.display='flex';
