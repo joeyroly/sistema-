@@ -261,9 +261,9 @@ tr:hover td{background:var(--s2)}
     </div>
 
     <label class="setup-lbl">URL do Supabase</label>
-    <input class="setup-inp" id="sb-url" type="text" placeholder="https://xxxxx.supabase.co" autocomplete="off">
-    <label class="setup-lbl">Chave anon (public)</label>
-    <input class="setup-inp" id="sb-key" type="password" placeholder="eyJhbGci...">
+    <input class="setup-inp" id="sb-url" type="text" placeholder="https://xxxxx.supabase.com" autocomplete="off">
+    <label class="setup-lbl">Chave (Publishable key ou anon key)</label>
+    <input class="setup-inp" id="sb-key" type="password" placeholder="sb_publishable_... ou eyJhbGci...">
     <button class="setup-btn" onclick="connectSB()">Conectar ao Supabase</button>
     <p class="setup-note">Não tem conta? <a href="https://supabase.com" target="_blank">supabase.com</a> — gratuito.<br>Veja o arquivo SETUP.html para o tutorial completo.</p>
   </div>
@@ -618,27 +618,36 @@ function calcWR(){
 
 // ── SUPABASE ──────────────────────────────────
 async function connectSB(url,key){
-  const u=url||document.getElementById('sb-url').value.trim();
+  let u=url||document.getElementById('sb-url').value.trim();
   const k=key||document.getElementById('sb-key').value.trim();
   if(!u||!k){showToast('Preencha URL e chave',true);return;}
+  // Normalize URL: ensure .supabase.com (not .co)
+  u=u.replace(/supabase\.co$/,'supabase.com').replace(/\/$/,'');
+  if(!u.startsWith('https://')) u='https://'+u;
   document.getElementById('setup').style.display='none';
   document.getElementById('loader').style.display='flex';
   try{
+    // Support both new sb_publishable_ format and legacy eyJ format
     SB=supabase.createClient(u,k);
-    const{error}=await SB.from('sistema_joey').select('id').limit(1);
-    if(error&&error.code!=='PGRST116') throw error;
+    const{data,error}=await SB.from('sistema_joey').select('id').limit(1);
+    if(error&&error.code!=='PGRST116'&&error.code!=='42P01') throw error;
     localStorage.setItem('sb_url',u); localStorage.setItem('sb_key',k);
     await loadFromSB();
     bootApp();
   }catch(e){
     document.getElementById('loader').style.display='none';
     document.getElementById('setup').style.display='flex';
-    showToast('Erro de conexão',true);
+    showToast('Erro: '+e.message,true);
   }
 }
 
 async function loadFromSB(){
   const{data,error}=await SB.from('sistema_joey').select('*').order('date_iso',{ascending:false});
+  if(error&&error.code==='42P01'){
+    // Table doesn't exist yet — show helpful message
+    showToast('Tabela não encontrada. Execute o setup-supabase.sql primeiro.',true);
+    throw new Error('Tabela não existe. Execute o setup-supabase.sql no SQL Editor do Supabase.');
+  }
   if(error) throw error;
   allData=data||[];
 }
