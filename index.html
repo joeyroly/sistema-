@@ -241,6 +241,74 @@ tr:hover td{background:var(--s2)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 .toast.err{background:var(--red)}
 
+/* ── BRIEFING CARD ──────────────────── */
+.briefing{background:linear-gradient(135deg,#0d1428,#0a1a10);border:1px solid rgba(78,124,248,.25);border-radius:var(--r);padding:16px;margin-bottom:12px;position:relative;overflow:hidden}
+.briefing::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--blue),var(--green))}
+.briefing-title{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:var(--dim);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.briefing-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
+.briefing-row:last-child{margin-bottom:0}
+.briefing-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.briefing-content{flex:1}
+.briefing-lbl{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:2px}
+.briefing-text{font-size:12px;color:var(--hi);line-height:1.5}
+.briefing-empty{font-size:11px;color:var(--dim);text-align:center;padding:8px 0}
+
+/* ── AGENDA ─────────────────────────── */
+.agenda-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.agenda-row{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:8px 10px;animation:fadeUp .15s ease}
+.agenda-time{font-size:10px;color:var(--blue);min-width:38px;font-weight:500}
+.agenda-text{flex:1;font-size:11px;color:var(--text)}
+.agenda-type{font-size:8px;padding:2px 6px;border-radius:6px;white-space:nowrap}
+.atype-trade{background:var(--td);color:var(--teal)}
+.atype-pessoal{background:var(--bd);color:var(--blue)}
+.atype-saude{background:var(--gd);color:var(--green)}
+.atype-familia{background:#1a0a28;color:#c090ff}
+.atype-trabalho{background:var(--od);color:var(--gold)}
+.agenda-del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px;transition:color .2s}
+.agenda-del:hover{color:var(--red)}
+.agenda-add-row{display:grid;grid-template-columns:60px 1fr auto auto;gap:6px;align-items:center}
+.time-inp{background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:8px 8px;font-family:'Geist Mono',monospace;font-size:11px;color:var(--hi);outline:none;text-align:center;width:100%}
+.time-inp:focus{border-color:var(--blue)}
+.type-sel{background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:8px 6px;font-family:'Geist Mono',monospace;font-size:10px;color:var(--text);outline:none;cursor:pointer}
+
+/* ── OPS TRADE ──────────────────────── */
+.op-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.op-row{background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:9px 11px;display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:8px;animation:fadeUp .15s ease}
+.op-dir{font-size:9px;padding:2px 8px;border-radius:6px;font-weight:500}
+.op-c{background:var(--gd);color:var(--green)}
+.op-v{background:var(--rd);color:var(--red)}
+.op-info{font-size:11px;color:var(--text)}
+.op-adh{font-size:8px;padding:2px 7px;border-radius:5px}
+.op-ok{background:var(--gd);color:var(--green)}
+.op-nok{background:var(--rd);color:var(--red)}
+.op-res{font-size:11px;font-weight:500}
+.op-del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px;padding:0 2px}
+.op-del:hover{color:var(--red)}
+
+/* ── NOTIF BANNER ───────────────────── */
+.notif-banner{position:fixed;top:52px;left:0;right:0;z-index:50;padding:0 16px;pointer-events:none;transition:all .3s}
+.notif-card{background:rgba(14,20,40,.97);backdrop-filter:blur(14px);border:1px solid var(--blue);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;pointer-events:all;transform:translateY(-20px);opacity:0;transition:all .3s;margin-bottom:6px}
+.notif-card.show{transform:translateY(0);opacity:1}
+.notif-card.warn{border-color:var(--gold)}
+.notif-icon{font-size:18px;flex-shrink:0}
+.notif-body{flex:1}
+.notif-title{font-size:11px;color:var(--hi);margin-bottom:2px}
+.notif-sub{font-size:10px;color:var(--dim)}
+.notif-close{background:none;border:none;color:var(--dim);cursor:pointer;font-size:16px;padding:0 2px;flex-shrink:0}
+.notif-close:hover{color:var(--hi)}
+
+/* ── NOTIF SETTINGS ─────────────────── */
+.notif-row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--b1)}
+.notif-row:last-child{border-bottom:none}
+.notif-label{font-size:12px;color:var(--hi)}
+.notif-sub-lbl{font-size:10px;color:var(--dim);margin-top:2px}
+.toggle{width:40px;height:22px;border-radius:11px;background:var(--b2);position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;border:none}
+.toggle.on{background:var(--blue)}
+.toggle::after{content:'';position:absolute;width:16px;height:16px;border-radius:50%;background:#fff;top:3px;left:3px;transition:left .2s}
+.toggle.on::after{left:21px}
+.time-cfg{background:var(--s2);border:1px solid var(--b1);border-radius:6px;padding:6px 10px;font-family:'Geist Mono',monospace;font-size:11px;color:var(--hi);outline:none;width:70px;text-align:center}
+.time-cfg:focus{border-color:var(--blue)}
+
 /* score ring */
 .score-ring-wrap{display:flex;align-items:center;justify-content:center;margin:4px 0 8px}
 .score-center{text-align:center}
@@ -289,6 +357,12 @@ tr:hover td{background:var(--s2)}
       <div class="pg-title">Dia Pessoal</div>
       <div class="pg-sub" id="pg-pessoal-date">—</div>
 
+      <!-- BRIEFING DE ABERTURA -->
+      <div class="briefing" id="briefing-card">
+        <div class="briefing-title">☀️ Briefing de hoje</div>
+        <div id="briefing-body"><div class="briefing-empty">Preencha o primeiro dia para ativar o briefing.</div></div>
+      </div>
+
       <div class="card">
         <div class="card-lbl">😌 Estado do dia</div>
         <div class="mood-grid">
@@ -334,7 +408,10 @@ tr:hover td{background:var(--s2)}
         <div class="card-lbl">❧ Uma coisa boa</div>
         <input type="text" class="finp" id="f-good" placeholder="Específico, não genérico…">
       </div>
+
       <div class="div"></div>
+
+      <!-- PLANEJAMENTO DE AMANHÃ -->
       <div class="card">
         <div class="card-lbl">🌅 Intenção de amanhã</div>
         <input type="text" class="finp" id="f-intent" placeholder="Amanhã opero como…">
@@ -342,6 +419,24 @@ tr:hover td{background:var(--s2)}
       <div class="card">
         <div class="card-lbl">◆ MIT — tarefa mais importante</div>
         <input type="text" class="finp" id="f-mit" placeholder="Se só isso acontecer, o dia foi válido…">
+      </div>
+
+      <!-- AGENDA DE AMANHÃ -->
+      <div class="card">
+        <div class="card-lbl">📅 Agenda de amanhã</div>
+        <div class="agenda-list" id="agenda-list"></div>
+        <div class="agenda-add-row">
+          <input class="time-inp" id="ag-time" type="time" value="07:00">
+          <input class="add-inp" id="ag-text" placeholder="Compromisso, treino, visita…" onkeydown="if(event.key==='Enter'){addAgenda();event.preventDefault()}">
+          <select class="type-sel" id="ag-type">
+            <option value="pessoal">Pessoal</option>
+            <option value="trade">Trade</option>
+            <option value="saude">Saúde</option>
+            <option value="familia">Família</option>
+            <option value="trabalho">Trabalho</option>
+          </select>
+          <button class="add-btn" onclick="addAgenda()">+</button>
+        </div>
       </div>
 
       <button class="btn-save" id="btn-p" onclick="savePessoal()">Salvar dia pessoal</button>
@@ -352,7 +447,105 @@ tr:hover td{background:var(--s2)}
       <div class="pg-title">Diário de Trade</div>
       <div class="pg-sub" id="pg-trade-date">—</div>
 
-      <!-- resultado -->
+      <!-- REGISTRO POR OPERAÇÃO -->
+      <div class="card">
+        <div class="card-lbl">📊 Operações do dia — registro individual</div>
+        <div class="op-list" id="op-list"></div>
+        <div style="display:grid;grid-template-columns:auto 1fr auto auto auto;gap:6px;align-items:center;margin-top:4px">
+          <select class="type-sel" id="op-dir" style="min-width:52px">
+            <option value="C">▲ C</option>
+            <option value="V">▼ V</option>
+          </select>
+          <input class="add-inp" id="op-pts" type="number" placeholder="Pts (ex: +15 ou -30)" style="min-width:0">
+          <select class="type-sel" id="op-sys">
+            <option value="1">✓ Sys</option>
+            <option value="0">✗ Sys</option>
+          </select>
+          <input class="add-inp" id="op-note" placeholder="Nota (opcional)" style="min-width:0;max-width:100px" onkeydown="if(event.key==='Enter'){addOp();event.preventDefault()}">
+          <button class="add-btn" onclick="addOp()">+</button>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid var(--b1)">
+          <div style="flex:1;text-align:center">
+            <div style="font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">Ops</div>
+            <div style="font-family:'Fraunces',serif;font-size:1.3rem;color:var(--hi)" id="ops-count">0</div>
+          </div>
+          <div style="flex:1;text-align:center">
+            <div style="font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">Win rate</div>
+            <div style="font-family:'Fraunces',serif;font-size:1.3rem;color:var(--teal)" id="ops-wr">—</div>
+          </div>
+          <div style="flex:1;text-align:center">
+            <div style="font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">Pts total</div>
+            <div style="font-family:'Fraunces',serif;font-size:1.3rem" id="ops-pts">0</div>
+          </div>
+          <div style="flex:1;text-align:center">
+            <div style="font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">Aderiu</div>
+            <div style="font-family:'Fraunces',serif;font-size:1.3rem;color:var(--green)" id="ops-adh">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- resultado financeiro -->
+      <div class="card">
+        <div class="card-lbl">💰 Resultado financeiro — R$</div>
+        <div class="num-row">
+          <div class="num-box">
+            <div class="num-lbl">Felling</div>
+            <input class="num-inp" id="t-felling" type="number" placeholder="0" step="100">
+          </div>
+          <div class="num-box">
+            <div class="num-lbl">Mesa Grande</div>
+            <input class="num-inp" id="t-mesa" type="number" placeholder="0" step="100">
+          </div>
+        </div>
+        <div class="num-row">
+          <div class="num-box">
+            <div class="num-lbl">PA / Price</div>
+            <input class="num-inp" id="t-pa" type="number" placeholder="0" step="100">
+          </div>
+          <div class="num-box" style="background:var(--s3);border-color:var(--b2)">
+            <div class="num-lbl">Total do dia</div>
+            <div class="num-inp" id="t-total" style="color:var(--hi);padding-top:2px">R$ 0</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- adesão ao sistema -->
+      <div class="card">
+        <div class="card-lbl">🎯 Adesão ao sistema E1+E2</div>
+        <div class="sl-row" style="margin-bottom:14px">
+          <span class="sl-name">Score geral</span>
+          <input type="range" min="0" max="10" value="5" id="sl-adh" oninput="sv('sl-adh','sv-adh')">
+          <span class="sl-val" id="sv-adh">5</span>
+        </div>
+        <div class="adh-grid" id="adh-grid">
+          <div class="adh-item" onclick="toggleAdh(this,'e1')" data-k="e1"><div class="adh-dot"></div><div class="adh-text">E1 respeitado</div></div>
+          <div class="adh-item" onclick="toggleAdh(this,'no_e3')" data-k="no_e3"><div class="adh-dot"></div><div class="adh-text">Sem E3</div></div>
+          <div class="adh-item" onclick="toggleAdh(this,'stop')" data-k="stop"><div class="adh-dot"></div><div class="adh-text">Stop correto</div></div>
+          <div class="adh-item" onclick="toggleAdh(this,'partial')" data-k="partial"><div class="adh-dot"></div><div class="adh-text">Parcial executado</div></div>
+          <div class="adh-item" onclick="toggleAdh(this,'entry')" data-k="entry"><div class="adh-dot"></div><div class="adh-text">Entrada com sinal</div></div>
+          <div class="adh-item" onclick="toggleAdh(this,'size')" data-k="size"><div class="adh-dot"></div><div class="adh-text">Tamanho correto</div></div>
+        </div>
+      </div>
+
+      <!-- estado emocional -->
+      <div class="card">
+        <div class="card-lbl">🧠 Estado emocional</div>
+        <div class="sl-row"><span class="sl-name">Pré-mercado</span><input type="range" min="1" max="10" value="5" id="sl-pre" oninput="sv('sl-pre','sv-pre')"><span class="sl-val" id="sv-pre">5</span></div>
+        <div class="sl-row"><span class="sl-name">Durante</span><input type="range" min="1" max="10" value="5" id="sl-dur" oninput="sv('sl-dur','sv-dur')"><span class="sl-val" id="sv-dur">5</span></div>
+        <div class="sl-row"><span class="sl-name">Pós fechamento</span><input type="range" min="1" max="10" value="5" id="sl-pos" oninput="sv('sl-pos','sv-pos')"><span class="sl-val" id="sv-pos">5</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-lbl">📝 Análise do dia de trade</div>
+        <textarea class="finp" id="t-analysis" placeholder="O que esse dia me ensina como trader? O que fiz bem? O que repetiria?"></textarea>
+      </div>
+      <div class="card">
+        <div class="card-lbl">⚑ O que evitar amanhã</div>
+        <input type="text" class="finp" id="t-avoid" placeholder="Comportamento ou situação a não repetir…">
+      </div>
+
+      <button class="btn-save" id="btn-t" onclick="saveTrade()">Salvar diário de trade</button>
+    </div>
       <div class="card">
         <div class="card-lbl">💰 Resultado financeiro — R$</div>
         <div class="num-row">
@@ -543,6 +736,9 @@ tr:hover td{background:var(--s2)}
 
   </div><!-- /scroll -->
 
+  <!-- NOTIFICATION BANNER -->
+  <div class="notif-banner" id="notif-banner"></div>
+
   <!-- BOTTOM NAV -->
   <nav class="bnav">
     <button class="nb active" onclick="goPage('pessoal',this)"><span class="nb-icon">✏️</span><span class="nb-lbl">Pessoal</span></button>
@@ -564,9 +760,10 @@ const MONTHS=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov',
 // ── STATE ─────────────────────────────────────
 let SB=null, useOffline=false;
 let allData=[], currentPeriod='week';
-let selectedMood=null, wins=[], fails=[];
+let selectedMood=null, wins=[], fails=[], agenda=[], tradeOps=[];
 let adhState={e1:false,no_e3:false,stop:false,partial:false,entry:false,size:false};
 let chatHistory=[], isTyping=false;
+let notifPermission=false;
 
 // ── INIT ──────────────────────────────────────
 window.addEventListener('DOMContentLoaded',()=>{
@@ -681,6 +878,9 @@ function bootApp(){
   const app=document.getElementById('app');
   app.style.display='flex'; app.style.flexDirection='column'; app.style.height='100dvh';
   loadTodayForms();
+  renderBriefing();
+  initNotifications();
+  startNotifScheduler();
 }
 
 function todayISO(){return new Date().toISOString().split('T')[0];}
@@ -693,8 +893,8 @@ function loadTodayForms(){
   // pessoal
   if(e.mood){selectedMood=e.mood;document.querySelectorAll('.mo').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+e.mood+"'")) b.classList.add('sel')});}
   [['sl-e','sv-e','energia'],['sl-d','sv-d','disciplina'],['sl-c','sv-c','clareza']].forEach(([s,v,k])=>{if(e[k]){document.getElementById(s).value=e[k];document.getElementById(v).textContent=e[k];}});
-  wins=e.wins||[]; fails=e.fails||[];
-  renderList('win'); renderList('fail');
+  wins=e.wins||[]; fails=e.fails||[]; agenda=e.agenda||[]; tradeOps=e.t_ops_detail||[];
+  renderList('win'); renderList('fail'); renderAgenda(); renderOps();
   ['lesson','good','intent','mit'].forEach(k=>{const el=document.getElementById('f-'+k);if(el&&e[k]) el.value=e[k];});
   // trade
   if(e.t_felling) document.getElementById('t-felling').value=e.t_felling;
@@ -717,6 +917,181 @@ function selMood(btn,mood){document.querySelectorAll('.mo').forEach(b=>b.classLi
 function addItem(type){const id=type==='win'?'win-inp':'fail-inp';const inp=document.getElementById(id);const v=inp.value.trim();if(!v) return;type==='win'?wins.push(v):fails.push(v);renderList(type);inp.value='';inp.focus();}
 function removeItem(type,idx){type==='win'?wins.splice(idx,1):fails.splice(idx,1);renderList(type);}
 function renderList(type){const id=type==='win'?'wins-list':'fails-list';const arr=type==='win'?wins:fails;document.getElementById(id).innerHTML=arr.map((v,i)=>`<div class="irow"><div class="idot d${type==='win'?'g':'r'}"></div><div class="itext">${esc(v)}</div><button class="idel" onclick="removeItem('${type}',${i})">×</button></div>`).join('');}
+
+// ── AGENDA ────────────────────────────────────
+function addAgenda(){
+  const time=document.getElementById('ag-time').value;
+  const text=document.getElementById('ag-text').value.trim();
+  const type=document.getElementById('ag-type').value;
+  if(!text) return;
+  agenda.push({time,text,type});
+  agenda.sort((a,b)=>a.time.localeCompare(b.time));
+  renderAgenda();
+  document.getElementById('ag-text').value='';
+}
+
+function removeAgenda(idx){agenda.splice(idx,1);renderAgenda();}
+
+function renderAgenda(){
+  const el=document.getElementById('agenda-list');
+  if(!el) return;
+  if(!agenda.length){el.innerHTML='';return;}
+  el.innerHTML=agenda.map((a,i)=>`
+    <div class="agenda-row">
+      <span class="agenda-time">${a.time}</span>
+      <span class="agenda-text">${esc(a.text)}</span>
+      <span class="agenda-type atype-${a.type}">${a.type}</span>
+      <button class="agenda-del" onclick="removeAgenda(${i})">×</button>
+    </div>`).join('');
+}
+
+// ── TRADE OPS ─────────────────────────────────
+function addOp(){
+  const dir=document.getElementById('op-dir').value;
+  const pts=parseFloat(document.getElementById('op-pts').value);
+  const sys=document.getElementById('op-sys').value==='1';
+  const note=document.getElementById('op-note').value.trim();
+  if(isNaN(pts)) return;
+  tradeOps.push({dir,pts,sys,note,time:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})});
+  renderOps();
+  document.getElementById('op-pts').value='';
+  document.getElementById('op-note').value='';
+}
+
+function removeOp(idx){tradeOps.splice(idx,1);renderOps();}
+
+function renderOps(){
+  const el=document.getElementById('op-list');
+  if(!el) return;
+  el.innerHTML=tradeOps.map((op,i)=>`
+    <div class="op-row">
+      <span class="op-dir ${op.dir==='C'?'op-c':'op-v'}">${op.dir==='C'?'▲ C':'▼ V'}</span>
+      <span class="op-info">${op.time}${op.note?' · '+esc(op.note):''}</span>
+      <span class="op-adh ${op.sys?'op-ok':'op-nok'}">${op.sys?'✓':'✗'}</span>
+      <span class="op-res" style="color:${op.pts>=0?'var(--green)':'var(--red)'}">${op.pts>=0?'+':''}${op.pts}pts</span>
+      <button class="op-del" onclick="removeOp(${i})">×</button>
+    </div>`).join('');
+  // stats
+  const n=tradeOps.length;
+  const wins=tradeOps.filter(o=>o.pts>0).length;
+  const totalPts=tradeOps.reduce((a,o)=>a+o.pts,0);
+  const adhCount=tradeOps.filter(o=>o.sys).length;
+  document.getElementById('ops-count').textContent=n;
+  document.getElementById('ops-wr').textContent=n?Math.round(wins/n*100)+'%':'—';
+  document.getElementById('ops-pts').textContent=(totalPts>=0?'+':'')+totalPts;
+  document.getElementById('ops-pts').style.color=totalPts>=0?'var(--green)':'var(--red)';
+  document.getElementById('ops-adh').textContent=n?Math.round(adhCount/n*100)+'%':'—';
+}
+
+// ── BRIEFING ──────────────────────────────────
+function renderBriefing(){
+  const el=document.getElementById('briefing-body');
+  if(!el) return;
+  // Get yesterday's entry
+  const yesterday=new Date(); yesterday.setDate(yesterday.getDate()-1);
+  const yISO=yesterday.toISOString().split('T')[0];
+  const yEntry=allData.find(e=>e.date_iso===yISO);
+  // Get today's agenda from yesterday's planning
+  const todayISO_=todayISO();
+  const todayPlanned=allData.find(e=>e.date_iso===yISO); // agenda planned yesterday for today
+
+  if(!yEntry){
+    el.innerHTML='<div class="briefing-empty">Nenhum dado de ontem ainda. Preencha o diário esta noite.</div>';
+    return;
+  }
+
+  const win=yEntry.wins?.length?yEntry.wins[yEntry.wins.length-1]:'—';
+  const fail=yEntry.fails?.length?yEntry.fails[yEntry.fails.length-1]:'—';
+  const intent=yEntry.intent||'—';
+  const mit=yEntry.mit||'—';
+  const agendaToday=yEntry.agenda||[];
+
+  let html=`
+    <div class="briefing-row"><span class="briefing-icon">✅</span><div class="briefing-content"><div class="briefing-lbl">Acerto de ontem</div><div class="briefing-text">${esc(win)}</div></div></div>
+    <div class="briefing-row"><span class="briefing-icon">⚠️</span><div class="briefing-content"><div class="briefing-lbl">Erro de ontem — não repetir</div><div class="briefing-text">${esc(fail)}</div></div></div>
+    <div class="briefing-row"><span class="briefing-icon">◎</span><div class="briefing-content"><div class="briefing-lbl">Intenção de hoje</div><div class="briefing-text">${esc(intent)}</div></div></div>
+    <div class="briefing-row"><span class="briefing-icon">◆</span><div class="briefing-content"><div class="briefing-lbl">MIT de hoje</div><div class="briefing-text">${esc(mit)}</div></div></div>`;
+
+  if(agendaToday.length){
+    html+=`<div class="briefing-row"><span class="briefing-icon">📅</span><div class="briefing-content"><div class="briefing-lbl">Agenda de hoje</div>${agendaToday.map(a=>`<div class="briefing-text" style="margin-bottom:2px"><span style="color:var(--blue)">${a.time}</span> · ${esc(a.text)}</div>`).join('')}</div></div>`;
+  }
+
+  el.innerHTML=html;
+}
+
+// ── NOTIFICATIONS ─────────────────────────────
+async function initNotifications(){
+  if(!('Notification' in window)) return;
+  if(Notification.permission==='granted') notifPermission=true;
+  else if(Notification.permission!=='denied'){
+    const perm=await Notification.requestPermission();
+    notifPermission=perm==='granted';
+  }
+}
+
+function startNotifScheduler(){
+  // Check every minute if a scheduled notification should fire
+  checkScheduledNotifs();
+  setInterval(checkScheduledNotifs, 60000);
+}
+
+function checkScheduledNotifs(){
+  const cfg=JSON.parse(localStorage.getItem('notif_cfg')||'{"morning":"07:00","pregao":"08:45","diario":"21:30","morning_on":true,"pregao_on":true,"diario_on":true}');
+  const now=new Date();
+  const hm=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const lastFired=JSON.parse(localStorage.getItem('notif_fired')||'{}');
+  const today=todayISO();
+
+  const checks=[
+    {key:'morning',label:'☀️ Briefing',msg:'Abra o Sistema Joey e revise o briefing do dia.',on:cfg.morning_on},
+    {key:'pregao',label:'📈 Pré-mercado',msg:'Registre seu estado emocional antes de operar.',on:cfg.pregao_on},
+    {key:'diario',label:'🌙 Diário noturno',msg:'Hora de preencher o diário e planejar amanhã.',on:cfg.diario_on},
+  ];
+
+  checks.forEach(c=>{
+    if(!c.on) return;
+    if(hm===cfg[c.key] && lastFired[today+'_'+c.key]!=='1'){
+      fireNotif(c.label, c.msg);
+      const fired=JSON.parse(localStorage.getItem('notif_fired')||'{}');
+      fired[today+'_'+c.key]='1';
+      localStorage.setItem('notif_fired',JSON.stringify(fired));
+    }
+  });
+
+  // In-app reminder if diario not filled after 21:00
+  if(now.getHours()>=21){
+    const te=todayEntry();
+    if(!te.date_iso){
+      showInAppBanner('🌙 Diário pendente','Você ainda não preencheu o diário de hoje.','warn');
+    }
+  }
+}
+
+function fireNotif(title, body){
+  if(notifPermission && Notification.permission==='granted'){
+    new Notification(title,{body,icon:'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><circle cx="16" cy="16" r="16" fill="%234e7cf8"/><text x="16" y="21" text-anchor="middle" font-size="16" fill="white">◈</text></svg>'});
+  }
+  showInAppBanner(title, body);
+}
+
+function showInAppBanner(title, body, type=''){
+  const banner=document.getElementById('notif-banner');
+  const id='nb_'+Date.now();
+  const div=document.createElement('div');
+  div.className='notif-card'+(type==='warn'?' warn':'');
+  div.id=id;
+  div.innerHTML=`<span class="notif-icon">${type==='warn'?'⚠️':'🔔'}</span><div class="notif-body"><div class="notif-title">${esc(title)}</div><div class="notif-sub">${esc(body)}</div></div><button class="notif-close" onclick="closeNotif('${id}')">×</button>`;
+  banner.appendChild(div);
+  setTimeout(()=>div.classList.add('show'),50);
+  setTimeout(()=>closeNotif(id),8000);
+}
+
+function closeNotif(id){
+  const el=document.getElementById(id);
+  if(!el) return;
+  el.classList.remove('show');
+  setTimeout(()=>el.remove(),300);
+}
 
 function toggleAdh(el,key){
   const isYes=el.classList.contains('yes');
@@ -751,6 +1126,7 @@ async function savePessoal(){
     good:document.getElementById('f-good').value.trim(),
     intent:document.getElementById('f-intent').value.trim(),
     mit:document.getElementById('f-mit').value.trim(),
+    agenda:[...agenda],
   };
   try{await saveToDB(entry);showToast('Dia pessoal salvo ✓');}
   catch(e){showToast('Erro ao salvar',true);}
@@ -763,8 +1139,9 @@ async function saveTrade(){
   const f=parseFloat(document.getElementById('t-felling').value)||0;
   const m=parseFloat(document.getElementById('t-mesa').value)||0;
   const p=parseFloat(document.getElementById('t-pa').value)||0;
-  const ops=parseInt(document.getElementById('t-ops').value)||0;
-  const wops=parseInt(document.getElementById('t-wins').value)||0;
+  // Auto-calculate from tradeOps if available
+  const ops_n=tradeOps.length||0;
+  const ops_w=tradeOps.filter(o=>o.pts>0).length||0;
   const today=todayEntry();
   const entry={
     ...today,
@@ -772,8 +1149,9 @@ async function saveTrade(){
     day_of_week:new Date().getDay(),
     t_felling:f, t_mesa:m, t_pa:p,
     t_result:f+m+p,
-    t_ops:ops, t_wins_ops:wops,
-    t_wr:ops>0?Math.round(wops/ops*100):null,
+    t_ops:ops_n||parseInt(document.getElementById('t-ops')?.value)||0,
+    t_wins_ops:ops_w||parseInt(document.getElementById('t-wins')?.value)||0,
+    t_wr:ops_n>0?Math.round(ops_w/ops_n*100):null,
     t_adh:+document.getElementById('sl-adh').value,
     t_adh_items:{...adhState},
     t_emo_pre:+document.getElementById('sl-pre').value,
@@ -781,6 +1159,7 @@ async function saveTrade(){
     t_emo_pos:+document.getElementById('sl-pos').value,
     t_analysis:document.getElementById('t-analysis').value.trim(),
     t_avoid:document.getElementById('t-avoid').value.trim(),
+    t_ops_detail:[...tradeOps],
   };
   try{await saveToDB(entry);showToast('Diário de trade salvo ✓');}
   catch(e){showToast('Erro ao salvar',true);}
