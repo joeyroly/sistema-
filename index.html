@@ -883,7 +883,10 @@ function bootApp(){
   startNotifScheduler();
 }
 
-function todayISO(){return new Date().toISOString().split('T')[0];}
+function todayISO(){
+  const n=new Date();
+  return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;
+}
 
 function todayEntry(){return allData.find(e=>e.date_iso===todayISO())||{};}
 
@@ -989,7 +992,7 @@ function renderBriefing(){
   if(!el) return;
   // Get yesterday's entry
   const yesterday=new Date(); yesterday.setDate(yesterday.getDate()-1);
-  const yISO=yesterday.toISOString().split('T')[0];
+  const yISO=`${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
   const yEntry=allData.find(e=>e.date_iso===yISO);
   // Get today's agenda from yesterday's planning
   const todayISO_=todayISO();
