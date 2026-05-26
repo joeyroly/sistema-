@@ -773,7 +773,7 @@ async function connectSB(url, key){
     SB=null;
     if(loader) loader.style.display='none';
     if(setup) setup.style.display='flex';
-    alert('Erro ao conectar: '+err.message);
+    alert('ERRO: '+err.message+'\n\nSTACK: '+(err.stack||'sem stack'));
   }
 }
 
