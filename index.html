@@ -738,12 +738,22 @@ function calcTotal(){
 }
 
 function calcWR(){
-  const ops=parseInt(document.getElementById('t-ops').value)||0;
-  const w=parseInt(document.getElementById('t-wins').value)||0;
-  const el=document.getElementById('t-wr');
-  if(ops>0&&w<=ops){const wr=Math.round(w/ops*100);el.textContent=wr+'%';el.style.color=wr>=65?'var(--green)':wr>=50?'var(--gold)':'var(--red)';}
-  else el.textContent='—%';
+  const opsEl=document.getElementById("t-ops");
+  const winsEl=document.getElementById("t-wins");
+  const el=document.getElementById("t-wr");
+  if(!opsEl||!winsEl||!el) return;
+  const ops=parseInt(opsEl.value)||0;
+  const w=parseInt(winsEl.value)||0;
+  if(ops>0&&w<=ops){const wr=Math.round(w/ops*100);el.textContent=wr+"%";el.style.color=wr>=65?"var(--green)":wr>=50?"var(--gold)":"var(--red)";}
+  else el.textContent="—%";
 }
+
+
+
+
+
+
+
 
 // ── SUPABASE ──────────────────────────────────
 function connectManual(){
@@ -844,12 +854,12 @@ function loadTodayForms(){
   if(e.t_ops) document.getElementById('t-ops').value=e.t_ops;
   if(e.t_wins_ops) document.getElementById('t-wins').value=e.t_wins_ops;
   if(e.t_adh) document.getElementById('sl-adh').value=e.t_adh;
-  document.getElementById('sv-adh').textContent=e.t_adh||5;
+  const svAdh=document.getElementById('sv-adh'); if(svAdh) svAdh.textContent=e.t_adh||5;
   [['sl-pre','sv-pre','t_emo_pre'],['sl-dur','sv-dur','t_emo_dur'],['sl-pos','sv-pos','t_emo_pos']].forEach(([s,v,k])=>{if(e[k]){document.getElementById(s).value=e[k];document.getElementById(v).textContent=e[k];}});
   if(e.t_analysis) document.getElementById('t-analysis').value=e.t_analysis;
   if(e.t_avoid) document.getElementById('t-avoid').value=e.t_avoid;
   if(e.t_adh_items) {adhState={...adhState,...e.t_adh_items};renderAdh();}
-  calcTotal(); calcWR();
+  if(document.getElementById('t-felling')) calcTotal(); if(document.getElementById('t-ops')) calcWR();
 }
 
 // ── FORM HELPERS ──────────────────────────────
