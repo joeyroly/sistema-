@@ -64,7 +64,7 @@ body{background:var(--bg);color:var(--text);font-family:'Geist Mono',monospace;f
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ── APP ────────────────────────────── */
-#app{display:none;flex:1;flex-direction:column;overflow:hidden}
+#app{display:none;flex:1;flex-direction:column;overflow:hidden;height:100dvh}
 #app.flex{display:flex}
 
 /* ── TOPBAR ─────────────────────────── */
@@ -90,7 +90,7 @@ body{background:var(--bg);color:var(--text);font-family:'Geist Mono',monospace;f
 .nb-lbl{font-size:7.5px;letter-spacing:1.5px;text-transform:uppercase}
 
 /* ── PAGES ──────────────────────────── */
-.page{display:none;padding:16px 16px 32px;animation:fadeUp .22s ease}
+.page{display:none;padding:16px 16px 80px;animation:fadeUp .22s ease}
 .page.active{display:block}
 @keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 
@@ -506,86 +506,6 @@ tr:hover td{background:var(--s2)}
             <div class="num-lbl">Total do dia</div>
             <div class="num-inp" id="t-total" style="color:var(--hi);padding-top:2px">R$ 0</div>
           </div>
-        </div>
-      </div>
-
-      <!-- adesão ao sistema -->
-      <div class="card">
-        <div class="card-lbl">🎯 Adesão ao sistema E1+E2</div>
-        <div class="sl-row" style="margin-bottom:14px">
-          <span class="sl-name">Score geral</span>
-          <input type="range" min="0" max="10" value="5" id="sl-adh" oninput="sv('sl-adh','sv-adh')">
-          <span class="sl-val" id="sv-adh">5</span>
-        </div>
-        <div class="adh-grid" id="adh-grid">
-          <div class="adh-item" onclick="toggleAdh(this,'e1')" data-k="e1"><div class="adh-dot"></div><div class="adh-text">E1 respeitado</div></div>
-          <div class="adh-item" onclick="toggleAdh(this,'no_e3')" data-k="no_e3"><div class="adh-dot"></div><div class="adh-text">Sem E3</div></div>
-          <div class="adh-item" onclick="toggleAdh(this,'stop')" data-k="stop"><div class="adh-dot"></div><div class="adh-text">Stop correto</div></div>
-          <div class="adh-item" onclick="toggleAdh(this,'partial')" data-k="partial"><div class="adh-dot"></div><div class="adh-text">Parcial executado</div></div>
-          <div class="adh-item" onclick="toggleAdh(this,'entry')" data-k="entry"><div class="adh-dot"></div><div class="adh-text">Entrada com sinal</div></div>
-          <div class="adh-item" onclick="toggleAdh(this,'size')" data-k="size"><div class="adh-dot"></div><div class="adh-text">Tamanho correto</div></div>
-        </div>
-      </div>
-
-      <!-- estado emocional -->
-      <div class="card">
-        <div class="card-lbl">🧠 Estado emocional</div>
-        <div class="sl-row"><span class="sl-name">Pré-mercado</span><input type="range" min="1" max="10" value="5" id="sl-pre" oninput="sv('sl-pre','sv-pre')"><span class="sl-val" id="sv-pre">5</span></div>
-        <div class="sl-row"><span class="sl-name">Durante</span><input type="range" min="1" max="10" value="5" id="sl-dur" oninput="sv('sl-dur','sv-dur')"><span class="sl-val" id="sv-dur">5</span></div>
-        <div class="sl-row"><span class="sl-name">Pós fechamento</span><input type="range" min="1" max="10" value="5" id="sl-pos" oninput="sv('sl-pos','sv-pos')"><span class="sl-val" id="sv-pos">5</span></div>
-      </div>
-
-      <div class="card">
-        <div class="card-lbl">📝 Análise do dia de trade</div>
-        <textarea class="finp" id="t-analysis" placeholder="O que esse dia me ensina como trader? O que fiz bem? O que repetiria?"></textarea>
-      </div>
-      <div class="card">
-        <div class="card-lbl">⚑ O que evitar amanhã</div>
-        <input type="text" class="finp" id="t-avoid" placeholder="Comportamento ou situação a não repetir…">
-      </div>
-
-      <button class="btn-save" id="btn-t" onclick="saveTrade()">Salvar diário de trade</button>
-    </div>
-      <div class="card">
-        <div class="card-lbl">💰 Resultado financeiro — R$</div>
-        <div class="num-row">
-          <div class="num-box">
-            <div class="num-lbl">Felling</div>
-            <input class="num-inp" id="t-felling" type="number" placeholder="0" step="100">
-          </div>
-          <div class="num-box">
-            <div class="num-lbl">Mesa Grande</div>
-            <input class="num-inp" id="t-mesa" type="number" placeholder="0" step="100">
-          </div>
-        </div>
-        <div class="num-row">
-          <div class="num-box">
-            <div class="num-lbl">PA / Price</div>
-            <input class="num-inp" id="t-pa" type="number" placeholder="0" step="100">
-          </div>
-          <div class="num-box" style="background:var(--s3);border-color:var(--b2)">
-            <div class="num-lbl">Total do dia</div>
-            <div class="num-inp" id="t-total" style="color:var(--hi);padding-top:2px">R$ 0</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- operações -->
-      <div class="card">
-        <div class="card-lbl">📈 Operações do dia</div>
-        <div class="num-row">
-          <div class="num-box">
-            <div class="num-lbl">Total de ops</div>
-            <input class="num-inp" id="t-ops" type="number" placeholder="0" min="0" oninput="calcWR()">
-          </div>
-          <div class="num-box">
-            <div class="num-lbl">Ganhadoras</div>
-            <input class="num-inp" id="t-wins" type="number" placeholder="0" min="0" oninput="calcWR()">
-          </div>
-        </div>
-        <div class="num-box" style="background:var(--s3);border-color:var(--b2)">
-          <div class="num-lbl">Win rate calculado</div>
-          <div class="num-inp" id="t-wr" style="color:var(--teal);padding-top:2px">—%</div>
         </div>
       </div>
 
@@ -1175,7 +1095,8 @@ function goPage(id,btn){
   document.querySelectorAll('.nb').forEach(b=>b.classList.remove('active'));
   document.getElementById('pg-'+id).classList.add('active');
   btn.classList.add('active');
-  document.getElementById('scroll').scrollTop=0;
+  const scroll=document.getElementById('scroll');
+  if(scroll) scroll.scrollTop=0;
   if(id==='dash') renderDash();
   if(id==='log') renderLog();
   if(id==='claude') scrollBottom();
