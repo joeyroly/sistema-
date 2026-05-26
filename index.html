@@ -332,7 +332,7 @@ tr:hover td{background:var(--s2)}
     <input class="setup-inp" id="sb-url" type="text" placeholder="https://xxxxx.supabase.co" autocomplete="off">
     <label class="setup-lbl">Chave (Publishable key ou anon key)</label>
     <input class="setup-inp" id="sb-key" type="password" placeholder="sb_publishable_... ou eyJhbGci...">
-    <button class="setup-btn" onclick="connectSB(document.getElementById('sb-url').value, document.getElementById('sb-key').value)">Conectar ao Supabase</button>
+    <button class="setup-btn" onclick="connectManual()">Conectar ao Supabase</button>
     <p class="setup-note">Não tem conta? <a href="https://supabase.com" target="_blank">supabase.com</a> — gratuito.<br>Veja o arquivo SETUP.html para o tutorial completo.</p>
   </div>
 </div>
@@ -718,7 +718,8 @@ function checkOnline(){
 
 function setupTradeCalc(){
   ['t-felling','t-mesa','t-pa'].forEach(id=>{
-    document.getElementById(id).addEventListener('input',calcTotal);
+    const el=document.getElementById(id);
+    if(el) el.addEventListener('input',calcTotal);
   });
 }
 
@@ -741,6 +742,12 @@ function calcWR(){
 }
 
 // ── SUPABASE ──────────────────────────────────
+function connectManual(){
+  const u=document.getElementById('sb-url').value.trim();
+  const k=document.getElementById('sb-key').value.trim();
+  connectSB(u,k);
+}
+
 async function connectSB(url, key){
   if(!url||!key){ document.getElementById('setup').style.display='flex'; return; }
   const u = url.replace(/\/$/,'');
