@@ -753,7 +753,7 @@ function connectManual(){
 }
 
 async function connectSB(url, key){
-  if(!url||!key){ document.getElementById('setup').style.display='flex'; return; }
+  if(!url||!key){ const s=document.getElementById('setup'); if(s) s.style.display='flex'; return; }
   const u = url.replace(/\/$/,'');
   const setup=document.getElementById('setup');
   const loader=document.getElementById('loader');
@@ -761,31 +761,30 @@ async function connectSB(url, key){
   if(loader) loader.style.display='flex';
   try{
     SB=supabase.createClient(u, key);
-    const{error}=await SB.from('sistema_joey').select('id').limit(1);
-    if(error&&error.code!=='PGRST116'&&error.code!=='42P01'){
-      throw new Error(error.message+' ('+error.code+')');
+    const result=await SB.from('sistema_joey').select('id').limit(1);
+    if(result.error&&result.error.code!=='PGRST116'&&result.error.code!=='42P01'){
+      throw new Error(result.error.message+' ('+result.error.code+')');
     }
     localStorage.setItem('sb_url', u);
     localStorage.setItem('sb_key', key);
     await loadFromSB();
     bootApp();
-  }catch(e){
+  }catch(err){
     SB=null;
     if(loader) loader.style.display='none';
     if(setup) setup.style.display='flex';
-    alert('Erro ao conectar: '+e.message);
+    alert('Erro ao conectar: '+err.message);
   }
 }
 
 async function loadFromSB(){
-  const{data,error}=await SB.from('sistema_joey').select('*').order('date_iso',{ascending:false});
-  if(error&&error.code==='42P01'){
-    // Table doesn't exist yet — show helpful message
+  const result=await SB.from('sistema_joey').select('*').order('date_iso',{ascending:false});
+  if(result.error&&result.error.code==='42P01'){
     showToast('Tabela não encontrada. Execute o setup-supabase.sql primeiro.',true);
-    throw new Error('Tabela não existe. Execute o setup-supabase.sql no SQL Editor do Supabase.');
+    throw new Error('Tabela não existe.');
   }
-  if(error) throw error;
-  allData=data||[];
+  if(result.error) throw result.error;
+  allData=result.data||[];
 }
 
 async function saveToDB(entry){
