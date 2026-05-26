@@ -735,26 +735,33 @@ function calcWR(){
 
 // ── SUPABASE ──────────────────────────────────
 async function connectSB(url,key){
-  if(SB) return; // prevent multiple instances
-  let u=url||document.getElementById('sb-url').value.trim();
-  const k=key||document.getElementById('sb-key').value.trim();
+  let u=url||document.getElementById('sb-url')?.value.trim();
+  const k=key||document.getElementById('sb-key')?.value.trim();
   if(!u||!k){showToast('Preencha URL e chave',true);return;}
   u=u.replace(/\/$/,'');
   if(!u.startsWith('https://')) u='https://'+u;
-  document.getElementById('setup').style.display='none';
-  document.getElementById('loader').style.display='flex';
+  SB=null;
+  const setup=document.getElementById('setup');
+  const loader=document.getElementById('loader');
+  if(setup) setup.style.display='none';
+  if(loader) loader.style.display='flex';
   try{
-    SB=supabase.createClient(u,k,{auth:{persistSession:false,autoRefreshToken:false}});
-    const{data,error}=await SB.from('sistema_joey').select('id').limit(1);
-    if(error&&error.code!=='PGRST116'&&error.code!=='42P01') throw error;
-    localStorage.setItem('sb_url',u); localStorage.setItem('sb_key',k);
+    SB=supabase.createClient(u,k);
+    const{error}=await SB.from('sistema_joey').select('id').limit(1);
+    if(error&&error.code!=='PGRST116'&&error.code!=='42P01'){
+      throw new Error(error.message+' ('+error.code+')');
+    }
+    localStorage.setItem('sb_url',u);
+    localStorage.setItem('sb_key',k);
     await loadFromSB();
     bootApp();
   }catch(e){
     SB=null;
-    document.getElementById('loader').style.display='none';
-    document.getElementById('setup').style.display='flex';
-    showToast('Erro: '+e.message,true);
+    if(loader) loader.style.display='none';
+    if(setup) setup.style.display='flex';
+    const msg='Erro: '+e.message;
+    alert(msg);
+    showToast(msg,true);
   }
 }
 
