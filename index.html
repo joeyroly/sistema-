@@ -735,23 +735,23 @@ function calcWR(){
 
 // ── SUPABASE ──────────────────────────────────
 async function connectSB(url,key){
+  if(SB) return; // prevent multiple instances
   let u=url||document.getElementById('sb-url').value.trim();
   const k=key||document.getElementById('sb-key').value.trim();
   if(!u||!k){showToast('Preencha URL e chave',true);return;}
-  // Clean URL: remove trailing slash only
   u=u.replace(/\/$/,'');
   if(!u.startsWith('https://')) u='https://'+u;
   document.getElementById('setup').style.display='none';
   document.getElementById('loader').style.display='flex';
   try{
-    // Support both new sb_publishable_ format and legacy eyJ format
-    SB=supabase.createClient(u,k);
+    SB=supabase.createClient(u,k,{auth:{persistSession:false,autoRefreshToken:false}});
     const{data,error}=await SB.from('sistema_joey').select('id').limit(1);
     if(error&&error.code!=='PGRST116'&&error.code!=='42P01') throw error;
     localStorage.setItem('sb_url',u); localStorage.setItem('sb_key',k);
     await loadFromSB();
     bootApp();
   }catch(e){
+    SB=null;
     document.getElementById('loader').style.display='none';
     document.getElementById('setup').style.display='flex';
     showToast('Erro: '+e.message,true);
