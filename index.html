@@ -1406,7 +1406,7 @@ function renderWRMoodChart(data){
     // 65% line
     const ly=pad.t+ch-(65/100)*ch;
     ctx.strokeStyle='rgba(255,255,255,.1)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
-    ctx.beginPath();ctx.moveTo(pad.l,ly);ctx.lineTo(pad.l+cw||w-pad.r,ly);ctx.stroke();ctx.setLineDash([]);
+    ctx.beginPath();ctx.moveTo(pad.l,ly);ctx.lineTo(w-pad.r,ly);ctx.stroke();ctx.setLineDash([]);
     ctx.fillStyle='#424a6a';ctx.font='8px Geist Mono';
     ctx.fillText(e.mood.slice(0,5),x,h-4);
     ctx.fillStyle=m.c;ctx.font='bold 9px Geist Mono';
