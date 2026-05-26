@@ -692,6 +692,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   const url=localStorage.getItem('sb_url'), key=localStorage.getItem('sb_key');
   if(url&&key) connectSB(url,key);
   else if(localStorage.getItem('dn_offline')) startOffline();
+  else { document.getElementById('setup').style.display='flex'; }
   setupTradeCalc();
 });
 
@@ -735,8 +736,17 @@ function calcWR(){
 
 // ── SUPABASE ──────────────────────────────────
 async function connectSB(url,key){
-  let u=url||document.getElementById('sb-url')?.value.trim();
-  const k=key||document.getElementById('sb-key')?.value.trim();
+  // Use passed params OR read from DOM (only if DOM elements exist)
+  let u = url;
+  let k = key;
+  if(!u){
+    const el = document.getElementById('sb-url');
+    u = el ? el.value.trim() : '';
+  }
+  if(!k){
+    const el = document.getElementById('sb-key');
+    k = el ? el.value.trim() : '';
+  }
   if(!u||!k){showToast('Preencha URL e chave',true);return;}
   u=u.replace(/\/$/,'');
   if(!u.startsWith('https://')) u='https://'+u;
@@ -759,9 +769,8 @@ async function connectSB(url,key){
     SB=null;
     if(loader) loader.style.display='none';
     if(setup) setup.style.display='flex';
-    const msg='Erro: '+e.message;
-    alert(msg);
-    showToast(msg,true);
+    alert('Erro ao conectar: '+e.message);
+    showToast('Erro: '+e.message,true);
   }
 }
 
