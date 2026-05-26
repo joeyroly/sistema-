@@ -690,16 +690,15 @@ window.addEventListener('DOMContentLoaded',()=>{
   tick(); setInterval(tick,30000);
   checkOnline(); window.addEventListener('online',checkOnline); window.addEventListener('offline',checkOnline);
   setupTradeCalc();
-  document.getElementById('setup').style.display='flex';
-  const url=localStorage.getItem('sb_url'), key=localStorage.getItem('sb_key');
-  if(url&&key){
-    const urlEl=document.getElementById('sb-url');
-    const keyEl=document.getElementById('sb-key');
-    if(urlEl) urlEl.value=url;
-    if(keyEl) keyEl.value=key;
-    setTimeout(()=>connectSB(url,key),400);
-  } else if(localStorage.getItem('dn_offline')){
-    setTimeout(()=>startOffline(),400);
+  // Auto-connect with saved credentials
+  const SUPABASE_URL = 'https://oovjuojqolysfonqmqgh.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_6nW470GtFjLDjH2GbZ2iug_JtOIQ-Nn';
+  const url = localStorage.getItem('sb_url') || SUPABASE_URL;
+  const key = localStorage.getItem('sb_key') || SUPABASE_KEY;
+  if(localStorage.getItem('dn_offline')){
+    startOffline();
+  } else {
+    connectSB(url, key);
   }
 });
 
@@ -742,34 +741,21 @@ function calcWR(){
 }
 
 // ── SUPABASE ──────────────────────────────────
-async function connectSB(url,key){
-  // Use passed params OR read from DOM (only if DOM elements exist)
-  let u = url;
-  let k = key;
-  if(!u){
-    const el = document.getElementById('sb-url');
-    u = el ? el.value.trim() : '';
-  }
-  if(!k){
-    const el = document.getElementById('sb-key');
-    k = el ? el.value.trim() : '';
-  }
-  if(!u||!k){showToast('Preencha URL e chave',true);return;}
-  u=u.replace(/\/$/,'');
-  if(!u.startsWith('https://')) u='https://'+u;
-  SB=null;
+async function connectSB(url, key){
+  if(!url||!key){ document.getElementById('setup').style.display='flex'; return; }
+  const u = url.replace(/\/$/,'');
   const setup=document.getElementById('setup');
   const loader=document.getElementById('loader');
   if(setup) setup.style.display='none';
   if(loader) loader.style.display='flex';
   try{
-    SB=supabase.createClient(u,k);
+    SB=supabase.createClient(u, key);
     const{error}=await SB.from('sistema_joey').select('id').limit(1);
     if(error&&error.code!=='PGRST116'&&error.code!=='42P01'){
       throw new Error(error.message+' ('+error.code+')');
     }
-    localStorage.setItem('sb_url',u);
-    localStorage.setItem('sb_key',k);
+    localStorage.setItem('sb_url', u);
+    localStorage.setItem('sb_key', key);
     await loadFromSB();
     bootApp();
   }catch(e){
@@ -777,7 +763,6 @@ async function connectSB(url,key){
     if(loader) loader.style.display='none';
     if(setup) setup.style.display='flex';
     alert('Erro ao conectar: '+e.message);
-    showToast('Erro: '+e.message,true);
   }
 }
 
