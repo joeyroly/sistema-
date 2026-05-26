@@ -487,20 +487,22 @@ tr:hover td{background:var(--s2)}
       <!-- resultado financeiro -->
       <div class="card">
         <div class="card-lbl">💰 Resultado financeiro — R$</div>
+        <div style="font-size:9px;color:var(--dim);letter-spacing:1px;margin-bottom:8px">FELLING + PA</div>
         <div class="num-row">
           <div class="num-box">
             <div class="num-lbl">Felling</div>
             <input class="num-inp" id="t-felling" type="number" placeholder="0" step="100">
           </div>
           <div class="num-box">
-            <div class="num-lbl">Mesa Grande</div>
-            <input class="num-inp" id="t-mesa" type="number" placeholder="0" step="100">
-          </div>
-        </div>
-        <div class="num-row">
-          <div class="num-box">
             <div class="num-lbl">PA / Price</div>
             <input class="num-inp" id="t-pa" type="number" placeholder="0" step="100">
+          </div>
+        </div>
+        <div style="font-size:9px;color:var(--dim);letter-spacing:1px;margin-bottom:8px;margin-top:4px">PF</div>
+        <div class="num-row">
+          <div class="num-box">
+            <div class="num-lbl">PF</div>
+            <input class="num-inp" id="t-mesa" type="number" placeholder="0" step="100">
           </div>
           <div class="num-box" style="background:var(--s3);border-color:var(--b2)">
             <div class="num-lbl">Total do dia</div>
@@ -536,6 +538,16 @@ tr:hover td{background:var(--s2)}
       </div>
 
       <div class="card">
+        <div class="card-lbl">⭐ Nota de execução</div>
+        <div class="sl-row" style="margin-bottom:8px">
+          <span class="sl-name">Execução</span>
+          <input type="range" min="1" max="10" value="5" id="sl-exec" oninput="sv('sl-exec','sv-exec')">
+          <span class="sl-val" id="sv-exec">5</span>
+        </div>
+        <input type="text" class="finp" id="t-exec-note" placeholder="Nota sobre a qualidade da execução hoje…" style="margin-bottom:0">
+      </div>
+
+      <div class="card">
         <div class="card-lbl">📝 Análise do dia de trade</div>
         <textarea class="finp" id="t-analysis" placeholder="O que esse dia me ensina como trader? O que fiz bem? O que repetiria?"></textarea>
       </div>
@@ -550,10 +562,10 @@ tr:hover td{background:var(--s2)}
     <!-- ── DASHBOARD ── -->
     <div id="pg-dash" class="page">
       <div class="ptabs">
-        <button class="ptab active" onclick="setPeriod('week',this)">7d</button>
+        <button class="ptab" onclick="setPeriod('week',this)">7d</button>
         <button class="ptab" onclick="setPeriod('month',this)">30d</button>
         <button class="ptab" onclick="setPeriod('quarter',this)">90d</button>
-        <button class="ptab" onclick="setPeriod('all',this)">Tudo</button>
+        <button class="ptab active" onclick="setPeriod('all',this)">Tudo</button>
       </div>
 
       <!-- Score unificado -->
@@ -620,7 +632,7 @@ tr:hover td{background:var(--s2)}
 
       <div class="log-s card" style="padding:0;overflow:hidden">
         <table>
-          <thead><tr><th>Data</th><th>Humor</th><th>En</th><th>Adh</th><th>R$</th><th>WR</th></tr></thead>
+          <thead><tr><th>Data</th><th>Humor</th><th>En</th><th>R$</th><th>WR%</th></tr></thead>
           <tbody id="log-body"></tbody>
         </table>
       </div>
@@ -679,7 +691,7 @@ const MONTHS=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov',
 
 // ── STATE ─────────────────────────────────────
 let SB=null, useOffline=false;
-let allData=[], currentPeriod='week';
+let allData=[], currentPeriod='all';
 let selectedMood=null, wins=[], fails=[], agenda=[], tradeOps=[];
 let adhState={e1:false,no_e3:false,stop:false,partial:false,entry:false,size:false};
 let chatHistory=[], isTyping=false;
@@ -858,6 +870,10 @@ function loadTodayForms(){
   [['sl-pre','sv-pre','t_emo_pre'],['sl-dur','sv-dur','t_emo_dur'],['sl-pos','sv-pos','t_emo_pos']].forEach(([s,v,k])=>{if(e[k]){document.getElementById(s).value=e[k];document.getElementById(v).textContent=e[k];}});
   if(e.t_analysis) document.getElementById('t-analysis').value=e.t_analysis;
   if(e.t_avoid) document.getElementById('t-avoid').value=e.t_avoid;
+  const slExec=document.getElementById('sl-exec');
+  const svExec=document.getElementById('sv-exec');
+  if(slExec&&e.t_exec_score){slExec.value=e.t_exec_score; if(svExec) svExec.textContent=e.t_exec_score;}
+  if(e.t_exec_note){const el=document.getElementById('t-exec-note');if(el) el.value=e.t_exec_note;}
   if(e.t_adh_items) {adhState={...adhState,...e.t_adh_items};renderAdh();}
   if(document.getElementById('t-felling')) calcTotal(); if(document.getElementById('t-ops')) calcWR();
 }
@@ -1110,6 +1126,8 @@ async function saveTrade(){
     t_emo_pos:+document.getElementById('sl-pos').value,
     t_analysis:document.getElementById('t-analysis').value.trim(),
     t_avoid:document.getElementById('t-avoid').value.trim(),
+    t_exec_score:+document.getElementById('sl-exec').value,
+    t_exec_note:document.getElementById('t-exec-note').value.trim(),
     t_ops_detail:[...tradeOps],
   };
   try{await saveToDB(entry);showToast('Diário de trade salvo ✓');}
@@ -1125,7 +1143,12 @@ function goPage(id,btn){
   btn.classList.add('active');
   const scroll=document.getElementById('scroll');
   if(scroll) scroll.scrollTop=0;
-  if(id==='dash') renderDash();
+  if(id==='dash'){
+    currentPeriod='all';
+    document.querySelectorAll('.ptab').forEach((b,i)=>b.classList.toggle('active',i===3));
+    document.getElementById('dash-period-lbl').textContent='Todo o histórico';
+    renderDash();
+  }
   if(id==='log') renderLog();
   if(id==='claude') scrollBottom();
 }
@@ -1449,18 +1472,18 @@ function renderLog(){
 
   // table
   const tbody=document.getElementById('log-body');
-  if(!allData.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:#424a6a">Nenhuma entrada ainda</td></tr>';return;}
+  if(!allData.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:24px;color:#424a6a">Nenhuma entrada ainda</td></tr>';return;}
   tbody.innerHTML=[...allData].sort((a,b)=>b.date_iso.localeCompare(a.date_iso)).slice(0,60).map(d=>{
     const m=MOODS[d.mood]||MOODS.calmo;
     const res=d.t_result;
     const resStr=res!=null?`<span style="color:${res>=0?'var(--green)':'var(--red)'}">R$${res>=0?'+':''}${Math.round(res).toLocaleString('pt-BR')}</span>`:'—';
     const wr=d.t_wr;
-    const wrStr=wr?`<span style="color:${wr>=65?'var(--green)':wr>=50?'var(--gold)':'var(--red)'}"> ${wr}%</span>`:'—';
+    const wrColor=wr>=65?'var(--green)':wr>=50?'var(--gold)':'var(--red)';
+    const wrStr=wr?`<span style="color:${wrColor};font-weight:500">${wr}%</span>`:'—';
     return`<tr>
-      <td style="color:#424a6a;white-space:nowrap">${d.date_label||d.date_iso}</td>
-      <td><span class="mc" style="background:${m.bg};color:${m.c}">${m.e} ${d.mood?.slice(0,5)||'—'}</span></td>
-      <td style="color:var(--blue)">${d.energia||'—'}</td>
-      <td style="color:var(--teal)">${d.t_adh||'—'}</td>
+      <td style="color:#424a6a;white-space:nowrap;font-size:10px">${(d.date_label||d.date_iso).slice(0,8)}</td>
+      <td><span class="mc" style="background:${m.bg};color:${m.c}">${m.e}</span></td>
+      <td style="color:var(--blue);font-weight:500">${d.energia||'—'}</td>
       <td>${resStr}</td>
       <td>${wrStr}</td>
     </tr>`;
@@ -1500,7 +1523,7 @@ Data atual: ${new Date().toLocaleDateString('pt-BR')}
 Total de entradas: ${allData.length} | Sequência: ${streak} dias
 
 PERFIL:
-Economista, trader WDOL (mini dólar futuro), 3 contas (Felling, Mesa Grande, PA/Price).
+Economista, trader WDOL (mini dólar futuro), 3 contas (Felling, PF e PA/Price).
 Win rate histórico: 68%. Modelo E1+E2 sem E3. Stop: 15pts da média. Parcial em 10pts.
 Empresa de serviços (Simples Nacional). Estoicismo e alto desempenho.
 
