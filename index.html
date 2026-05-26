@@ -686,6 +686,10 @@ let chatHistory=[], isTyping=false;
 let notifPermission=false;
 
 // ── INIT ──────────────────────────────────────
+window.addEventListener('error', function(e){
+  alert('ERRO LINHA '+e.lineno+': '+e.message);
+});
+
 window.addEventListener('DOMContentLoaded',()=>{
   tick(); setInterval(tick,30000);
   checkOnline(); window.addEventListener('online',checkOnline); window.addEventListener('offline',checkOnline);
