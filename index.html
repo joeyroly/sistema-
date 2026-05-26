@@ -689,11 +689,18 @@ let notifPermission=false;
 window.addEventListener('DOMContentLoaded',()=>{
   tick(); setInterval(tick,30000);
   checkOnline(); window.addEventListener('online',checkOnline); window.addEventListener('offline',checkOnline);
-  const url=localStorage.getItem('sb_url'), key=localStorage.getItem('sb_key');
-  if(url&&key) connectSB(url,key);
-  else if(localStorage.getItem('dn_offline')) startOffline();
-  else { document.getElementById('setup').style.display='flex'; }
   setupTradeCalc();
+  document.getElementById('setup').style.display='flex';
+  const url=localStorage.getItem('sb_url'), key=localStorage.getItem('sb_key');
+  if(url&&key){
+    const urlEl=document.getElementById('sb-url');
+    const keyEl=document.getElementById('sb-key');
+    if(urlEl) urlEl.value=url;
+    if(keyEl) keyEl.value=key;
+    setTimeout(()=>connectSB(url,key),400);
+  } else if(localStorage.getItem('dn_offline')){
+    setTimeout(()=>startOffline(),400);
+  }
 });
 
 function tick(){
