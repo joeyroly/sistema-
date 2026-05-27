@@ -267,8 +267,8 @@ tr:hover td{background:var(--s2)}
 .agenda-del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px;transition:color .2s}
 .agenda-del:hover{color:var(--red)}
 .agenda-add-row{display:grid;grid-template-columns:60px 1fr auto auto;gap:6px;align-items:center}
-.time-inp{background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:8px 8px;font-family:'Geist Mono',monospace;font-size:11px;color:var(--hi);outline:none;text-align:center;width:100%}
-.time-inp:focus{border-color:var(--blue)}
+.time-inp{background:var(--s2);border:1px solid var(--blue);border-radius:7px;padding:8px 8px;font-family:'Geist Mono',monospace;font-size:11px;color:var(--blue);outline:none;text-align:center;width:100%;font-weight:500}
+.time-inp:focus{border-color:var(--blue);background:var(--bd)}
 .type-sel{background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:8px 6px;font-family:'Geist Mono',monospace;font-size:10px;color:var(--text);outline:none;cursor:pointer}
 
 /* ── OPS TRADE ──────────────────────── */
@@ -896,6 +896,10 @@ function bootApp(){
   document.getElementById('loader').style.display='none';
   const app=document.getElementById('app');
   app.style.display='flex'; app.style.flexDirection='column'; app.style.height='100dvh';
+  // Set current time in time inputs
+  const now=new Date();
+  const hm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  ['op-time','hes-time'].forEach(id=>{const el=document.getElementById(id);if(el) el.value=hm;});
   loadTodayForms();
   renderBriefing();
   initNotifications();
@@ -984,6 +988,11 @@ function addOp(){
   renderOps();
   document.getElementById('op-pts').value='';
   document.getElementById('op-note').value='';
+  // Update time to now for next entry
+  const now=new Date();
+  const hm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  const opT=document.getElementById('op-time');
+  if(opT) opT.value=hm;
 }
 
 function removeOp(idx){tradeOps.splice(idx,1);renderOps();}
@@ -1022,6 +1031,11 @@ function addHes(){
   hesitations.push({time,dir,pts,reason});
   renderHes();
   document.getElementById('hes-pts').value='';
+  // Update time to now for next entry
+  const now=new Date();
+  const hm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+  const hesT=document.getElementById('hes-time');
+  if(hesT) hesT.value=hm;
 }
 
 function removeHes(idx){hesitations.splice(idx,1);renderHes();}
@@ -1043,7 +1057,7 @@ function renderHes(){
   if(summary) summary.style.display='block';
 
   const totalPts=hesitations.reduce((a,h)=>a+h.pts,0);
-  const totalBRL=totalPts*10; // 10 contratos × R$10/pt
+  const totalBRL=totalPts*100; // 10 contratos × R$10/pt = R$100/pt
 
   // Peak hour analysis
   const hourCount={};
@@ -1263,7 +1277,15 @@ function goPage(id,btn){
     document.getElementById('dash-period-lbl').textContent='Todo o histórico';
     renderDash();
   }
-  if(id==='log') renderLog();
+  if(id==='trade'){
+    // Auto-fill time inputs with current time
+    const now=new Date();
+    const hm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+    const opT=document.getElementById('op-time');
+    const hesT=document.getElementById('hes-time');
+    if(opT&&!opT.value) opT.value=hm;
+    if(hesT&&!hesT.value) hesT.value=hm;
+  }
   if(id==='claude') scrollBottom();
 }
 
@@ -1816,7 +1838,7 @@ function exportParaClaude(){
     'CUSTO DA HESITACAO (30 dias)\n'+
     'Trades nao executados: '+hesLast30.length+'\n'+
     'Pontos deixados na mesa: '+totalHesPts+'pts\n'+
-    'Custo em R$: R$'+(totalHesPts*10).toLocaleString('pt-BR')+'\n'+
+    'Custo em R$: R$'+(totalHesPts*100).toLocaleString('pt-BR')+'\n'+
     'Motivo principal: '+(topHesReason?topHesReason[0]+' ('+topHesReason[1]+'x)':'sem dados')+'\n'+
     'Horario de pico: '+(peakHesHour?peakHesHour[0]+'h':'sem dados')+'\n\n'+
     'DETALHE ULTIMOS 7 DIAS'+dailyDetail+'\n\n'+
