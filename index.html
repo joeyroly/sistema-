@@ -641,6 +641,12 @@ tr:hover td{background:var(--s2)}
     <!-- ── CLAUDE ── -->
     <div id="pg-claude" class="page">
       <div class="chat-shell">
+
+        <!-- EXPORT BUTTON -->
+        <button onclick="exportParaClaude()" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--blue),var(--purp));border:none;border-radius:10px;color:#fff;font-family:'Geist Mono',monospace;font-size:11px;font-weight:500;cursor:pointer;margin-bottom:10px;letter-spacing:.5px;transition:opacity .2s" onmouseenter="this.style.opacity='.85'" onmouseleave="this.style.opacity='1'">
+          📋 Copiar relatório completo para colar no Claude.ai
+        </button>
+
         <div class="qbtns" id="qbtns">
           <button class="qbtn" onclick="qmsg('Como estou indo essa semana?')">Esta semana</button>
           <button class="qbtn" onclick="qmsg('Qual a correlação entre minha energia e os resultados de trade?')">Energia vs Trade</button>
@@ -1625,6 +1631,96 @@ function removeTyping(id){const el=document.getElementById(id);if(el)el.remove()
 function scrollBottom(){setTimeout(()=>{const w=document.getElementById('chat-msgs');if(w)w.scrollTop=w.scrollHeight;},60);}
 function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,88)+'px';}
 function mdHtml(t){return esc(t).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/_(.+?)_/g,'<em>$1</em>').replace(/\n/g,'<br>');}
+// ── EXPORT PARA CLAUDE ────────────────────────
+function exportParaClaude(){
+  if(!allData.length){showToast('Nenhum dado para exportar',true);return;}
+  const sorted=[...allData].sort((a,b)=>a.date_iso.localeCompare(b.date_iso));
+  const last7=sorted.slice(-7), last30=sorted.slice(-30);
+  const streak=calcStreak();
+  const avgM=(arr,k)=>arr.length?(arr.reduce((a,d)=>a+(d[k]||0),0)/arr.length).toFixed(1):'N/A';
+  const td7=last7.filter(d=>d.t_result!=null);
+  const td30=last30.filter(d=>d.t_result!=null);
+  const tdAll=sorted.filter(d=>d.t_result!=null);
+  const totalR7=td7.reduce((a,d)=>a+(d.t_result||0),0);
+  const totalR30=td30.reduce((a,d)=>a+(d.t_result||0),0);
+  const totalRAll=tdAll.reduce((a,d)=>a+(d.t_result||0),0);
+  const avgWR=(arr)=>{const w=arr.filter(d=>d.t_wr);return w.length?Math.round(w.reduce((a,d)=>a+d.t_wr,0)/w.length)+'%':'N/A';};
+  const moodFreq={};last30.forEach(d=>moodFreq[d.mood]=(moodFreq[d.mood]||0)+1);
+  const topMoods=Object.entries(moodFreq).sort((a,b)=>b[1]-a[1]).slice(0,3).map(([m,n])=>`${m}(${n}x)`).join(', ');
+  const byDay=Array(7).fill(null).map(()=>({s:0,n:0}));
+  sorted.forEach(d=>{byDay[d.day_of_week].s+=d.energia;byDay[d.day_of_week].n++;});
+  const bestDay=byDay.reduce((bi,d,i,a)=>d.n&&d.s/d.n>(a[bi].n?a[bi].s/a[bi].n:0)?i:bi,0);
+  const highE=tdAll.filter(d=>d.energia>=7);
+  const lowE=tdAll.filter(d=>d.energia<=4);
+  const avgHighR=highE.length?(highE.reduce((a,d)=>a+(d.t_result||0),0)/highE.length).toFixed(0):null;
+  const avgLowR=lowE.length?(lowE.reduce((a,d)=>a+(d.t_result||0),0)/lowE.length).toFixed(0):null;
+  const breaks=sorted.filter(d=>d.t_adh&&d.t_adh<=5);
+  const breaksByMood={};breaks.forEach(d=>{if(d.mood) breaksByMood[d.mood]=(breaksByMood[d.mood]||0)+1;});
+  const topBreakMood=Object.entries(breaksByMood).sort((a,b)=>b[1]-a[1])[0];
+  const lessons=sorted.slice(-7).filter(d=>d.lesson).map(d=>`[${d.date_label}] ${d.lesson}`).join('\n');
+  const recentFails=[],recentWins=[];
+  sorted.slice(-14).forEach(d=>{(d.fails||[]).forEach(f=>recentFails.push(f));(d.wins||[]).forEach(w=>recentWins.push(w));});
+  const dailyDetail=last7.map(d=>`
+  ${d.date_label} (${DAYS[d.day_of_week]})
+  Humor:${d.mood||'—'} E:${d.energia||'—'} D:${d.disciplina||'—'} C:${d.clareza||'—'}
+  Trade: R$${d.t_result!=null?Math.round(d.t_result):'—'} WR:${d.t_wr||'—'}% Adesão:${d.t_adh||'—'}/10
+  Realizações: ${(d.wins||[]).join('; ')||'—'}
+  Falhas: ${(d.fails||[]).join('; ')||'—'}
+  Lição: ${d.lesson||'—'}
+  Intenção amanhã: ${d.intent||'—'}`).join('\n');
+
+  const txt=`═══════════════════════════════════════
+RELATÓRIO SISTEMA JOEY
+${new Date().toLocaleDateString('pt-BR')} — ${allData.length} entradas — Sequência: ${streak} dias
+═══════════════════════════════════════
+
+ÚLTIMOS 7 DIAS
+Energia:${avgM(last7,'energia')} Disciplina:${avgM(last7,'disciplina')} Clareza:${avgM(last7,'clareza')}
+Trade: R$${Math.round(totalR7).toLocaleString('pt-BR')} | WR:${avgWR(td7)} | Adesão:${avgM(td7,'t_adh')}
+
+ÚLTIMOS 30 DIAS
+Energia:${avgM(last30,'energia')} Disciplina:${avgM(last30,'disciplina')} Clareza:${avgM(last30,'clareza')}
+Trade: R$${Math.round(totalR30).toLocaleString('pt-BR')} | WR:${avgWR(td30)} | Adesão:${avgM(td30,'t_adh')}
+Humores: ${topMoods}
+
+HISTÓRICO COMPLETO
+Energia:${avgM(sorted,'energia')} Disciplina:${avgM(sorted,'disciplina')} Clareza:${avgM(sorted,'clareza')}
+Resultado total: R$${Math.round(totalRAll).toLocaleString('pt-BR')} | WR:${avgWR(tdAll)}
+Melhor dia: ${DAYS[bestDay]}
+${avgHighR?`Energia≥7 → R$${parseInt(avgHighR).toLocaleString('pt-BR')}/dia`:''}
+${avgLowR?`Energia≤4 → R$${parseInt(avgLowR).toLocaleString('pt-BR')}/dia`:''}
+Quebras sistema: ${breaks.length}/${allData.length} dias
+${topBreakMood?`Humor nas quebras: ${topBreakMood[0]}(${topBreakMood[1]}x)`:''}
+
+PADRÕES RECENTES (14 dias)
+Realizações: ${[...new Set(recentWins)].slice(0,5).join(' | ')||'—'}
+Falhas: ${[...new Set(recentFails)].slice(0,5).join(' | ')||'—'}
+Lições: ${lessons||'—'}
+
+DETALHE ÚLTIMOS 7 DIAS${dailyDetail}
+
+═══════════════════════════════════════
+Analise como mentor. Aponte padrões,
+pontos fortes, gaps e 1 foco prioritário.
+═══════════════════════════════════════`;
+
+  navigator.clipboard.writeText(txt).then(()=>{
+    showToast('✓ Copiado — cole no Claude.ai');
+  }).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=txt;
+    ta.style.cssText='position:fixed;top:10px;left:10px;right:10px;height:80vh;z-index:999;background:#0d0f18;color:#b0b8d8;font-family:monospace;font-size:11px;padding:12px;border:1px solid #4e7cf8;border-radius:8px;resize:none';
+    document.body.appendChild(ta);
+    ta.focus();ta.select();
+    const btn=document.createElement('button');
+    btn.textContent='✕ Fechar';
+    btn.style.cssText='position:fixed;top:12px;right:14px;z-index:1000;background:#e84040;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px';
+    btn.onclick=()=>{document.body.removeChild(ta);document.body.removeChild(btn);};
+    document.body.appendChild(btn);
+    showToast('Selecione tudo (Ctrl+A) e copie');
+  });
+}
+
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 function showToast(msg,err=false){const t=document.getElementById('toast');t.textContent=msg;t.className='toast'+(err?' err':'')+' show';setTimeout(()=>t.className='toast',2600);}
 </script>
