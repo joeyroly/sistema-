@@ -896,10 +896,10 @@ function bootApp(){
   document.getElementById('loader').style.display='none';
   const app=document.getElementById('app');
   app.style.display='flex'; app.style.flexDirection='column'; app.style.height='100dvh';
-  // Set current time in time inputs
+  // Set current time in time inputs (only if they exist)
   const now=new Date();
   const hm=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
-  ['op-time','hes-time'].forEach(id=>{const el=document.getElementById(id);if(el) el.value=hm;});
+  ['op-time','hes-time'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value) el.value=hm;});
   loadTodayForms();
   renderBriefing();
   initNotifications();
@@ -922,17 +922,16 @@ function loadTodayForms(){
   wins=e.wins||[]; fails=e.fails||[]; agenda=e.agenda||[]; tradeOps=e.t_ops_detail||[]; hesitations=e.t_hesitations||[];
   renderList('win'); renderList('fail'); renderAgenda(); renderOps(); renderHes();
   ['lesson','good','intent','mit'].forEach(k=>{const el=document.getElementById('f-'+k);if(el&&e[k]) el.value=e[k];});
-  // trade
-  if(e.t_felling) document.getElementById('t-felling').value=e.t_felling;
-  if(e.t_mesa) document.getElementById('t-mesa').value=e.t_mesa;
-  if(e.t_pa) document.getElementById('t-pa').value=e.t_pa;
-  if(e.t_ops) document.getElementById('t-ops').value=e.t_ops;
-  if(e.t_wins_ops) document.getElementById('t-wins').value=e.t_wins_ops;
-  if(e.t_adh) document.getElementById('sl-adh').value=e.t_adh;
+  // trade — safe getElement with null check
+  const safe=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null) el.value=val;};
+  safe('t-felling',e.t_felling);
+  safe('t-mesa',e.t_mesa);
+  safe('t-pa',e.t_pa);
+  safe('sl-adh',e.t_adh);
   const svAdh=document.getElementById('sv-adh'); if(svAdh) svAdh.textContent=e.t_adh||5;
-  [['sl-pre','sv-pre','t_emo_pre'],['sl-dur','sv-dur','t_emo_dur'],['sl-pos','sv-pos','t_emo_pos']].forEach(([s,v,k])=>{if(e[k]){document.getElementById(s).value=e[k];document.getElementById(v).textContent=e[k];}});
-  if(e.t_analysis) document.getElementById('t-analysis').value=e.t_analysis;
-  if(e.t_avoid) document.getElementById('t-avoid').value=e.t_avoid;
+  [['sl-pre','sv-pre','t_emo_pre'],['sl-dur','sv-dur','t_emo_dur'],['sl-pos','sv-pos','t_emo_pos']].forEach(([s,v,k])=>{if(e[k]){const se=document.getElementById(s);const ve=document.getElementById(v);if(se) se.value=e[k];if(ve) ve.textContent=e[k];}});
+  safe('t-analysis',e.t_analysis);
+  safe('t-avoid',e.t_avoid);
   const slExec=document.getElementById('sl-exec');
   const svExec=document.getElementById('sv-exec');
   if(slExec&&e.t_exec_score){slExec.value=e.t_exec_score; if(svExec) svExec.textContent=e.t_exec_score;}
