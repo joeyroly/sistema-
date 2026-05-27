@@ -1205,6 +1205,11 @@ function renderAdh(){
 async function savePessoal(){
   const btn=document.getElementById('btn-p');
   btn.disabled=true; btn.textContent='Salvando…';
+  // Capture any pending text in input fields
+  const winInp=document.getElementById('win-inp');
+  const failInp=document.getElementById('fail-inp');
+  if(winInp&&winInp.value.trim()){wins.push(winInp.value.trim());winInp.value='';renderList('win');}
+  if(failInp&&failInp.value.trim()){fails.push(failInp.value.trim());failInp.value='';renderList('fail');}
   const today=todayEntry();
   const entry={
     ...today,
@@ -1285,6 +1290,7 @@ function goPage(id,btn){
     if(opT&&!opT.value) opT.value=hm;
     if(hesT&&!hesT.value) hesT.value=hm;
   }
+  if(id==='log'||id==='hist') setTimeout(()=>renderLog(),60);
   if(id==='claude') scrollBottom();
 }
 
