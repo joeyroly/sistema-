@@ -310,6 +310,14 @@ tr:hover td{background:var(--s2)}
 .time-cfg:focus{border-color:var(--blue)}
 
 /* score ring */
+.hes-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.hes-row{display:grid;grid-template-columns:40px auto 1fr auto auto;align-items:center;gap:6px;background:rgba(232,64,64,.06);border:1px solid rgba(232,64,64,.2);border-radius:7px;padding:8px 10px;animation:fadeUp .15s ease}
+.hes-time{font-size:10px;color:var(--red);font-weight:500}
+.hes-dir{font-size:9px;padding:2px 6px;border-radius:5px;background:rgba(232,64,64,.15);color:var(--red);white-space:nowrap}
+.hes-pts{font-size:11px;color:var(--red);font-weight:500;white-space:nowrap}
+.hes-reason{font-size:9px;padding:2px 7px;border-radius:5px;background:rgba(232,64,64,.1);color:#e88080;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:90px}
+.hes-del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px;padding:0 2px}
+.hes-del:hover{color:var(--red)}
 .score-ring-wrap{display:flex;align-items:center;justify-content:center;margin:4px 0 8px}
 .score-center{text-align:center}
 .score-num{font-family:'Fraunces',serif;font-size:2.4rem;font-weight:300;color:var(--hi);line-height:1}
@@ -449,19 +457,20 @@ tr:hover td{background:var(--s2)}
 
       <!-- REGISTRO POR OPERAÇÃO -->
       <div class="card">
-        <div class="card-lbl">📊 Operações do dia — registro individual</div>
+        <div class="card-lbl">📊 Operações executadas</div>
         <div class="op-list" id="op-list"></div>
-        <div style="display:grid;grid-template-columns:auto 1fr auto auto auto;gap:6px;align-items:center;margin-top:4px">
+        <div style="display:grid;grid-template-columns:52px auto 1fr auto auto auto;gap:6px;align-items:center;margin-top:4px">
+          <input class="time-inp" id="op-time" type="time" style="font-size:10px;padding:8px 6px">
           <select class="type-sel" id="op-dir" style="min-width:52px">
             <option value="C">▲ C</option>
             <option value="V">▼ V</option>
           </select>
-          <input class="add-inp" id="op-pts" type="number" placeholder="Pts (ex: +15 ou -30)" style="min-width:0">
+          <input class="add-inp" id="op-pts" type="number" placeholder="Pts (+10 ou -10)" style="min-width:0">
           <select class="type-sel" id="op-sys">
             <option value="1">✓ Sys</option>
             <option value="0">✗ Sys</option>
           </select>
-          <input class="add-inp" id="op-note" placeholder="Nota (opcional)" style="min-width:0;max-width:100px" onkeydown="if(event.key==='Enter'){addOp();event.preventDefault()}">
+          <input class="add-inp" id="op-note" placeholder="Nota" style="min-width:0;max-width:80px" onkeydown="if(event.key==='Enter'){addOp();event.preventDefault()}">
           <button class="add-btn" onclick="addOp()">+</button>
         </div>
         <div style="display:flex;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid var(--b1)">
@@ -480,6 +489,50 @@ tr:hover td{background:var(--s2)}
           <div style="flex:1;text-align:center">
             <div style="font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">Aderiu</div>
             <div style="font-family:'Fraunces',serif;font-size:1.3rem;color:var(--green)" id="ops-adh">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- HESITAÇÕES -->
+      <div class="card">
+        <div class="card-lbl" style="color:var(--red)">⚠️ Trades lidos — não executados</div>
+        <div style="font-size:10px;color:var(--dim);margin-bottom:10px;line-height:1.5">Registre cada setup que você viu mas não entrou por medo. Isso mede o custo real da hesitação.</div>
+        <div class="hes-list" id="hes-list"></div>
+        <div style="display:grid;grid-template-columns:52px auto 1fr 1fr auto;gap:6px;align-items:center">
+          <input class="time-inp" id="hes-time" type="time" style="font-size:10px;padding:8px 6px">
+          <select class="type-sel" id="hes-dir">
+            <option value="C">▲ C</option>
+            <option value="V">▼ V</option>
+          </select>
+          <input class="add-inp" id="hes-pts" type="number" placeholder="Pts estimados" style="min-width:0" onkeydown="if(event.key==='Enter'){addHes();event.preventDefault()}">
+          <select class="type-sel" id="hes-reason">
+            <option value="confirmação">Aguardei confirmação</option>
+            <option value="medo stop">Medo do stop</option>
+            <option value="indicadores">Indicadores não alinhados</option>
+            <option value="abertura">Horário abertura</option>
+            <option value="outro">Outro</option>
+          </select>
+          <button class="add-btn" onclick="addHes()">+</button>
+        </div>
+        <!-- Resumo hesitações -->
+        <div id="hes-summary" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(232,64,64,.2)">
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <div style="flex:1;text-align:center;min-width:60px">
+              <div style="font-family:'Fraunces',serif;font-size:1.3rem;color:var(--red)" id="hes-count-val">0</div>
+              <div style="font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:2px">Hesitações</div>
+            </div>
+            <div style="flex:1;text-align:center;min-width:60px">
+              <div style="font-family:'Fraunces',serif;font-size:1.3rem;color:var(--red)" id="hes-pts-val">0</div>
+              <div style="font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:2px">Pts perdidos</div>
+            </div>
+            <div style="flex:1;text-align:center;min-width:60px">
+              <div style="font-family:'Fraunces',serif;font-size:1.3rem;color:var(--red)" id="hes-brl-val">R$0</div>
+              <div style="font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:2px">Custo real</div>
+            </div>
+            <div style="flex:1;text-align:center;min-width:60px">
+              <div style="font-family:'Fraunces',serif;font-size:1.3rem;color:var(--dim)" id="hes-peak-val">—</div>
+              <div style="font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-top:2px">Horário pico</div>
+            </div>
           </div>
         </div>
       </div>
@@ -698,7 +751,7 @@ const MONTHS=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov',
 // ── STATE ─────────────────────────────────────
 let SB=null, useOffline=false;
 let allData=[], currentPeriod='all';
-let selectedMood=null, wins=[], fails=[], agenda=[], tradeOps=[];
+let selectedMood=null, wins=[], fails=[], agenda=[], tradeOps=[], hesitations=[];
 let adhState={e1:false,no_e3:false,stop:false,partial:false,entry:false,size:false};
 let chatHistory=[], isTyping=false;
 let notifPermission=false;
@@ -862,8 +915,8 @@ function loadTodayForms(){
   // pessoal
   if(e.mood){selectedMood=e.mood;document.querySelectorAll('.mo').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+e.mood+"'")) b.classList.add('sel')});}
   [['sl-e','sv-e','energia'],['sl-d','sv-d','disciplina'],['sl-c','sv-c','clareza']].forEach(([s,v,k])=>{if(e[k]){document.getElementById(s).value=e[k];document.getElementById(v).textContent=e[k];}});
-  wins=e.wins||[]; fails=e.fails||[]; agenda=e.agenda||[]; tradeOps=e.t_ops_detail||[];
-  renderList('win'); renderList('fail'); renderAgenda(); renderOps();
+  wins=e.wins||[]; fails=e.fails||[]; agenda=e.agenda||[]; tradeOps=e.t_ops_detail||[]; hesitations=e.t_hesitations||[];
+  renderList('win'); renderList('fail'); renderAgenda(); renderOps(); renderHes();
   ['lesson','good','intent','mit'].forEach(k=>{const el=document.getElementById('f-'+k);if(el&&e[k]) el.value=e[k];});
   // trade
   if(e.t_felling) document.getElementById('t-felling').value=e.t_felling;
@@ -924,11 +977,14 @@ function addOp(){
   const pts=parseFloat(document.getElementById('op-pts').value);
   const sys=document.getElementById('op-sys').value==='1';
   const note=document.getElementById('op-note').value.trim();
+  const timeEl=document.getElementById('op-time');
+  const time=timeEl&&timeEl.value?timeEl.value:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
   if(isNaN(pts)) return;
-  tradeOps.push({dir,pts,sys,note,time:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})});
+  tradeOps.push({dir,pts,sys,note,time});
   renderOps();
   document.getElementById('op-pts').value='';
   document.getElementById('op-note').value='';
+}
 }
 
 function removeOp(idx){tradeOps.splice(idx,1);renderOps();}
@@ -956,7 +1012,59 @@ function renderOps(){
   document.getElementById('ops-adh').textContent=n?Math.round(adhCount/n*100)+'%':'—';
 }
 
-// ── BRIEFING ──────────────────────────────────
+// ── HESITAÇÕES ────────────────────────────────
+function addHes(){
+  const timeEl=document.getElementById('hes-time');
+  const time=timeEl&&timeEl.value?timeEl.value:new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const dir=document.getElementById('hes-dir').value;
+  const pts=parseFloat(document.getElementById('hes-pts').value);
+  const reason=document.getElementById('hes-reason').value;
+  if(isNaN(pts)||pts<=0){showToast('Informe os pontos estimados',true);return;}
+  hesitations.push({time,dir,pts,reason});
+  renderHes();
+  document.getElementById('hes-pts').value='';
+}
+
+function removeHes(idx){hesitations.splice(idx,1);renderHes();}
+
+function renderHes(){
+  const el=document.getElementById('hes-list');
+  if(!el) return;
+  el.innerHTML=hesitations.map((h,i)=>`
+    <div class="hes-row">
+      <span class="hes-time">${h.time}</span>
+      <span class="hes-dir">${h.dir==='C'?'▲ C':'▼ V'}</span>
+      <span style="font-size:10px;color:var(--dim)">${esc(h.reason)}</span>
+      <span class="hes-pts">+${h.pts}pts</span>
+      <button class="hes-del" onclick="removeHes(${i})">×</button>
+    </div>`).join('');
+
+  const summary=document.getElementById('hes-summary');
+  if(!hesitations.length){if(summary) summary.style.display='none';return;}
+  if(summary) summary.style.display='block';
+
+  const totalPts=hesitations.reduce((a,h)=>a+h.pts,0);
+  const totalBRL=totalPts*10; // 10 contratos × R$10/pt
+
+  // Peak hour analysis
+  const hourCount={};
+  hesitations.forEach(h=>{
+    const hr=h.time.split(':')[0];
+    hourCount[hr]=(hourCount[hr]||0)+1;
+  });
+  const peakHour=Object.entries(hourCount).sort((a,b)=>b[1]-a[1])[0];
+
+  const cv=document.getElementById('hes-count-val');
+  const pv=document.getElementById('hes-pts-val');
+  const bv=document.getElementById('hes-brl-val');
+  const phv=document.getElementById('hes-peak-val');
+  if(cv) cv.textContent=hesitations.length;
+  if(pv) pv.textContent=totalPts+'pts';
+  if(bv) bv.textContent='R$'+totalBRL.toLocaleString('pt-BR');
+  if(phv) phv.textContent=peakHour?peakHour[0]+'h':'—';
+}
+
+
 function renderBriefing(){
   const el=document.getElementById('briefing-body');
   if(!el) return;
@@ -1135,6 +1243,7 @@ async function saveTrade(){
     t_exec_score:+document.getElementById('sl-exec').value,
     t_exec_note:document.getElementById('t-exec-note').value.trim(),
     t_ops_detail:[...tradeOps],
+    t_hesitations:[...hesitations],
   };
   try{await saveToDB(entry);showToast('Diário de trade salvo ✓');}
   catch(e){showToast('Erro ao salvar',true);}
@@ -1697,14 +1806,32 @@ Realizações: ${[...new Set(recentWins)].slice(0,5).join(' | ')||'—'}
 Falhas: ${[...new Set(recentFails)].slice(0,5).join(' | ')||'—'}
 Lições: ${lessons||'—'}
 
-DETALHE ÚLTIMOS 7 DIAS${dailyDetail}
+CUSTO DA HESITAÇÃO (30 dias)
+Trades não executados: ${hesLast30.length}
+Pontos deixados na mesa: ${totalHesPts}pts
+Custo em R$: R$${(totalHesPts*10).toLocaleString('pt-BR')} (×10 contratos)
+Motivo principal: ${topHesReason?topHesReason[0]+' ('+topHesReason[1]+'x)':'sem dados'}
+Horário de pico: ${peakHesHour?peakHesHour[0]+'h':'sem dados'}
+
+
 
 ═══════════════════════════════════════
 Analise como mentor. Aponte padrões,
 pontos fortes, gaps e 1 foco prioritário.
 ═══════════════════════════════════════`;
 
-  navigator.clipboard.writeText(txt).then(()=>{
+  // Hesitation analysis
+  const allHes=[];
+  sorted.forEach(d=>(d.t_hesitations||[]).forEach(h=>allHes.push({...h,date:d.date_label})));
+  const hesLast30=[];
+  last30.forEach(d=>(d.t_hesitations||[]).forEach(h=>hesLast30.push(h)));
+  const totalHesPts=hesLast30.reduce((a,h)=>a+h.pts,0);
+  const hesReasons={};
+  hesLast30.forEach(h=>hesReasons[h.reason]=(hesReasons[h.reason]||0)+1);
+  const topHesReason=Object.entries(hesReasons).sort((a,b)=>b[1]-a[1])[0];
+  const hesHours={};
+  hesLast30.forEach(h=>{const hr=h.time?.split(':')[0];if(hr) hesHours[hr]=(hesHours[hr]||0)+1;});
+  const peakHesHour=Object.entries(hesHours).sort((a,b)=>b[1]-a[1])[0];
     showToast('✓ Copiado — cole no Claude.ai');
   }).catch(()=>{
     const ta=document.createElement('textarea');
