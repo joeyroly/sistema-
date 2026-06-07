@@ -414,16 +414,34 @@ tr:hover td{background:var(--s2)}
         </div>
       </div>
 
+      <!-- ESTADO PRÉ-PREGÃO — preenchido de manhã -->
       <div class="card">
-        <div class="card-lbl">😌 Estado do dia</div>
-        <div class="mood-grid">
-          <button class="mo" onclick="selMood(this,'focado')">⚡<br>Focado</button>
-          <button class="mo" onclick="selMood(this,'calmo')">🌊<br>Calmo</button>
-          <button class="mo" onclick="selMood(this,'produtivo')">🔥<br>Produtivo</button>
-          <button class="mo" onclick="selMood(this,'disperso')">🌀<br>Disperso</button>
-          <button class="mo" onclick="selMood(this,'ansioso')">⚡<br>Ansioso</button>
-          <button class="mo" onclick="selMood(this,'cansado')">🌑<br>Cansado</button>
+        <div class="card-lbl">🌅 Estado pré-pregão</div>
+        <div style="font-size:9px;color:var(--dim);margin-bottom:10px;line-height:1.5">Antes de abrir o mercado — como você está chegando</div>
+        <div class="mood-grid" id="mood-pre-grid">
+          <button class="mo" onclick="selMoodPre(this,'focado')">⚡<br>Focado</button>
+          <button class="mo" onclick="selMoodPre(this,'calmo')">🌊<br>Calmo</button>
+          <button class="mo" onclick="selMoodPre(this,'produtivo')">🔥<br>Produtivo</button>
+          <button class="mo" onclick="selMoodPre(this,'disperso')">🌀<br>Disperso</button>
+          <button class="mo" onclick="selMoodPre(this,'ansioso')">⚡<br>Ansioso</button>
+          <button class="mo" onclick="selMoodPre(this,'cansado')">🌑<br>Cansado</button>
         </div>
+        <textarea class="finp" id="f-mood-pre-note" placeholder="O que está passando na cabeça agora? Situação do dia, pensamentos, corpo…" style="margin-top:9px;margin-bottom:0;min-height:44px"></textarea>
+      </div>
+
+      <!-- ESTADO PÓS-PREGÃO — preenchido à noite -->
+      <div class="card">
+        <div class="card-lbl">🌙 Estado pós-pregão</div>
+        <div style="font-size:9px;color:var(--dim);margin-bottom:10px;line-height:1.5">Após fechar — como o mercado te deixou</div>
+        <div class="mood-grid" id="mood-pos-grid">
+          <button class="mo" onclick="selMoodPos(this,'focado')">⚡<br>Focado</button>
+          <button class="mo" onclick="selMoodPos(this,'calmo')">🌊<br>Calmo</button>
+          <button class="mo" onclick="selMoodPos(this,'produtivo')">🔥<br>Produtivo</button>
+          <button class="mo" onclick="selMoodPos(this,'disperso')">🌀<br>Disperso</button>
+          <button class="mo" onclick="selMoodPos(this,'ansioso')">⚡<br>Ansioso</button>
+          <button class="mo" onclick="selMoodPos(this,'cansado')">🌑<br>Cansado</button>
+        </div>
+        <textarea class="finp" id="f-mood-pos-note" placeholder="Como você está saindo? O que o mercado fez com você hoje?" style="margin-top:9px;margin-bottom:0;min-height:44px"></textarea>
       </div>
 
       <div class="card">
@@ -495,14 +513,6 @@ tr:hover td{background:var(--s2)}
       <div class="pg-title">Diário de Trade</div>
       <div class="pg-sub" id="pg-trade-date">—</div>
 
-      <!-- SETUP TÉCNICO -->
-      <div class="card">
-        <div class="card-lbl">🔬 Setup técnico do dia</div>
-        <input class="setup-search" id="setup-search" type="text" placeholder="Buscar setup…" oninput="filterSetups(this.value)">
-        <div class="setup-wrap"><div class="setup-tags" id="setup-tags"></div></div>
-        <div class="setup-sel-info" id="setup-sel-info">Selecionados: <span id="setup-sel-names">—</span></div>
-      </div>
-
       <!-- OPERAÇÕES — cada uma com estado emocional próprio -->
       <div class="card">
         <div class="card-lbl">📊 Operações executadas</div>
@@ -511,7 +521,9 @@ tr:hover td{background:var(--s2)}
         <!-- Form nova operação -->
         <div style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:11px">
           <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:9px">Nova operação</div>
-          <div style="display:grid;grid-template-columns:56px 56px 1fr 80px;gap:6px;margin-bottom:8px">
+
+          <!-- Linha 1: horário, direção, pontos, sistema -->
+          <div style="display:grid;grid-template-columns:56px 56px 1fr 88px;gap:6px;margin-bottom:10px">
             <input class="time-inp" id="op-time" type="time" style="font-size:10px;padding:7px 5px">
             <select class="type-sel" id="op-dir">
               <option value="C">▲ C</option>
@@ -523,9 +535,16 @@ tr:hover td{background:var(--s2)}
               <option value="0">✗ Sistema</option>
             </select>
           </div>
-          <!-- Estado emocional da entrada — por operação -->
-          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Gatilho psicológico desta entrada</div>
-          <div class="op-state-grid" id="new-op-state-btns">
+
+          <!-- Setup técnico por trade -->
+          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px">Setup técnico</div>
+          <input class="setup-search" id="op-setup-search" type="text" placeholder="Buscar setup…" oninput="filterOpSetups(this.value)" style="margin-bottom:6px">
+          <div style="max-height:100px;overflow-y:auto;margin-bottom:10px"><div class="setup-tags" id="op-setup-tags"></div></div>
+          <div class="setup-sel-info" id="op-setup-sel-info" style="margin-bottom:8px">Setup: <span id="op-setup-sel-names" style="color:var(--teal)">—</span></div>
+
+          <!-- Gatilho psicológico -->
+          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Gatilho psicológico da entrada</div>
+          <div class="op-state-grid" id="new-op-state-btns" style="margin-bottom:10px">
             <button class="os-btn" data-v="planejado" onclick="selNewOpState(this)">📋 Planejado</button>
             <button class="os-btn" data-v="atrasado" onclick="selNewOpState(this)">⏰ Atrasado</button>
             <button class="os-btn" data-v="emotivo" onclick="selNewOpState(this)">🔥 Emotivo</button>
@@ -535,16 +554,41 @@ tr:hover td{background:var(--s2)}
             <button class="os-btn" data-v="desfocado" onclick="selNewOpState(this)">🌀 Desfocado</button>
             <button class="os-btn" data-v="revanche" onclick="selNewOpState(this)">⚡ Revanche</button>
           </div>
-          <!-- Intensidade emocional -->
-          <div style="margin-top:8px">
-            <div class="op-emo-row">
-              <span class="op-emo-lbl">Intensidade emo.</span>
-              <input type="range" min="1" max="10" value="5" id="new-op-emo" oninput="document.getElementById('new-op-emo-val').textContent=this.value">
-              <span class="op-emo-val" id="new-op-emo-val">5</span>
-            </div>
+
+          <!-- Parcial ou adição -->
+          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Parcial / Adição — por quê?</div>
+          <div class="op-state-grid" id="new-op-partial-btns" style="margin-bottom:10px">
+            <button class="os-btn" data-v="E2Cal" onclick="selNewOpPartial(this)">E2 Calc</button>
+            <button class="os-btn" data-v="E2Medo" onclick="selNewOpPartial(this)">E2 Medo</button>
+            <button class="os-btn" data-v="E3Cal" onclick="selNewOpPartial(this)">E3 Calc</button>
+            <button class="os-btn" data-v="E3Medo" onclick="selNewOpPartial(this)">E3 Medo</button>
+            <button class="os-btn" data-v="ParCal" onclick="selNewOpPartial(this)">Par Calc</button>
+            <button class="os-btn" data-v="ParMedo" onclick="selNewOpPartial(this)">Par Medo</button>
           </div>
-          <!-- Narrativa da operação -->
-          <textarea class="op-note-inp" id="new-op-note" placeholder="O que estava pensando ao entrar? Como seu corpo estava? O que te fez decidir…" style="width:100%;margin-top:6px;min-height:44px" oninput="autoResizeTA(this)"></textarea>
+
+          <!-- Motivo da saída -->
+          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Motivo da saída</div>
+          <div class="op-state-grid" id="new-op-exit-btns" style="margin-bottom:10px">
+            <button class="os-btn" data-v="AlvoPts" onclick="selNewOpExit(this)">Alvo Pts</button>
+            <button class="os-btn" data-v="AlvoTec" onclick="selNewOpExit(this)">Alvo Téc</button>
+            <button class="os-btn" data-v="AlvoAj" onclick="selNewOpExit(this)">Alvo Aj</button>
+            <button class="os-btn" data-v="AlvoVwap" onclick="selNewOpExit(this)">Alvo Vwap</button>
+            <button class="os-btn" data-v="AlvoAb" onclick="selNewOpExit(this)">Alvo Ab</button>
+            <button class="os-btn" data-v="AlvoFc" onclick="selNewOpExit(this)">Alvo Fc</button>
+            <button class="os-btn" data-v="StPlanJ" onclick="selNewOpExit(this)">Stop Plan</button>
+            <button class="os-btn" data-v="MEDO" onclick="selNewOpExit(this)">⚠️ Medo</button>
+            <button class="os-btn" data-v="STOPMESA" onclick="selNewOpExit(this)">🛑 Stop Mesa</button>
+          </div>
+
+          <!-- Intensidade emocional -->
+          <div class="op-emo-row" style="margin-bottom:6px">
+            <span class="op-emo-lbl">Intensidade emo.</span>
+            <input type="range" min="1" max="10" value="5" id="new-op-emo" oninput="document.getElementById('new-op-emo-val').textContent=this.value">
+            <span class="op-emo-val" id="new-op-emo-val">5</span>
+          </div>
+
+          <!-- Narrativa -->
+          <textarea class="op-note-inp" id="new-op-note" placeholder="Narrativa: o que pensava ao entrar, como estava o corpo, o que decidiu…" style="width:100%;min-height:40px" oninput="autoResizeTA(this)"></textarea>
           <button class="add-btn" onclick="addOp()" style="width:100%;margin-top:8px;padding:10px">+ Registrar operação</button>
         </div>
 
@@ -591,15 +635,26 @@ tr:hover td{background:var(--s2)}
       <!-- RESULTADO FINANCEIRO -->
       <div class="card">
         <div class="card-lbl">💰 Resultado financeiro — R$</div>
-        <div style="font-size:9px;color:var(--dim);margin-bottom:8px">FELLING + PA</div>
-        <div class="num-row">
-          <div class="num-box"><div class="num-lbl">Felling</div><input class="num-inp" id="t-felling" type="number" placeholder="0" step="100"></div>
-          <div class="num-box"><div class="num-lbl">PA / Price</div><input class="num-inp" id="t-pa" type="number" placeholder="0" step="100"></div>
+
+        <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:7px">Conta Felling + PA</div>
+        <div class="num-row" style="margin-bottom:4px">
+          <div class="num-box"><div class="num-lbl">Felling</div><input class="num-inp" id="t-felling" type="number" placeholder="0" step="100" oninput="calcTotals()"></div>
+          <div class="num-box"><div class="num-lbl">PA</div><input class="num-inp" id="t-pa" type="number" placeholder="0" step="100" oninput="calcTotals()"></div>
         </div>
-        <div style="font-size:9px;color:var(--dim);margin-bottom:8px;margin-top:4px">PF</div>
+        <div class="num-row" style="margin-bottom:14px">
+          <div class="num-box" style="background:var(--s3);border-color:var(--b2);grid-column:span 2">
+            <div class="num-lbl">Total Felling+PA</div>
+            <div class="num-inp" id="t-total-fpa" style="color:var(--hi);padding-top:2px">R$ 0</div>
+          </div>
+        </div>
+
+        <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:7px">Conta PF</div>
         <div class="num-row">
-          <div class="num-box"><div class="num-lbl">PF</div><input class="num-inp" id="t-mesa" type="number" placeholder="0" step="100"></div>
-          <div class="num-box" style="background:var(--s3);border-color:var(--b2)"><div class="num-lbl">Total do dia</div><div class="num-inp" id="t-total" style="color:var(--hi);padding-top:2px">R$ 0</div></div>
+          <div class="num-box"><div class="num-lbl">PF</div><input class="num-inp" id="t-mesa" type="number" placeholder="0" step="100" oninput="calcTotals()"></div>
+          <div class="num-box" style="background:var(--s3);border-color:var(--b2)">
+            <div class="num-lbl">Total PF</div>
+            <div class="num-inp" id="t-total-pf" style="color:var(--hi);padding-top:2px">R$ 0</div>
+          </div>
         </div>
       </div>
 
@@ -777,21 +832,21 @@ const ENTRY_STATES={planejado:{label:'📋 Planejado',cls:'sel-plan'},atrasado:{
 
 // ── STATE ─────────────────────────────────────
 let SB=null,useOffline=false,allData=[],currentPeriod='all';
-let selectedMood=null,wins=[],fails=[],agenda=[],tradeOps=[],hesitations=[];
+let selectedMood=null,moodPre=null,moodPos=null,wins=[],fails=[],agenda=[],tradeOps=[],hesitations=[];
 let adhState={e1:false,no_e3:false,stop:false,partial:false,entry:false,size:false};
 let chatHistory=[],isTyping=false,notifPermission=false;
 let sleepQuality=null;
 let pilares={alma:[],corpo:[],espirito:[],pessoas:[]};
 let selectedSetups=[],setupUsage={};
-let newOpState=null;
+let newOpState=null,newOpPartial=null,newOpExit=null,newOpSetups=[];
 
 // ── INIT ──────────────────────────────────────
 window.addEventListener('DOMContentLoaded',()=>{
   tick();setInterval(tick,30000);
   checkOnline();window.addEventListener('online',checkOnline);window.addEventListener('offline',checkOnline);
-  ['t-felling','t-mesa','t-pa'].forEach(id=>{const el=document.getElementById(id);if(el) el.addEventListener('input',calcTotal);});
+  ['t-felling','t-mesa','t-pa'].forEach(id=>{const el=document.getElementById(id);if(el) el.addEventListener('input',calcTotals);});
   setupUsage=JSON.parse(localStorage.getItem('setup_usage')||'{}');
-  renderSetupTags('');
+  renderOpSetupTags('');
   installPWA();
   const SB_URL='https://oovjuojqolysfonqmqgh.supabase.co';
   const SB_KEY='sb_publishable_6nW470GtFjLDjH2GbZ2iug_JtOIQ-Nn';
@@ -808,7 +863,47 @@ function tick(){
   document.getElementById('pg-trade-date').textContent=s;
 }
 function checkOnline(){const b=document.getElementById('badge-online');b.textContent=navigator.onLine?'● online':'● offline';b.className='badge-online'+(navigator.onLine?'':' off');}
-function calcTotal(){const f=parseFloat(document.getElementById('t-felling').value)||0,m=parseFloat(document.getElementById('t-mesa').value)||0,p=parseFloat(document.getElementById('t-pa').value)||0,total=f+m+p;const el=document.getElementById('t-total');el.textContent=`R$ ${total.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})}`;el.style.color=total>0?'var(--green)':total<0?'var(--red)':'var(--hi)';}
+function calcTotals(){
+  const f=parseFloat(document.getElementById('t-felling').value)||0;
+  const p=parseFloat(document.getElementById('t-pa').value)||0;
+  const m=parseFloat(document.getElementById('t-mesa').value)||0;
+  const fpa=f+p, fmt=(v)=>`R$ ${v.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})}`;
+  const fpaEl=document.getElementById('t-total-fpa');
+  const pfEl=document.getElementById('t-total-pf');
+  if(fpaEl){fpaEl.textContent=fmt(fpa);fpaEl.style.color=fpa>0?'var(--green)':fpa<0?'var(--red)':'var(--hi)';}
+  if(pfEl){pfEl.textContent=fmt(m);pfEl.style.color=m>0?'var(--green)':m<0?'var(--red)':'var(--hi)';}
+}
+
+// ── ESTADO PRÉ/PÓS ───────────────────────────
+function selMoodPre(btn,mood){document.querySelectorAll('#mood-pre-grid .mo').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');moodPre=mood;}
+function selMoodPos(btn,mood){document.querySelectorAll('#mood-pos-grid .mo').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');moodPos=mood;}
+
+// ── SETUP POR TRADE ───────────────────────────
+function renderOpSetupTags(filter){
+  const grid=document.getElementById('op-setup-tags');if(!grid) return;
+  const f=(filter||'').toLowerCase();
+  const sorted=[...ALL_SETUPS].sort((a,b)=>{const ca=setupUsage[a]||0,cb=setupUsage[b]||0;if(cb!==ca) return cb-ca;return a.localeCompare(b);});
+  const filtered=f?sorted.filter(s=>s.toLowerCase().includes(f)):sorted;
+  grid.innerHTML=filtered.map(s=>{const c=setupUsage[s]||0,isSel=newOpSetups.includes(s);return`<button class="setup-tag${isSel?' sel':''}" onclick="toggleOpSetup('${s}')">${esc(s)}${c>0?`<span class="stag-count">${c}</span>`:''}</button>`;}).join('');
+}
+function filterOpSetups(v){renderOpSetupTags(v);}
+function toggleOpSetup(name){const idx=newOpSetups.indexOf(name);if(idx>=0) newOpSetups.splice(idx,1);else newOpSetups.push(name);renderOpSetupTags(document.getElementById('op-setup-search').value);const info=document.getElementById('op-setup-sel-info'),names=document.getElementById('op-setup-sel-names');if(names) names.textContent=newOpSetups.length?newOpSetups.join(', '):'—';if(info) info.style.display=newOpSetups.length?'block':'none';}
+
+// ── PARCIAL/ADIÇÃO ────────────────────────────
+function selNewOpPartial(btn){
+  document.querySelectorAll('#new-op-partial-btns .os-btn').forEach(b=>b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold'));
+  newOpPartial=btn.dataset.v;
+  // Medo = vermelho, Calc = verde
+  btn.classList.add(btn.dataset.v.includes('Medo')?'sel-danger':'sel-plan');
+}
+
+// ── MOTIVO DE SAÍDA ───────────────────────────
+function selNewOpExit(btn){
+  document.querySelectorAll('#new-op-exit-btns .os-btn').forEach(b=>b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold'));
+  newOpExit=btn.dataset.v;
+  const dangerExits=['MEDO','STOPMESA'];
+  btn.classList.add(dangerExits.includes(btn.dataset.v)?'sel-danger':'sel-plan');
+}
 
 // ── SONO ──────────────────────────────────────
 function calcSleepDur(){
@@ -881,19 +976,27 @@ function addOp(){
   const pts=parseFloat(document.getElementById('op-pts').value);
   const sys=document.getElementById('op-sys').value==='1';
   const noteEl=document.getElementById('new-op-note');
-  const note=noteEl.value.trim();
+  const note=noteEl?noteEl.value.trim():'';
   const timeEl=document.getElementById('op-time');
   const time=timeEl&&timeEl.value?timeEl.value:nowHM();
   const emoEl=document.getElementById('new-op-emo');
   const emo=emoEl?parseInt(emoEl.value):5;
   if(isNaN(pts)){showToast('Informe os pontos',true);return;}
-  tradeOps.push({dir,pts,sys,note,time,entry_state:newOpState,emo_intensity:emo});
+  tradeOps.push({dir,pts,sys,note,time,entry_state:newOpState,emo_intensity:emo,partial_reason:newOpPartial,exit_reason:newOpExit,setups:[...newOpSetups]});
+  // Incrementa uso dos setups desta operação
+  newOpSetups.forEach(s=>{setupUsage[s]=(setupUsage[s]||0)+1;});
+  localStorage.setItem('setup_usage',JSON.stringify(setupUsage));
   renderOps();
+  // Reset
   document.getElementById('op-pts').value='';
-  if(noteEl){noteEl.value='';noteEl.style.height='44px';}
-  if(emoEl) emoEl.value=5;document.getElementById('new-op-emo-val').textContent='5';
-  document.querySelectorAll('#new-op-state-btns .os-btn').forEach(b=>b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold'));
-  newOpState=null;
+  if(noteEl){noteEl.value='';noteEl.style.height='40px';}
+  if(emoEl){emoEl.value=5;document.getElementById('new-op-emo-val').textContent='5';}
+  ['#new-op-state-btns','#new-op-partial-btns','#new-op-exit-btns'].forEach(sel=>document.querySelectorAll(sel+' .os-btn').forEach(b=>b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold')));
+  newOpState=null;newOpPartial=null;newOpExit=null;newOpSetups=[];
+  const searchEl=document.getElementById('op-setup-search');if(searchEl) searchEl.value='';
+  renderOpSetupTags('');
+  const info=document.getElementById('op-setup-sel-info');if(info) info.style.display='none';
+  const names=document.getElementById('op-setup-sel-names');if(names) names.textContent='—';
   const opT=document.getElementById('op-time');if(opT) opT.value=nowHM();
 }
 
@@ -909,8 +1012,12 @@ function toggleOpExpand(idx){
 function renderOps(){
   const el=document.getElementById('op-list');if(!el) return;
   el.innerHTML=tradeOps.map((op,i)=>{
-    const stateLabel=op.entry_state&&ENTRY_STATES[op.entry_state]?ENTRY_STATES[op.entry_state].label:'—';
+    const stateLabel=op.entry_state&&ENTRY_STATES[op.entry_state]?ENTRY_STATES[op.entry_state].label:op.entry_state||'—';
     const emoColor=op.emo_intensity>=8?'var(--red)':op.emo_intensity>=6?'var(--gold)':op.emo_intensity>=4?'var(--blue)':'var(--green)';
+    const dangerExits=['MEDO','STOPMESA'];
+    const exitColor=op.exit_reason&&dangerExits.includes(op.exit_reason)?'var(--red)':'var(--green)';
+    const partialColor=op.partial_reason&&op.partial_reason.includes('Medo')?'var(--red)':'var(--teal)';
+    const setupsStr=(op.setups||[]).join(' · ')||'—';
     return`<div class="op-card" id="opcard-${i}">
       <div class="op-card-top">
         <span class="op-dir-badge ${op.dir==='C'?'op-c':'op-v'}">${op.dir==='C'?'▲ C':'▼ V'}</span>
@@ -921,10 +1028,13 @@ function renderOps(){
         <button class="op-del" onclick="removeOp(${i})">×</button>
       </div>
       <div class="op-detail">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:7px">
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px">
           <span style="font-size:9px;background:var(--s3);border:1px solid var(--b1);padding:2px 8px;border-radius:8px;color:var(--dim)">${stateLabel}</span>
-          <span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${emoColor}">Intensidade emo: ${op.emo_intensity||5}/10</span>
+          <span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${emoColor}">emo:${op.emo_intensity||5}/10</span>
+          ${op.partial_reason?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${partialColor}">${op.partial_reason}</span>`:''}
+          ${op.exit_reason?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${exitColor}">saída:${op.exit_reason}</span>`:''}
         </div>
+        ${setupsStr!=='—'?`<div style="font-size:9px;color:var(--teal);margin-bottom:6px">📋 ${setupsStr}</div>`:''}
         ${op.note?`<div style="font-size:10px;color:var(--text);line-height:1.6;background:var(--s3);border-radius:6px;padding:7px 9px">${esc(op.note)}</div>`:''}
       </div>
     </div>`;
@@ -1057,7 +1167,10 @@ function todayEntry(){return allData.find(e=>e.date_iso===todayISO())||{};}
 
 function loadTodayForms(){
   const e=todayEntry();if(!e.date_iso) return;
-  if(e.mood){selectedMood=e.mood;document.querySelectorAll('.mo').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+e.mood+"'")) b.classList.add('sel');});}
+  if(e.mood){moodPre=e.mood_pre||e.mood;document.querySelectorAll('#mood-pre-grid .mo').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+moodPre+"'")) b.classList.add('sel');});}
+  if(e.mood_pos){moodPos=e.mood_pos;document.querySelectorAll('#mood-pos-grid .mo').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+e.mood_pos+"'")) b.classList.add('sel');});}
+  if(e.mood_pre_note){const el=document.getElementById('f-mood-pre-note');if(el) el.value=e.mood_pre_note;}
+  if(e.mood_pos_note){const el=document.getElementById('f-mood-pos-note');if(el) el.value=e.mood_pos_note;}
   [['sl-e','sv-e','energia'],['sl-d','sv-d','disciplina'],['sl-c','sv-c','clareza']].forEach(([s,v,k])=>{if(e[k]){document.getElementById(s).value=e[k];document.getElementById(v).textContent=e[k];}});
   wins=e.wins||[];fails=e.fails||[];agenda=e.agenda||[];tradeOps=e.t_ops_detail||[];hesitations=e.t_hesitations||[];
   renderList('win');renderList('fail');renderAgenda();renderOps();renderHes();
@@ -1069,8 +1182,6 @@ function loadTodayForms(){
   if(e.sleep_bed&&e.sleep_wake) calcSleepDur();
   // pilares
   if(e.pilares) loadPilares(e.pilares);
-  // setups
-  if(e.t_setups_used&&Array.isArray(e.t_setups_used)){selectedSetups=[...e.t_setups_used];renderSetupTags('');updateSetupInfo();}
   // trade
   const safe=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null) el.value=val;};
   safe('t-felling',e.t_felling);safe('t-mesa',e.t_mesa);safe('t-pa',e.t_pa);
@@ -1082,7 +1193,7 @@ function loadTodayForms(){
   if(e.t_exec_note){const el=document.getElementById('t-exec-note');if(el) el.value=e.t_exec_note;}
   if(e.t_adh_items){adhState={...adhState,...e.t_adh_items};renderAdh();}
   if(e.t_hes_detail){const el=document.getElementById('hes-detail');if(el) el.value=e.t_hes_detail;}
-  if(document.getElementById('t-felling')) calcTotal();
+  if(document.getElementById('t-felling')) calcTotals();
 }
 
 // ── BRIEFING ──────────────────────────────────
@@ -1126,7 +1237,11 @@ async function savePessoal(){
     ...todayEntry(),
     date_iso:todayISO(),date_label:new Date().toLocaleDateString('pt-BR'),
     day_of_week:new Date().getDay(),
-    mood:selectedMood||'calmo',
+    mood:moodPre||'calmo',
+    mood_pre:moodPre,
+    mood_pre_note:document.getElementById('f-mood-pre-note').value.trim(),
+    mood_pos:moodPos,
+    mood_pos_note:document.getElementById('f-mood-pos-note').value.trim(),
     energia:+document.getElementById('sl-e').value,
     disciplina:+document.getElementById('sl-d').value,
     clareza:+document.getElementById('sl-c').value,
@@ -1149,16 +1264,15 @@ async function savePessoal(){
 async function saveTrade(){
   const btn=document.getElementById('btn-t');btn.disabled=true;btn.textContent='Salvando…';
   const f=parseFloat(document.getElementById('t-felling').value)||0;
-  const m=parseFloat(document.getElementById('t-mesa').value)||0;
   const p=parseFloat(document.getElementById('t-pa').value)||0;
+  const m=parseFloat(document.getElementById('t-mesa').value)||0;
   const ops_n=tradeOps.length,ops_w=tradeOps.filter(o=>o.pts>0).length;
-  // Incrementa uso dos setups
-  selectedSetups.forEach(s=>{setupUsage[s]=(setupUsage[s]||0)+1;});
-  localStorage.setItem('setup_usage',JSON.stringify(setupUsage));
   const entry={
     ...todayEntry(),
     date_iso:todayISO(),date_label:new Date().toLocaleDateString('pt-BR'),day_of_week:new Date().getDay(),
-    t_felling:f,t_mesa:m,t_pa:p,t_result:f+m+p,
+    t_felling:f,t_pa:p,t_mesa:m,
+    t_result_fpa:f+p,
+    t_result_pf:m,
     t_ops:ops_n,t_wins_ops:ops_w,
     t_wr:ops_n>0?Math.round(ops_w/ops_n*100):null,
     t_adh:+document.getElementById('sl-adh').value,
@@ -1173,7 +1287,6 @@ async function saveTrade(){
     t_ops_detail:[...tradeOps],
     t_hesitations:[...hesitations],
     t_hes_detail:document.getElementById('hes-detail').value.trim(),
-    t_setups_used:[...selectedSetups],
   };
   try{await saveToDB(entry);showToast('Diário de trade salvo ✓');}
   catch(e){showToast('Erro: '+e.message.slice(0,40),true);console.error(e);}
@@ -1328,9 +1441,19 @@ function buildCtx(){
   const l7=sorted.slice(-7),l30=sorted.slice(-30);
   const avgM=(arr,k)=>arr.length?(arr.reduce((a,d)=>a+(d[k]||0),0)/arr.length).toFixed(1):'N/A';
   const streak=calcStreak();
-  const td30=l30.filter(d=>d.t_result!=null);
-  const totalR30=td30.reduce((a,d)=>a+(d.t_result||0),0);
-  const allOps=[];sorted.forEach(d=>(d.t_ops_detail||[]).forEach(op=>allOps.push({...op,date:d.date_iso,mood:d.mood,energia:d.energia,sleep_quality:d.sleep_quality})));
+  const td30=l30.filter(d=>d.t_result_fpa!=null||d.t_result_pf!=null);
+  const totalFPA30=td30.reduce((a,d)=>a+(d.t_result_fpa||0),0);
+  const totalPF30=td30.reduce((a,d)=>a+(d.t_result_pf||0),0);
+  const allOps=[];sorted.forEach(d=>(d.t_ops_detail||[]).forEach(op=>allOps.push({...op,date:d.date_iso,mood:d.mood_pre||d.mood,energia:d.energia,sleep_quality:d.sleep_quality})));
+  // Exit reason stats
+  const byExit={};allOps.filter(op=>op.exit_reason).forEach(op=>{if(!byExit[op.exit_reason]) byExit[op.exit_reason]={pts:0,n:0};byExit[op.exit_reason].pts+=op.pts;byExit[op.exit_reason].n++;});
+  const exitStr=Object.entries(byExit).sort((a,b)=>b[1].n-a[1].n).map(([s,v])=>`${s}:n=${v.n},avg=${( v.pts/v.n).toFixed(0)}pts`).join(' | ')||'sem dados';
+  // Partial reason stats
+  const byPartial={};allOps.filter(op=>op.partial_reason).forEach(op=>{if(!byPartial[op.partial_reason]) byPartial[op.partial_reason]={pts:0,n:0};byPartial[op.partial_reason].pts+=op.pts;byPartial[op.partial_reason].n++;});
+  const partialStr=Object.entries(byPartial).map(([s,v])=>`${s}:n=${v.n}`).join(' | ')||'sem dados';
+  // Mood pre vs pos delta
+  const deltaDays=sorted.filter(d=>d.mood_pre&&d.mood_pos&&d.mood_pre!==d.mood_pos);
+  const moodDeltaStr=deltaDays.length?`${deltaDays.length} dias com mudança de estado pré→pós`:'poucos dados';
   const byState={};allOps.filter(op=>op.entry_state).forEach(op=>{if(!byState[op.entry_state]) byState[op.entry_state]={pts:0,n:0,w:0};byState[op.entry_state].pts+=op.pts;byState[op.entry_state].n++;if(op.pts>0) byState[op.entry_state].w++;});
   const stateStr=Object.entries(byState).map(([s,v])=>`${s}:${v.pts.toFixed(0)}pts avg=${( v.pts/v.n).toFixed(0)} WR=${Math.round(v.w/v.n*100)}% n=${v.n}`).join(' | ')||'sem dados';
   const highEmoOps=allOps.filter(op=>op.emo_intensity>=8);const avgHighEmoR=highEmoOps.length?highEmoOps.reduce((a,o)=>a+o.pts,0)/highEmoOps.length:null;
@@ -1347,10 +1470,14 @@ Economista, trader WDOL (WDOLFUT), 3 contas (Felling/PF/PA-Price). Win rate hist
 Energia:${avgM(l7,'energia')} Disc:${avgM(l7,'disciplina')} Clar:${avgM(l7,'clareza')} (${l7.length}/7 dias preenchidos)
 
 30 DIAS — TRADE:
-Resultado: R$${Math.round(totalR30).toLocaleString('pt-BR')} | WR:${td30.filter(d=>d.t_wr).length?Math.round(avg(td30.filter(d=>d.t_wr),'t_wr'))+'%':'N/A'} | Adesão:${avgM(td30,'t_adh')}/10
+Felling+PA: R$${Math.round(totalFPA30).toLocaleString('pt-BR')} | PF: R$${Math.round(totalPF30).toLocaleString('pt-BR')}
+WR:${td30.filter(d=>d.t_wr).length?Math.round(avg(td30.filter(d=>d.t_wr),'t_wr'))+'%':'N/A'} | Adesão:${avgM(td30,'t_adh')}/10
 
 SONO:
 Média: ${avgSleepMins?`${Math.floor(avgSleepMins/60)}h${Math.round(avgSleepMins%60)}m`:'sem dados'} | Registros: ${sleepAll.length}
+
+ESTADO EMOCIONAL — DELTA PRÉ×PÓS:
+${moodDeltaStr}
 
 4 PILARES (histórico):
 Alma:${pilarCompletion.alma} Corpo:${pilarCompletion.corpo} Espírito:${pilarCompletion.espirito} Pessoas:${pilarCompletion.pessoas}
@@ -1358,12 +1485,18 @@ Alma:${pilarCompletion.alma} Corpo:${pilarCompletion.corpo} Espírito:${pilarCom
 GATILHOS DE ENTRADA × RESULTADO (por operação):
 ${stateStr}
 
+MOTIVO DE SAÍDA × RESULTADO:
+${exitStr}
+
+PARCIAL/ADIÇÃO — POR QUÊ:
+${partialStr}
+
 OPERAÇÕES COM INTENSIDADE EMOCIONAL ALTA (≥8/10):
 n=${highEmoOps.length} | média pts: ${avgHighEmoR!==null?avgHighEmoR.toFixed(1):'sem dados'}
 Planejadas: n=${planOps.length} | Emotivas/medo/desfoco/revanche: n=${dangerOps.length}
 
 ÚLTIMAS 10 ENTRADAS:
-${sorted.slice(-10).map(d=>`[${d.date_label}] ${d.mood||'—'} E:${d.energia||'—'} sono:${d.sleep_quality||'—'} adh:${d.t_adh||'—'} R$:${d.t_result!=null?Math.round(d.t_result):'—'} WR:${d.t_wr||'—'}%`).join('\n')}`;
+${sorted.slice(-10).map(d=>`[${d.date_label}] pré:${d.mood_pre||d.mood||'—'} pós:${d.mood_pos||'—'} E:${d.energia||'—'} sono:${d.sleep_quality||'—'} adh:${d.t_adh||'—'} FPA:${d.t_result_fpa!=null?Math.round(d.t_result_fpa):'—'} PF:${d.t_result_pf!=null?Math.round(d.t_result_pf):'—'} WR:${d.t_wr||'—'}%`).join('\n')}`;
 }
 
 async function sendMsg(){
@@ -1411,17 +1544,25 @@ function showToast(msg,err=false){const t=document.getElementById('toast');t.tex
 </script>
 
 <!-- ── SQL DE MIGRAÇÃO ─── cole no Supabase SQL Editor ──
--- Execute isso uma vez no SQL Editor do seu projeto Supabase:
+-- Execute isso UMA VEZ no SQL Editor do seu projeto Supabase:
 
 ALTER TABLE sistema_joey
   ADD COLUMN IF NOT EXISTS sleep_bed text,
   ADD COLUMN IF NOT EXISTS sleep_wake text,
   ADD COLUMN IF NOT EXISTS sleep_quality text,
   ADD COLUMN IF NOT EXISTS pilares jsonb DEFAULT '{}',
-  ADD COLUMN IF NOT EXISTS t_setups_used jsonb DEFAULT '[]',
-  ADD COLUMN IF NOT EXISTS t_hes_detail text;
+  ADD COLUMN IF NOT EXISTS t_hes_detail text,
+  ADD COLUMN IF NOT EXISTS mood_pre text,
+  ADD COLUMN IF NOT EXISTS mood_pre_note text,
+  ADD COLUMN IF NOT EXISTS mood_pos text,
+  ADD COLUMN IF NOT EXISTS mood_pos_note text,
+  ADD COLUMN IF NOT EXISTS t_pa numeric,
+  ADD COLUMN IF NOT EXISTS t_result_fpa numeric,
+  ADD COLUMN IF NOT EXISTS t_result_pf numeric;
 
 -- Isso resolve o erro 400 (Bad Request) ao salvar.
+-- Os campos t_ops_detail (jsonb) já inclui: entry_state, emo_intensity,
+-- partial_reason, exit_reason, setups[] — tudo dentro do array de operações.
 ────────────────────────────────────────────── -->
 
 </body>
