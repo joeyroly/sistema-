@@ -414,34 +414,20 @@ tr:hover td{background:var(--s2)}
         </div>
       </div>
 
-      <!-- ESTADO PRÉ-PREGÃO — preenchido de manhã -->
+      <!-- AVALIAÇÃO DO DIA — perspectiva pessoal (não trade) -->
       <div class="card">
-        <div class="card-lbl">🌅 Estado pré-pregão</div>
-        <div style="font-size:9px;color:var(--dim);margin-bottom:10px;line-height:1.5">Antes de abrir o mercado — como você está chegando</div>
-        <div class="mood-grid" id="mood-pre-grid">
-          <button class="mo" onclick="selMoodPre(this,'focado')">⚡<br>Focado</button>
-          <button class="mo" onclick="selMoodPre(this,'calmo')">🌊<br>Calmo</button>
-          <button class="mo" onclick="selMoodPre(this,'produtivo')">🔥<br>Produtivo</button>
-          <button class="mo" onclick="selMoodPre(this,'disperso')">🌀<br>Disperso</button>
-          <button class="mo" onclick="selMoodPre(this,'ansioso')">⚡<br>Ansioso</button>
-          <button class="mo" onclick="selMoodPre(this,'cansado')">🌑<br>Cansado</button>
-        </div>
-        <textarea class="finp" id="f-mood-pre-note" placeholder="O que está passando na cabeça agora? Situação do dia, pensamentos, corpo…" style="margin-top:9px;margin-bottom:0;min-height:44px"></textarea>
-      </div>
+        <div class="card-lbl">🔆 Avaliação do dia</div>
+        <div style="font-size:9px;color:var(--dim);margin-bottom:12px;line-height:1.6">Independente do resultado financeiro — quem você foi hoje?</div>
 
-      <!-- ESTADO PÓS-PREGÃO — preenchido à noite -->
-      <div class="card">
-        <div class="card-lbl">🌙 Estado pós-pregão</div>
-        <div style="font-size:9px;color:var(--dim);margin-bottom:10px;line-height:1.5">Após fechar — como o mercado te deixou</div>
-        <div class="mood-grid" id="mood-pos-grid">
-          <button class="mo" onclick="selMoodPos(this,'focado')">⚡<br>Focado</button>
-          <button class="mo" onclick="selMoodPos(this,'calmo')">🌊<br>Calmo</button>
-          <button class="mo" onclick="selMoodPos(this,'produtivo')">🔥<br>Produtivo</button>
-          <button class="mo" onclick="selMoodPos(this,'disperso')">🌀<br>Disperso</button>
-          <button class="mo" onclick="selMoodPos(this,'ansioso')">⚡<br>Ansioso</button>
-          <button class="mo" onclick="selMoodPos(this,'cansado')">🌑<br>Cansado</button>
+        <div class="sl-row">
+          <span class="sl-name" style="font-size:9px">Presença</span>
+          <input type="range" min="1" max="10" value="5" id="sl-presenca" oninput="sv('sl-presenca','sv-presenca')">
+          <span class="sl-val" id="sv-presenca">5</span>
         </div>
-        <textarea class="finp" id="f-mood-pos-note" placeholder="Como você está saindo? O que o mercado fez com você hoje?" style="margin-top:9px;margin-bottom:0;min-height:44px"></textarea>
+        <div style="font-size:8px;color:var(--dim);margin:-6px 0 10px 0;line-height:1.5">Você estava consciente e presente, ou no piloto automático?</div>
+
+        <input type="text" class="finp" id="f-proposito" placeholder="O que hoje confirmou que vale a pena continuar?" style="margin-bottom:0">
+        <div style="font-size:8px;color:var(--dim);margin-top:4px">Propósito funcional — conecte com o porquê, não com o resultado</div>
       </div>
 
       <div class="card">
@@ -513,7 +499,22 @@ tr:hover td{background:var(--s2)}
       <div class="pg-title">Diário de Trade</div>
       <div class="pg-sub" id="pg-trade-date">—</div>
 
-      <!-- OPERAÇÕES — cada uma com estado emocional próprio -->
+      <!-- ESTADO PRÉ-PREGÃO -->
+      <div class="card">
+        <div class="card-lbl">🌅 Estado pré-pregão</div>
+        <div style="font-size:9px;color:var(--dim);margin-bottom:10px;line-height:1.5">Antes de abrir o mercado — preencha ao chegar</div>
+        <div class="mood-grid" id="mood-pre-grid">
+          <button class="mo" onclick="selMoodPre(this,'focado')">⚡<br>Focado</button>
+          <button class="mo" onclick="selMoodPre(this,'calmo')">🌊<br>Calmo</button>
+          <button class="mo" onclick="selMoodPre(this,'produtivo')">🔥<br>Produtivo</button>
+          <button class="mo" onclick="selMoodPre(this,'disperso')">🌀<br>Disperso</button>
+          <button class="mo" onclick="selMoodPre(this,'ansioso')">⚡<br>Ansioso</button>
+          <button class="mo" onclick="selMoodPre(this,'cansado')">🌑<br>Cansado</button>
+        </div>
+        <textarea class="finp" id="f-mood-pre-note" placeholder="O que está passando na cabeça? Corpo, pensamentos, contexto do dia…" style="margin-top:9px;margin-bottom:0;min-height:40px"></textarea>
+      </div>
+
+      <!-- OPERAÇÕES — cada uma com adesão, emocional e execução individuais -->
       <div class="card">
         <div class="card-lbl">📊 Operações executadas</div>
         <div class="op-list" id="op-list"></div>
@@ -522,25 +523,27 @@ tr:hover td{background:var(--s2)}
         <div style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:11px">
           <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:9px">Nova operação</div>
 
-          <!-- Linha 1: horário, direção, pontos, sistema -->
-          <div style="display:grid;grid-template-columns:56px 56px 1fr 88px;gap:6px;margin-bottom:10px">
+          <!-- Linha 1: horário, direção, lotes, pontos -->
+          <div style="display:grid;grid-template-columns:56px 56px 60px 1fr;gap:6px;margin-bottom:10px">
             <input class="time-inp" id="op-time" type="time" style="font-size:10px;padding:7px 5px">
             <select class="type-sel" id="op-dir">
               <option value="C">▲ C</option>
               <option value="V">▼ V</option>
             </select>
-            <input class="add-inp" id="op-pts" type="number" placeholder="Pontos (ex: +10)" style="min-width:0">
-            <select class="type-sel" id="op-sys">
-              <option value="1">✓ Sistema</option>
-              <option value="0">✗ Sistema</option>
-            </select>
+            <input class="add-inp" id="op-lots" type="number" placeholder="Lotes" min="1" step="1" style="min-width:0" oninput="calcOpResult()">
+            <input class="add-inp" id="op-pts" type="number" placeholder="Pontos (ex: +10)" style="min-width:0" oninput="calcOpResult()">
+          </div>
+
+          <!-- Resultado R$ calculado automaticamente -->
+          <div id="op-calc-result" style="font-size:10px;color:var(--dim);margin-bottom:10px;padding:6px 9px;background:var(--s3);border-radius:6px;display:none">
+            Resultado: <span id="op-calc-val" style="color:var(--hi);font-weight:500">—</span>
           </div>
 
           <!-- Setup técnico por trade -->
           <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px">Setup técnico</div>
           <input class="setup-search" id="op-setup-search" type="text" placeholder="Buscar setup…" oninput="filterOpSetups(this.value)" style="margin-bottom:6px">
-          <div style="max-height:100px;overflow-y:auto;margin-bottom:10px"><div class="setup-tags" id="op-setup-tags"></div></div>
-          <div class="setup-sel-info" id="op-setup-sel-info" style="margin-bottom:8px">Setup: <span id="op-setup-sel-names" style="color:var(--teal)">—</span></div>
+          <div style="max-height:100px;overflow-y:auto;margin-bottom:6px"><div class="setup-tags" id="op-setup-tags"></div></div>
+          <div class="setup-sel-info" id="op-setup-sel-info" style="margin-bottom:10px;display:none">Setup: <span id="op-setup-sel-names" style="color:var(--teal)">—</span></div>
 
           <!-- Gatilho psicológico -->
           <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Gatilho psicológico da entrada</div>
@@ -580,15 +583,31 @@ tr:hover td{background:var(--s2)}
             <button class="os-btn" data-v="STOPMESA" onclick="selNewOpExit(this)">🛑 Stop Mesa</button>
           </div>
 
-          <!-- Intensidade emocional -->
-          <div class="op-emo-row" style="margin-bottom:6px">
-            <span class="op-emo-lbl">Intensidade emo.</span>
-            <input type="range" min="1" max="10" value="5" id="new-op-emo" oninput="document.getElementById('new-op-emo-val').textContent=this.value">
+          <!-- Adesão ao sistema — por operação -->
+          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:7px">Adesão ao sistema E1+E2</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px" id="new-op-adh-grid">
+            <div class="adh-item" onclick="toggleOpAdh(this,'e1')" data-k="e1"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">E1 respeitado</div></div>
+            <div class="adh-item" onclick="toggleOpAdh(this,'no_e3')" data-k="no_e3"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">Sem E3</div></div>
+            <div class="adh-item" onclick="toggleOpAdh(this,'stop')" data-k="stop"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">Stop correto</div></div>
+            <div class="adh-item" onclick="toggleOpAdh(this,'partial')" data-k="partial"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">Parcial executado</div></div>
+            <div class="adh-item" onclick="toggleOpAdh(this,'entry')" data-k="entry"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">Entrada com sinal</div></div>
+            <div class="adh-item" onclick="toggleOpAdh(this,'size')" data-k="size"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">Tamanho correto</div></div>
+          </div>
+
+          <!-- Estado emocional + execução — por operação -->
+          <div class="op-emo-row" style="margin-bottom:5px">
+            <span class="op-emo-lbl">Emo. intensidade</span>
+            <input type="range" min="1" max="10" value="5" id="new-op-emo" oninput="document.getElementById('new-op-emo-val').textContent=this.value;calcOpResult()">
             <span class="op-emo-val" id="new-op-emo-val">5</span>
+          </div>
+          <div class="op-emo-row" style="margin-bottom:5px">
+            <span class="op-emo-lbl">Nota execução</span>
+            <input type="range" min="1" max="10" value="5" id="new-op-exec" oninput="document.getElementById('new-op-exec-val').textContent=this.value">
+            <span class="op-emo-val" id="new-op-exec-val">5</span>
           </div>
 
           <!-- Narrativa -->
-          <textarea class="op-note-inp" id="new-op-note" placeholder="Narrativa: o que pensava ao entrar, como estava o corpo, o que decidiu…" style="width:100%;min-height:40px" oninput="autoResizeTA(this)"></textarea>
+          <textarea class="op-note-inp" id="new-op-note" placeholder="Narrativa: o que pensava ao entrar, como estava o corpo, o que decidiu…" style="width:100%;min-height:40px;margin-top:6px" oninput="autoResizeTA(this)"></textarea>
           <button class="add-btn" onclick="addOp()" style="width:100%;margin-top:8px;padding:10px">+ Registrar operação</button>
         </div>
 
@@ -658,41 +677,21 @@ tr:hover td{background:var(--s2)}
         </div>
       </div>
 
-      <!-- ADESÃO -->
+      <!-- ESTADO PÓS-PREGÃO -->
       <div class="card">
-        <div class="card-lbl">🎯 Adesão ao sistema E1+E2</div>
-        <div class="sl-row" style="margin-bottom:14px">
-          <span class="sl-name">Score geral</span>
-          <input type="range" min="0" max="10" value="5" id="sl-adh" oninput="sv('sl-adh','sv-adh')">
-          <span class="sl-val" id="sv-adh">5</span>
+        <div class="card-lbl">🌙 Estado pós-pregão</div>
+        <div style="font-size:9px;color:var(--dim);margin-bottom:10px;line-height:1.5">Após fechar — como o mercado te deixou hoje</div>
+        <div class="mood-grid" id="mood-pos-grid">
+          <button class="mo" onclick="selMoodPos(this,'focado')">⚡<br>Focado</button>
+          <button class="mo" onclick="selMoodPos(this,'calmo')">🌊<br>Calmo</button>
+          <button class="mo" onclick="selMoodPos(this,'produtivo')">🔥<br>Produtivo</button>
+          <button class="mo" onclick="selMoodPos(this,'disperso')">🌀<br>Disperso</button>
+          <button class="mo" onclick="selMoodPos(this,'ansioso')">⚡<br>Ansioso</button>
+          <button class="mo" onclick="selMoodPos(this,'cansado')">🌑<br>Cansado</button>
         </div>
-        <div class="adh-grid" id="adh-grid">
-          <div class="adh-item" onclick="toggleAdh(this,'e1')" data-k="e1"><div class="adh-dot"></div><div class="adh-text">E1 respeitado</div></div>
-          <div class="adh-item" onclick="toggleAdh(this,'no_e3')" data-k="no_e3"><div class="adh-dot"></div><div class="adh-text">Sem E3</div></div>
-          <div class="adh-item" onclick="toggleAdh(this,'stop')" data-k="stop"><div class="adh-dot"></div><div class="adh-text">Stop correto</div></div>
-          <div class="adh-item" onclick="toggleAdh(this,'partial')" data-k="partial"><div class="adh-dot"></div><div class="adh-text">Parcial executado</div></div>
-          <div class="adh-item" onclick="toggleAdh(this,'entry')" data-k="entry"><div class="adh-dot"></div><div class="adh-text">Entrada com sinal</div></div>
-          <div class="adh-item" onclick="toggleAdh(this,'size')" data-k="size"><div class="adh-dot"></div><div class="adh-text">Tamanho correto</div></div>
-        </div>
+        <textarea class="finp" id="f-mood-pos-note" placeholder="Como você está saindo? O que o mercado fez com você hoje?" style="margin-top:9px;margin-bottom:0;min-height:40px"></textarea>
       </div>
 
-      <!-- ESTADO EMOCIONAL OPERACIONAL -->
-      <div class="card">
-        <div class="card-lbl">🧠 Estado emocional operacional</div>
-        <div class="sl-row"><span class="sl-name">Pré-mercado</span><input type="range" min="1" max="10" value="5" id="sl-pre" oninput="sv('sl-pre','sv-pre')"><span class="sl-val" id="sv-pre">5</span></div>
-        <div class="sl-row"><span class="sl-name">Durante</span><input type="range" min="1" max="10" value="5" id="sl-dur" oninput="sv('sl-dur','sv-dur')"><span class="sl-val" id="sv-dur">5</span></div>
-        <div class="sl-row"><span class="sl-name">Pós fechamento</span><input type="range" min="1" max="10" value="5" id="sl-pos" oninput="sv('sl-pos','sv-pos')"><span class="sl-val" id="sv-pos">5</span></div>
-      </div>
-
-      <div class="card">
-        <div class="card-lbl">⭐ Nota de execução</div>
-        <div class="sl-row" style="margin-bottom:8px">
-          <span class="sl-name">Execução</span>
-          <input type="range" min="1" max="10" value="5" id="sl-exec" oninput="sv('sl-exec','sv-exec')">
-          <span class="sl-val" id="sv-exec">5</span>
-        </div>
-        <input type="text" class="finp" id="t-exec-note" placeholder="Nota sobre a qualidade da execução hoje…" style="margin-bottom:0">
-      </div>
       <div class="card">
         <div class="card-lbl">📝 Análise do dia de trade</div>
         <textarea class="finp" id="t-analysis" placeholder="O que esse dia me ensina como trader? O que fiz bem? O que repetiria?"></textarea>
@@ -839,6 +838,33 @@ let sleepQuality=null;
 let pilares={alma:[],corpo:[],espirito:[],pessoas:[]};
 let selectedSetups=[],setupUsage={};
 let newOpState=null,newOpPartial=null,newOpExit=null,newOpSetups=[];
+let newOpAdh={e1:false,no_e3:false,stop:false,partial:false,entry:false,size:false};
+
+// ── CÁLCULO RESULTADO POR OP ──────────────────
+function calcOpResult(){
+  const pts=parseFloat(document.getElementById('op-pts')?.value)||0;
+  const lots=parseFloat(document.getElementById('op-lots')?.value)||0;
+  const el=document.getElementById('op-calc-result');
+  const val=document.getElementById('op-calc-val');
+  if(pts!==0&&lots>0){
+    const r=pts*lots*10; // pts × lotes × R$10/ponto
+    if(el) el.style.display='block';
+    if(val){val.textContent=`R$ ${r.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})}`;val.style.color=r>0?'var(--green)':r<0?'var(--red)':'var(--hi)';}
+  } else {
+    if(el) el.style.display='none';
+  }
+}
+
+// ── ADESÃO POR OPERAÇÃO ───────────────────────
+function toggleOpAdh(el,key){
+  const isYes=el.classList.contains('yes');
+  el.classList.toggle('yes',!isYes);
+  const dot=el.querySelector('.adh-dot');
+  if(dot) dot.style.background=!isYes?'var(--green)':'var(--b2)';
+  const txt=el.querySelector('.adh-text');
+  if(txt) txt.style.color=!isYes?'var(--green)':'var(--dim)';
+  newOpAdh[key]=!isYes;
+}
 
 // ── INIT ──────────────────────────────────────
 window.addEventListener('DOMContentLoaded',()=>{
@@ -974,25 +1000,31 @@ function selNewOpState(btn){
 function addOp(){
   const dir=document.getElementById('op-dir').value;
   const pts=parseFloat(document.getElementById('op-pts').value);
-  const sys=document.getElementById('op-sys').value==='1';
+  const lots=parseFloat(document.getElementById('op-lots')?.value)||0;
   const noteEl=document.getElementById('new-op-note');
   const note=noteEl?noteEl.value.trim():'';
   const timeEl=document.getElementById('op-time');
   const time=timeEl&&timeEl.value?timeEl.value:nowHM();
   const emoEl=document.getElementById('new-op-emo');
   const emo=emoEl?parseInt(emoEl.value):5;
+  const execEl=document.getElementById('new-op-exec');
+  const execScore=execEl?parseInt(execEl.value):5;
   if(isNaN(pts)){showToast('Informe os pontos',true);return;}
-  tradeOps.push({dir,pts,sys,note,time,entry_state:newOpState,emo_intensity:emo,partial_reason:newOpPartial,exit_reason:newOpExit,setups:[...newOpSetups]});
-  // Incrementa uso dos setups desta operação
+  const result_brl=lots>0?pts*lots*10:null;
+  tradeOps.push({dir,pts,lots:lots||null,result_brl,note,time,entry_state:newOpState,emo_intensity:emo,exec_score:execScore,adh_items:{...newOpAdh},partial_reason:newOpPartial,exit_reason:newOpExit,setups:[...newOpSetups]});
   newOpSetups.forEach(s=>{setupUsage[s]=(setupUsage[s]||0)+1;});
   localStorage.setItem('setup_usage',JSON.stringify(setupUsage));
   renderOps();
-  // Reset
   document.getElementById('op-pts').value='';
+  const lotsEl=document.getElementById('op-lots');if(lotsEl) lotsEl.value='';
   if(noteEl){noteEl.value='';noteEl.style.height='40px';}
   if(emoEl){emoEl.value=5;document.getElementById('new-op-emo-val').textContent='5';}
+  if(execEl){execEl.value=5;document.getElementById('new-op-exec-val').textContent='5';}
+  const calcEl=document.getElementById('op-calc-result');if(calcEl) calcEl.style.display='none';
   ['#new-op-state-btns','#new-op-partial-btns','#new-op-exit-btns'].forEach(sel=>document.querySelectorAll(sel+' .os-btn').forEach(b=>b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold')));
+  document.querySelectorAll('#new-op-adh-grid .adh-item').forEach(el=>{el.classList.remove('yes');const d=el.querySelector('.adh-dot');if(d) d.style.background='var(--b2)';const t=el.querySelector('.adh-text');if(t) t.style.color='var(--dim)';});
   newOpState=null;newOpPartial=null;newOpExit=null;newOpSetups=[];
+  newOpAdh={e1:false,no_e3:false,stop:false,partial:false,entry:false,size:false};
   const searchEl=document.getElementById('op-setup-search');if(searchEl) searchEl.value='';
   renderOpSetupTags('');
   const info=document.getElementById('op-setup-sel-info');if(info) info.style.display='none';
@@ -1017,13 +1049,19 @@ function renderOps(){
     const dangerExits=['MEDO','STOPMESA'];
     const exitColor=op.exit_reason&&dangerExits.includes(op.exit_reason)?'var(--red)':'var(--green)';
     const partialColor=op.partial_reason&&op.partial_reason.includes('Medo')?'var(--red)':'var(--teal)';
-    const setupsStr=(op.setups||[]).join(' · ')||'—';
+    const setupsStr=(op.setups||[]).join(' · ')||null;
+    const brlStr=op.result_brl!=null?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${op.result_brl>=0?'var(--green)':'var(--red)'}">R$${op.result_brl>=0?'+':''}${op.result_brl.toLocaleString('pt-BR')}</span>`:'';
+    const lotsStr=op.lots?`<span style="font-size:9px;padding:2px 7px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:var(--dim)">${op.lots}L</span>`:'';
+    // Adesão chips
+    const adhItems=op.adh_items||{};
+    const adhChips=Object.entries(adhItems).filter(([,v])=>v).map(([k])=>`<span style="font-size:8px;padding:1px 6px;border-radius:6px;background:var(--gd);border:1px solid rgba(48,196,120,.3);color:var(--green)">${k}</span>`).join('');
+    const execColor=op.exec_score>=8?'var(--green)':op.exec_score>=5?'var(--blue)':'var(--red)';
     return`<div class="op-card" id="opcard-${i}">
       <div class="op-card-top">
         <span class="op-dir-badge ${op.dir==='C'?'op-c':'op-v'}">${op.dir==='C'?'▲ C':'▼ V'}</span>
-        <span class="op-meta">${op.time}</span>
-        <span class="op-adh ${op.sys?'op-ok':'op-nok'}">${op.sys?'✓':'✗'}</span>
+        <span class="op-meta">${op.time}${op.lots?' · '+op.lots+'L':''}</span>
         <span class="op-res" style="color:${op.pts>=0?'var(--green)':'var(--red)'}">${op.pts>=0?'+':''}${op.pts}pts</span>
+        ${op.result_brl!=null?`<span class="op-res" style="font-size:9px;color:${op.result_brl>=0?'var(--green)':'var(--red)'}">R$${op.result_brl>=0?'+':''}${op.result_brl.toLocaleString('pt-BR')}</span>`:''}
         <button class="op-expand" onclick="toggleOpExpand(${i})">▾</button>
         <button class="op-del" onclick="removeOp(${i})">×</button>
       </div>
@@ -1031,20 +1069,33 @@ function renderOps(){
         <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px">
           <span style="font-size:9px;background:var(--s3);border:1px solid var(--b1);padding:2px 8px;border-radius:8px;color:var(--dim)">${stateLabel}</span>
           <span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${emoColor}">emo:${op.emo_intensity||5}/10</span>
+          <span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${execColor}">exec:${op.exec_score||5}/10</span>
           ${op.partial_reason?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${partialColor}">${op.partial_reason}</span>`:''}
           ${op.exit_reason?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${exitColor}">saída:${op.exit_reason}</span>`:''}
         </div>
-        ${setupsStr!=='—'?`<div style="font-size:9px;color:var(--teal);margin-bottom:6px">📋 ${setupsStr}</div>`:''}
+        ${adhChips?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">${adhChips}</div>`:''}
+        ${setupsStr?`<div style="font-size:9px;color:var(--teal);margin-bottom:6px">📋 ${setupsStr}</div>`:''}
         ${op.note?`<div style="font-size:10px;color:var(--text);line-height:1.6;background:var(--s3);border-radius:6px;padding:7px 9px">${esc(op.note)}</div>`:''}
       </div>
     </div>`;
   }).join('');
-  const n=tradeOps.length,w=tradeOps.filter(o=>o.pts>0).length,totalPts=tradeOps.reduce((a,o)=>a+o.pts,0),adhCount=tradeOps.filter(o=>o.sys).length;
+  const n=tradeOps.length,w=tradeOps.filter(o=>o.pts>0).length,totalPts=tradeOps.reduce((a,o)=>a+o.pts,0);
+  // Adesão: média dos adh_items por op
+  const opWithAdh=tradeOps.filter(o=>o.adh_items);
+  const adhScores=opWithAdh.map(o=>{const items=Object.values(o.adh_items||{});return items.length?items.filter(Boolean).length/items.length*10:5;});
+  const avgAdh=adhScores.length?adhScores.reduce((a,v)=>a+v,0)/adhScores.length:null;
+  // R$ total se tiver lotes
+  const opsWithBRL=tradeOps.filter(o=>o.result_brl!=null);
+  const totalBRL=opsWithBRL.length?opsWithBRL.reduce((a,o)=>a+(o.result_brl||0),0):null;
   document.getElementById('ops-count').textContent=n;
   document.getElementById('ops-wr').textContent=n?Math.round(w/n*100)+'%':'—';
-  document.getElementById('ops-pts').textContent=(totalPts>=0?'+':'')+totalPts;
-  document.getElementById('ops-pts').style.color=totalPts>=0?'var(--green)':'var(--red)';
-  document.getElementById('ops-adh').textContent=n?Math.round(adhCount/n*100)+'%':'—';
+  const ptsEl=document.getElementById('ops-pts');
+  if(ptsEl){
+    ptsEl.textContent=totalBRL!=null?`R$${totalBRL>=0?'+':''}${totalBRL.toLocaleString('pt-BR')}`:(totalPts>=0?'+':'')+totalPts;
+    ptsEl.style.color=(totalBRL!=null?totalBRL:totalPts)>=0?'var(--green)':'var(--red)';
+  }
+  const adhEl=document.getElementById('ops-adh');
+  if(adhEl) adhEl.textContent=avgAdh!=null?avgAdh.toFixed(1)+'/10':'—';
 }
 
 // ── HESITAÇÕES ────────────────────────────────
@@ -1171,7 +1222,8 @@ function loadTodayForms(){
   if(e.mood_pos){moodPos=e.mood_pos;document.querySelectorAll('#mood-pos-grid .mo').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+e.mood_pos+"'")) b.classList.add('sel');});}
   if(e.mood_pre_note){const el=document.getElementById('f-mood-pre-note');if(el) el.value=e.mood_pre_note;}
   if(e.mood_pos_note){const el=document.getElementById('f-mood-pos-note');if(el) el.value=e.mood_pos_note;}
-  [['sl-e','sv-e','energia'],['sl-d','sv-d','disciplina'],['sl-c','sv-c','clareza']].forEach(([s,v,k])=>{if(e[k]){document.getElementById(s).value=e[k];document.getElementById(v).textContent=e[k];}});
+  [['sl-e','sv-e','energia'],['sl-d','sv-d','disciplina'],['sl-c','sv-c','clareza'],['sl-presenca','sv-presenca','presenca']].forEach(([s,v,k])=>{if(e[k]){const se=document.getElementById(s),ve=document.getElementById(v);if(se) se.value=e[k];if(ve) ve.textContent=e[k];}});
+  if(e.proposito){const el=document.getElementById('f-proposito');if(el) el.value=e.proposito;}
   wins=e.wins||[];fails=e.fails||[];agenda=e.agenda||[];tradeOps=e.t_ops_detail||[];hesitations=e.t_hesitations||[];
   renderList('win');renderList('fail');renderAgenda();renderOps();renderHes();
   ['lesson','good','intent','mit'].forEach(k=>{const el=document.getElementById('f-'+k);if(el&&e[k]) el.value=e[k];});
@@ -1185,13 +1237,7 @@ function loadTodayForms(){
   // trade
   const safe=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null) el.value=val;};
   safe('t-felling',e.t_felling);safe('t-mesa',e.t_mesa);safe('t-pa',e.t_pa);
-  safe('sl-adh',e.t_adh);const svAdh=document.getElementById('sv-adh');if(svAdh) svAdh.textContent=e.t_adh||5;
-  [['sl-pre','sv-pre','t_emo_pre'],['sl-dur','sv-dur','t_emo_dur'],['sl-pos','sv-pos','t_emo_pos']].forEach(([s,v,k])=>{if(e[k]){const se=document.getElementById(s),ve=document.getElementById(v);if(se) se.value=e[k];if(ve) ve.textContent=e[k];}});
   safe('t-analysis',e.t_analysis);safe('t-avoid',e.t_avoid);
-  const slEx=document.getElementById('sl-exec'),svEx=document.getElementById('sv-exec');
-  if(slEx&&e.t_exec_score){slEx.value=e.t_exec_score;if(svEx) svEx.textContent=e.t_exec_score;}
-  if(e.t_exec_note){const el=document.getElementById('t-exec-note');if(el) el.value=e.t_exec_note;}
-  if(e.t_adh_items){adhState={...adhState,...e.t_adh_items};renderAdh();}
   if(e.t_hes_detail){const el=document.getElementById('hes-detail');if(el) el.value=e.t_hes_detail;}
   if(document.getElementById('t-felling')) calcTotals();
 }
@@ -1238,6 +1284,8 @@ async function savePessoal(){
     date_iso:todayISO(),date_label:new Date().toLocaleDateString('pt-BR'),
     day_of_week:new Date().getDay(),
     mood:moodPre||'calmo',
+    presenca:+document.getElementById('sl-presenca').value,
+    proposito:document.getElementById('f-proposito').value.trim(),
     mood_pre:moodPre,
     mood_pre_note:document.getElementById('f-mood-pre-note').value.trim(),
     mood_pos:moodPos,
@@ -1275,15 +1323,11 @@ async function saveTrade(){
     t_result_pf:m,
     t_ops:ops_n,t_wins_ops:ops_w,
     t_wr:ops_n>0?Math.round(ops_w/ops_n*100):null,
-    t_adh:+document.getElementById('sl-adh').value,
-    t_adh_items:{...adhState},
-    t_emo_pre:+document.getElementById('sl-pre').value,
-    t_emo_dur:+document.getElementById('sl-dur').value,
-    t_emo_pos:+document.getElementById('sl-pos').value,
+    t_emo_pre:+document.getElementById('sl-pre')?.value||5,
+    t_emo_pos:+document.getElementById('sl-pos')?.value||5,
     t_analysis:document.getElementById('t-analysis').value.trim(),
     t_avoid:document.getElementById('t-avoid').value.trim(),
-    t_exec_score:+document.getElementById('sl-exec').value,
-    t_exec_note:document.getElementById('t-exec-note').value.trim(),
+    // exec_score and adh now per-op in t_ops_detail
     t_ops_detail:[...tradeOps],
     t_hesitations:[...hesitations],
     t_hes_detail:document.getElementById('hes-detail').value.trim(),
@@ -1495,6 +1539,10 @@ OPERAÇÕES COM INTENSIDADE EMOCIONAL ALTA (≥8/10):
 n=${highEmoOps.length} | média pts: ${avgHighEmoR!==null?avgHighEmoR.toFixed(1):'sem dados'}
 Planejadas: n=${planOps.length} | Emotivas/medo/desfoco/revanche: n=${dangerOps.length}
 
+ANÁLISE POR LOTES (E1 puro vs com adição):
+Total ops com lotes registrados: ${allOps.filter(o=>o.lots).length}
+E1 puro (sem adição E2/E3): n=${allOps.filter(o=>!o.partial_reason||!o.partial_reason.startsWith('E')).length}
+
 ÚLTIMAS 10 ENTRADAS:
 ${sorted.slice(-10).map(d=>`[${d.date_label}] pré:${d.mood_pre||d.mood||'—'} pós:${d.mood_pos||'—'} E:${d.energia||'—'} sono:${d.sleep_quality||'—'} adh:${d.t_adh||'—'} FPA:${d.t_result_fpa!=null?Math.round(d.t_result_fpa):'—'} PF:${d.t_result_pf!=null?Math.round(d.t_result_pf):'—'} WR:${d.t_wr||'—'}%`).join('\n')}`;
 }
@@ -1552,6 +1600,8 @@ ALTER TABLE sistema_joey
   ADD COLUMN IF NOT EXISTS sleep_quality text,
   ADD COLUMN IF NOT EXISTS pilares jsonb DEFAULT '{}',
   ADD COLUMN IF NOT EXISTS t_hes_detail text,
+  ADD COLUMN IF NOT EXISTS presenca integer,
+  ADD COLUMN IF NOT EXISTS proposito text,
   ADD COLUMN IF NOT EXISTS mood_pre text,
   ADD COLUMN IF NOT EXISTS mood_pre_note text,
   ADD COLUMN IF NOT EXISTS mood_pos text,
