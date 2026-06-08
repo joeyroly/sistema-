@@ -1307,10 +1307,7 @@ function renderOps(){
         </div>
         ${adhChips?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">${adhChips}</div>`:''}
         ${setupsStr?`<div style="font-size:9px;color:var(--teal);margin-bottom:6px">📋 ${setupsStr}</div>`:''}
-        ${(op.mfe||op.mae)?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">
-          ${op.mfe?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--td);color:var(--teal)">MFE ${op.mfe}pts${op.capture_pct!=null?' · captura '+op.capture_pct+'%':''}</span>`:''}
-          ${op.mae?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--rd);color:var(--red)">MAE ${op.mae}pts</span>`:''}
-        </div>`:''}`
+        ${(op.mfe||op.mae)?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">${op.mfe?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--td);color:var(--teal)">MFE ${op.mfe}pts${op.capture_pct!=null?' · captura '+op.capture_pct+'%':''}</span>`:''} ${op.mae?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--rd);color:var(--red)">MAE ${op.mae}pts</span>`:''}</div>`:''}
         ${op.note?`<div style="font-size:10px;color:var(--text);line-height:1.6;background:var(--s3);border-radius:6px;padding:7px 9px">${esc(op.note)}</div>`:''}
         <textarea class="op-note-inp" id="op-corr-${i}" placeholder="Correção: o que executaria diferente? (escreva agora)" style="width:100%;min-height:32px;font-size:9px;margin-top:5px" oninput="autoResizeTA(this);saveOpCorr(${i},this.value)">${esc(op.corr||'')||''}</textarea>
       </div>
