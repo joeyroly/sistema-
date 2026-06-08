@@ -293,6 +293,26 @@ tr:hover td{background:var(--s2)}
 .setup-tag.sel .stag-count{background:rgba(78,124,248,.2);color:var(--blue)}
 .setup-sel-info{margin-top:7px;font-size:9px;color:var(--dim);display:none}
 .setup-sel-info span{color:var(--teal)}
+
+/* ── FRASE ÂNCORA ── */
+.anchor-card{background:linear-gradient(135deg,#0c1020,#0a1218);border:1px solid rgba(78,124,248,.2);border-radius:var(--r);padding:16px;margin-bottom:12px;position:relative;overflow:hidden}
+.anchor-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--purp),var(--blue),var(--teal))}
+.anchor-quote{font-family:'Fraunces',serif;font-size:1.05rem;font-weight:300;font-style:italic;color:var(--hi);line-height:1.6;margin-bottom:8px}
+.anchor-source{font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim)}
+.anchor-activation{margin-top:10px;padding-top:10px;border-top:1px solid rgba(78,124,248,.15);font-size:10px;color:var(--blue);line-height:1.5}
+
+/* ── TRACKER VISITAS ── */
+.visit-row{display:flex;align-items:flex-start;gap:8px;background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:8px 10px;animation:fadeUp .15s ease;margin-bottom:5px}
+.visit-row.done-item{border-color:rgba(48,196,120,.3);background:rgba(6,20,16,.6)}
+.visit-check{width:20px;height:20px;border-radius:6px;border:1px solid var(--b2);background:var(--s3);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:10px;transition:all .15s;margin-top:1px}
+.visit-check.chk{border-color:var(--green);background:var(--gd);color:var(--green)}
+.visit-info{flex:1}
+.visit-name{font-size:11px;color:var(--text);line-height:1.4}
+.visit-row.done-item .visit-name{color:var(--dim);text-decoration:line-through;text-decoration-color:rgba(48,196,120,.4)}
+.visit-meta{font-size:9px;color:var(--dim);margin-top:2px}
+.visit-del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px;padding:0 2px;align-self:center}
+.visit-del:hover{color:var(--red)}
+.visit-cost-row{background:rgba(232,64,64,.06);border:1px solid rgba(232,64,64,.2);border-radius:7px;padding:9px 11px;margin-top:8px;display:none}
 </style>
 </head>
 <body>
@@ -328,6 +348,13 @@ tr:hover td{background:var(--s2)}
     <div id="pg-pessoal" class="page active">
       <div class="pg-title">Dia Pessoal</div>
       <div class="pg-sub" id="pg-pessoal-date">—</div>
+
+      <!-- FRASE ÂNCORA DO DIA -->
+      <div class="anchor-card" id="anchor-card">
+        <div class="anchor-quote" id="anchor-quote">Carregando...</div>
+        <div class="anchor-source" id="anchor-source">—</div>
+        <div class="anchor-activation" id="anchor-activation">—</div>
+      </div>
 
       <div class="briefing" id="briefing-card">
         <div class="briefing-title">☀️ BRIEFING DE HOJE</div>
@@ -407,9 +434,31 @@ tr:hover td{background:var(--s2)}
             </div>
             <div class="pilar-items" id="pitems-pessoas"></div>
             <div class="pilar-add-row">
-              <input class="add-inp" id="pi-pessoas" placeholder="Adicionar item…" onkeydown="if(event.key==='Enter'){addPilarItem('pessoas');event.preventDefault()}">
+              <input class="add-inp" id="pi-pessoas" placeholder="Adicionar item família…" onkeydown="if(event.key==='Enter'){addPilarItem('pessoas');event.preventDefault()}">
               <button class="add-btn" onclick="addPilarItem('pessoas')">+</button>
             </div>
+          </div>
+          <div class="div" style="margin:10px 0"></div>
+          <!-- TRACKER DE VISITAS A CLIENTES -->
+          <div class="pilar-section">
+            <div class="pilar-header">
+              <div class="pilar-title">🤝 <span>Visitas a clientes</span></div>
+              <div id="visit-score" style="font-size:8px;padding:2px 8px;border-radius:8px;background:var(--s2);border:1px solid var(--b1);color:var(--dim)">0/0 visitados</div>
+            </div>
+            <div style="font-size:9px;color:var(--dim);margin-bottom:9px;line-height:1.5">Planeje agora: cliente, horário específico, o que você vai falar. Vaga não acontece.</div>
+            <div id="visit-list"></div>
+            <!-- Custo de não visitar -->
+            <div class="visit-cost-row" id="visit-cost-row">
+              <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--red);margin-bottom:3px">💸 Custo da visita não feita</div>
+              <div id="visit-cost-text" style="font-size:10px;color:var(--text);line-height:1.5"></div>
+            </div>
+            <!-- Form nova visita -->
+            <div style="display:grid;grid-template-columns:1fr 64px auto;gap:6px;margin-top:6px">
+              <input class="add-inp" id="visit-client-inp" placeholder="Nome do cliente…" onkeydown="if(event.key==='Enter'){addVisit();event.preventDefault()}">
+              <input class="time-inp" id="visit-time-inp" type="time" value="14:00">
+              <button class="add-btn" onclick="addVisit()">+</button>
+            </div>
+            <input class="add-inp" id="visit-note-inp" placeholder="Objetivo da visita — o que você vai propor…" style="width:100%;margin-top:5px" onkeydown="if(event.key==='Enter'){addVisit();event.preventDefault()}">
           </div>
         </div>
       </div>
@@ -837,6 +886,52 @@ const MOODS={focado:{c:'#4e7cf8',bg:'#091028',e:'⚡'},calmo:{c:'#30c478',bg:'#0
 const DAYS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 const MONTHS=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 const PILAR_KEYS=['alma','corpo','espirito','pessoas'];
+
+// ── FRASES ÂNCORA — 7 por dia da semana, calibradas para trader com gargalo de medo ──
+const ANCHOR_PHRASES=[
+  // Domingo
+  {
+    quote:"Descanse com intenção, não por inércia. Quem se recupera com consciência chega segunda com vantagem sobre quem só esperou o fim de semana passar.",
+    source:"Joel Jota — princípio de recuperação ativa",
+    activation:"Pergunta: o que você vai fazer hoje para chegar segunda melhor do que estava sexta?"
+  },
+  // Segunda
+  {
+    quote:"A coragem não é ausência de medo. É entrar mesmo com medo e executar o processo. O resultado é consequência. O processo é sua responsabilidade.",
+    source:"David Goggins — Can't Hurt Me + Bernadinho Rezende — cultura de processo",
+    activation:"Pergunta: qual é a única coisa que você pode controlar totalmente hoje?"
+  },
+  // Terça
+  {
+    quote:"Você não está atrasado. Você está onde suas decisões te colocaram. A próxima decisão começa agora.",
+    source:"Flávio Augusto — Geração de Valor + Ícaro de Carvalho",
+    activation:"Pergunta: qual decisão pequena, feita agora, muda a trajetória do dia?"
+  },
+  // Quarta
+  {
+    quote:"O medo de errar é mais caro do que o erro. Calcule o custo real de não agir — ele sempre supera o custo de agir errado e aprender.",
+    source:"Elon Musk — first principles + Caio Carneiro — mentalidade comercial",
+    activation:"Pergunta: o que você está evitando hoje por medo de errar? Qual é o real custo de continuar evitando?"
+  },
+  // Quinta
+  {
+    quote:"Disciplina é fazer o que precisa ser feito no momento em que precisa, independente de como você está se sentindo. O sentimento segue a ação, não o contrário.",
+    source:"Jordan Peterson — 12 Rules for Life + Novak Djokovic — protocolo de consistência",
+    activation:"Pergunta: se você agisse como a melhor versão de si mesmo nas próximas 2 horas, o que faria primeiro?"
+  },
+  // Sexta
+  {
+    quote:"Resultado é lagging indicator. O que você pode medir hoje é o processo: executou o sistema? Tomou a decisão certa? O lucro vem depois de um volume de decisões corretas.",
+    source:"Talles Gomes — mentalidade de volume + Guto Galamba — fundamentos de performance",
+    activation:"Pergunta: independente do resultado desta semana, você seguiu o processo? Se não, o que especificamente mudaria?"
+  },
+  // Sábado
+  {
+    quote:"Revise como um cientista, não como um juiz. Dados não têm julgamento. Comportamentos têm padrões. Encontre o padrão, ajuste a variável, teste de novo.",
+    source:"Metodologia científica comportamental — Kahneman + Ericsson",
+    activation:"Pergunta: olhando esta semana como dado puro, qual foi o padrão mais importante que você quer replicar ou eliminar?"
+  }
+];
 const ALL_SETUPS=['Op1','Op2','MetN','DupPr','DivOc','Cont','Emotivo','DnçVw','FlCtVw','MOLEQUE','RtMeSg','D-1','News','Aj 0,5','Aj 0,75','Aj 1,0','Aj 1,25','Aj 1,5','Fec','Fec 0,5','Fec 0,75','Fec 1,00','Fec 1,25','Fec 1,50','Ab','DvR 2','DvR 10','DvR 210','DvI 2','DvI 5','DvI 10','DvI 210','DvRI 2','DvRI 10','DvRI 210','Bseg 2','Bseg 10','Bseg 210','FOMO','Marc','SlAg','Fluxo','Vwap 0','Vwap 0,20','Vwap 0,50','Vwap 0,60','Vwap 0,75','Vwap 1,00','Cirilo','BarraG','8-17','8 mm','PA','St10'];
 const ENTRY_STATES={planejado:{label:'📋 Planejado',cls:'sel-plan'},atrasado:{label:'⏰ Atrasado',cls:'sel-gold'},emotivo:{label:'🔥 Emotivo',cls:'sel-danger'},medo_falha:{label:'😨 Medo falha',cls:'sel-danger'},oportunidade:{label:'💡 Oportunidade',cls:'sel-gold'},cirilo:{label:'🎯 Cirilo',cls:'sel-cirilo'},desfocado:{label:'🌀 Desfocado',cls:'sel-danger'},revanche:{label:'⚡ Revanche',cls:'sel-danger'}};
 
@@ -847,6 +942,7 @@ let adhState={e1:false,no_e3:false,stop:false,partial:false,entry:false,size:fal
 let chatHistory=[],isTyping=false,notifPermission=false;
 let sleepQuality=null;
 let pilares={alma:[],corpo:[],espirito:[],pessoas:[]};
+let visits=[];  // [{client, time, note, done, value_est}]
 let selectedSetups=[],setupUsage={};
 let newOpState=null,newOpPartial=null,newOpExit=null,newOpSetups=[];
 let newOpAdh={e1:false,no_e3:false,stop:false,partial:false,entry:false,size:false};
@@ -940,6 +1036,84 @@ function selNewOpExit(btn){
   newOpExit=btn.dataset.v;
   const dangerExits=['MEDO','STOPMESA'];
   btn.classList.add(dangerExits.includes(btn.dataset.v)?'sel-danger':'sel-plan');
+}
+
+// ── FRASE ÂNCORA ─────────────────────────────
+function renderAnchorPhrase(){
+  const dow=new Date().getDay(); // 0=Dom, 1=Seg...
+  const p=ANCHOR_PHRASES[dow];
+  if(!p) return;
+  const q=document.getElementById('anchor-quote');
+  const s=document.getElementById('anchor-source');
+  const a=document.getElementById('anchor-activation');
+  if(q) q.textContent=p.quote;
+  if(s) s.textContent=p.source;
+  if(a) a.innerHTML=`<strong>→</strong> ${esc(p.activation)}`;
+}
+
+// ── TRACKER VISITAS ───────────────────────────
+function addVisit(){
+  const client=document.getElementById('visit-client-inp')?.value.trim();
+  const time=document.getElementById('visit-time-inp')?.value||'';
+  const note=document.getElementById('visit-note-inp')?.value.trim()||'';
+  if(!client){showToast('Informe o nome do cliente',true);return;}
+  visits.push({client,time,note,done:false});
+  renderVisits();
+  const ci=document.getElementById('visit-client-inp');if(ci) ci.value='';
+  const ni=document.getElementById('visit-note-inp');if(ni) ni.value='';
+  const ti=document.getElementById('visit-time-inp');if(ti) ti.value='14:00';
+  if(ci) ci.focus();
+}
+
+function toggleVisit(idx){
+  visits[idx].done=!visits[idx].done;
+  renderVisits();
+}
+
+function removeVisit(idx){visits.splice(idx,1);renderVisits();}
+
+function renderVisits(){
+  const el=document.getElementById('visit-list');if(!el) return;
+  el.innerHTML=visits.map((v,i)=>`
+    <div class="visit-row${v.done?' done-item':''}">
+      <div class="visit-check${v.done?' chk':''}" onclick="toggleVisit(${i})">${v.done?'✓':''}</div>
+      <div class="visit-info">
+        <div class="visit-name">${esc(v.client)}</div>
+        <div class="visit-meta">${v.time?v.time+' · ':''}${v.note?esc(v.note):'sem objetivo registrado'}</div>
+      </div>
+      <button class="visit-del" onclick="removeVisit(${i})">×</button>
+    </div>`).join('');
+
+  // Score
+  const done=visits.filter(v=>v.done).length;
+  const sc=document.getElementById('visit-score');
+  if(sc){
+    sc.textContent=`${done}/${visits.length} visitados`;
+    sc.style.color=done>0&&done===visits.length?'var(--green)':done>0?'var(--gold)':'var(--dim)';
+  }
+
+  // Custo da visita não feita
+  const notDone=visits.filter(v=>!v.done);
+  const costRow=document.getElementById('visit-cost-row');
+  const costText=document.getElementById('visit-cost-text');
+  if(notDone.length>0&&costRow){
+    costRow.style.display='block';
+    // Busca histórico de valor médio por visita se disponível
+    const allVisitDays=allData.filter(d=>d.visits&&d.visits.some&&d.visits.some(v=>v.done));
+    if(costText){
+      if(notDone.length===1){
+        costText.innerHTML=`<strong>${esc(notDone[0].client)}</strong> ainda não foi visitado. Se o horário passar sem ação, registre como hesitação de negócio — o padrão é o mesmo do trade.`;
+      } else {
+        costText.innerHTML=`${notDone.length} visitas planejadas não realizadas. Cada uma representa uma janela de oportunidade que fechou.`;
+      }
+    }
+  } else if(costRow){
+    costRow.style.display='none';
+  }
+}
+
+function loadVisits(data){
+  if(Array.isArray(data)){visits=[...data];renderVisits();}
 }
 
 // ── SONO ──────────────────────────────────────
@@ -1046,6 +1220,7 @@ function addOp(){
 function nowHM(){const n=new Date();return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
 
 function removeOp(idx){tradeOps.splice(idx,1);renderOps();}
+function saveOpCorr(idx,val){if(tradeOps[idx]) tradeOps[idx].corr=val;}
 
 function toggleOpExpand(idx){
   const el=document.getElementById('opcard-'+idx);
@@ -1087,6 +1262,7 @@ function renderOps(){
         ${adhChips?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">${adhChips}</div>`:''}
         ${setupsStr?`<div style="font-size:9px;color:var(--teal);margin-bottom:6px">📋 ${setupsStr}</div>`:''}
         ${op.note?`<div style="font-size:10px;color:var(--text);line-height:1.6;background:var(--s3);border-radius:6px;padding:7px 9px">${esc(op.note)}</div>`:''}
+        <textarea class="op-note-inp" id="op-corr-${i}" placeholder="Correção: o que executaria diferente? (escreva agora)" style="width:100%;min-height:32px;font-size:9px;margin-top:5px" oninput="autoResizeTA(this);saveOpCorr(${i},this.value)">${esc(op.corr||'')||''}</textarea>
       </div>
     </div>`;
   }).join('');
@@ -1222,7 +1398,7 @@ function bootApp(){
   const app=document.getElementById('app');app.style.display='flex';app.style.flexDirection='column';app.style.height='100dvh';
   const hm=nowHM();
   ['op-time','hes-time'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value) el.value=hm;});
-  loadTodayForms();renderBriefing();initNotifications();startNotifScheduler();
+  loadTodayForms();renderBriefing();renderAnchorPhrase();initNotifications();startNotifScheduler();
 }
 function todayISO(){const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;}
 function todayEntry(){return allData.find(e=>e.date_iso===todayISO())||{};}
@@ -1245,6 +1421,8 @@ function loadTodayForms(){
   if(e.sleep_bed&&e.sleep_wake) calcSleepDur();
   // pilares
   if(e.pilares) loadPilares(e.pilares);
+  // visitas
+  if(e.visits) loadVisits(e.visits);
   // trade
   const safe=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null) el.value=val;};
   safe('t-felling',e.t_felling);safe('t-mesa',e.t_mesa);safe('t-pa',e.t_pa);
@@ -1324,6 +1502,7 @@ async function savePessoal(){
     intent:document.getElementById('f-intent').value.trim(),
     mit:document.getElementById('f-mit').value.trim(),
     agenda:[...agenda],
+    visits:visits.map(v=>({client:v.client,time:v.time,note:v.note,done:v.done})),
     sleep_bed:document.getElementById('sleep-bed').value||null,
     sleep_wake:document.getElementById('sleep-wake').value||null,
     sleep_quality:sleepQuality,
@@ -1795,7 +1974,8 @@ ALTER TABLE sistema_joey
   ADD COLUMN IF NOT EXISTS mood_pos_note text,
   ADD COLUMN IF NOT EXISTS t_pa numeric,
   ADD COLUMN IF NOT EXISTS t_result_fpa numeric,
-  ADD COLUMN IF NOT EXISTS t_result_pf numeric;
+  ADD COLUMN IF NOT EXISTS t_result_pf numeric,
+  ADD COLUMN IF NOT EXISTS visits jsonb DEFAULT '[]';
 
 -- Isso resolve o erro 400 (Bad Request) ao salvar.
 -- Os campos t_ops_detail (jsonb) já inclui: entry_state, emo_intensity,
