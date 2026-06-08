@@ -574,7 +574,7 @@ tr:hover td{background:var(--s2)}
 
           <!-- Linha 1: horário, direção, lotes, pontos -->
           <div style="display:grid;grid-template-columns:56px 56px 60px 1fr;gap:6px;margin-bottom:10px">
-            <input class="time-inp" id="op-time" type="time" style="font-size:10px;padding:7px 5px">
+            <input class="time-inp" id="op-time" type="time" list="pregao-times" style="font-size:10px;padding:7px 5px">
             <select class="type-sel" id="op-dir">
               <option value="C">▲ C</option>
               <option value="V">▼ V</option>
@@ -643,6 +643,7 @@ tr:hover td{background:var(--s2)}
             <button class="os-btn" data-v="StPlanJ" onclick="selNewOpExit(this)">Stop Plan</button>
             <button class="os-btn" data-v="MEDO" onclick="selNewOpExit(this)">⚠️ Medo</button>
             <button class="os-btn" data-v="STOPMESA" onclick="selNewOpExit(this)">🛑 Stop Mesa</button>
+            <button class="os-btn" data-v="AlvoFin" onclick="selNewOpExit(this)">💰 Alvo Fin</button>
           </div>
 
           <!-- Adesão ao sistema — por operação -->
@@ -687,25 +688,36 @@ tr:hover td{background:var(--s2)}
         <div class="card-lbl" style="color:var(--red)">⚠️ Trades lidos — não executados</div>
         <div style="font-size:10px;color:var(--dim);margin-bottom:10px;line-height:1.5">Cada setup que você viu mas não entrou. Mede o custo real da hesitação.</div>
         <div class="hes-list" id="hes-list"></div>
-        <div style="display:grid;grid-template-columns:52px auto 1fr 1fr auto;gap:6px;align-items:center;margin-bottom:7px">
-          <input class="time-inp" id="hes-time" type="time" style="font-size:10px;padding:7px 5px">
+        <div style="display:grid;grid-template-columns:56px 56px 1fr auto;gap:6px;align-items:center;margin-bottom:8px">
+          <input class="time-inp" id="hes-time" type="time" list="pregao-times" style="font-size:10px;padding:7px 5px">
           <select class="type-sel" id="hes-dir">
             <option value="C">▲ C</option><option value="V">▼ V</option>
           </select>
           <input class="add-inp" id="hes-pts" type="number" placeholder="Pts estimados" style="min-width:0">
-          <select class="type-sel" id="hes-reason">
-            <option value="confirmação">Aguardei confirmação</option>
-            <option value="medo stop">Medo do stop</option>
-            <option value="indicadores">Indicadores não alinhados</option>
-            <option value="abertura">Horário abertura</option>
-            <option value="cirilo">Cirilo (setup Cirilo)</option>
-            <option value="sem foco">Sem foco</option>
-            <option value="medo horário">Medo do horário</option>
-            <option value="medo tarde">Medo — tarde demais</option>
-            <option value="prox hr sair">Próx. hora de sair</option>
-            <option value="outro">Outro</option>
-          </select>
           <button class="add-btn" onclick="addHes()">+</button>
+        </div>
+        <!-- Motivos multi-select -->
+        <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Motivos (selecione todos que se aplicam)</div>
+        <div class="op-state-grid" id="hes-reason-btns" style="margin-bottom:8px">
+          <button class="os-btn" data-v="confirmação" onclick="toggleHesReason(this)">⏳ Confirmação</button>
+          <button class="os-btn" data-v="medo stop" onclick="toggleHesReason(this)">😨 Medo stop</button>
+          <button class="os-btn" data-v="indicadores" onclick="toggleHesReason(this)">📊 Indicadores</button>
+          <button class="os-btn" data-v="abertura" onclick="toggleHesReason(this)">🕘 Hora abertura</button>
+          <button class="os-btn" data-v="cirilo" onclick="toggleHesReason(this)">🎯 Cirilo</button>
+          <button class="os-btn" data-v="sem foco" onclick="toggleHesReason(this)">🌀 Sem foco</button>
+          <button class="os-btn" data-v="medo horário" onclick="toggleHesReason(this)">⏰ Medo horário</button>
+          <button class="os-btn" data-v="medo tarde" onclick="toggleHesReason(this)">🌅 Medo tarde</button>
+          <button class="os-btn" data-v="prox hr sair" onclick="toggleHesReason(this)">🚗 Prox sair</button>
+          <button class="os-btn" data-v="outro" onclick="toggleHesReason(this)">💬 Outro</button>
+        </div>
+        <!-- Setup do trade não executado -->
+        <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px">Setup que você viu</div>
+        <input class="setup-search" id="hes-setup-search" type="text" placeholder="Buscar setup…" oninput="filterHesSetups(this.value)" style="margin-bottom:5px">
+        <div style="max-height:80px;overflow-y:auto;margin-bottom:6px"><div class="setup-tags" id="hes-setup-tags"></div></div>
+        <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:4px;margin-top:4px">MFE estimado / MAE observado</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+          <input class="add-inp" id="hes-mfe" type="number" placeholder="MFE estimado (pts)">
+          <input class="add-inp" id="hes-mae" type="number" placeholder="MAE observado (pts)">
         </div>
         <textarea class="finp" id="hes-detail" placeholder="Detalhe: o pensamento exato, o contexto, o que travou internamente…" style="margin-bottom:0;min-height:48px"></textarea>
         <div id="hes-summary" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(232,64,64,.2)">
@@ -954,7 +966,7 @@ const ANCHOR_PHRASES=[
     activation:"Pergunta: olhando esta semana como dado puro, qual foi o padrão mais importante que você quer replicar ou eliminar?"
   }
 ];
-const ALL_SETUPS=['Op1','Op2','MetN','DupPr','DivOc','Cont','Emotivo','DnçVw','FlCtVw','MOLEQUE','RtMeSg','D-1','News','Aj','Aj 0,5','Aj 0,75','Aj 1,0','Aj 1,25','Aj 1,5','Fec','Fec 0,5','Fec 0,75','Fec 1,00','Fec 1,25','Fec 1,50','Ab','DvR 2','DvR 10','DvR 210','DvI 2','DvI 5','DvI 10','DvI 210','DvRI 2','DvRI 10','DvRI 210','Bseg 2','Bseg 10','Bseg 210','FOMO','Marc','SlAg','Fluxo','Vwap 0','Vwap 0,20','Vwap 0,40','Vwap 0,50','Vwap 0,60','Vwap 0,75','Vwap 1,00','50%','Cirilo','BarraG','8-17','8 mm','PA','St10'];
+const ALL_SETUPS=['Op1','Op2','MetN','DupPr','DivOc','Cont','Emotivo','DnçVw','FlCtVw','MOLEQUE','RtMeSg','D-1','News','Aj','Aj 0,5','Aj 0,75','Aj 1,0','Aj 1,25','Aj 1,5','Fec','Fec 0,5','Fec 0,75','Fec 1,00','Fec 1,25','Fec 1,50','Ab','DvR 2','DvR 10','DvR 210','DvI 2','DvI 5','DvI 10','DvI 210','DvRI 2','DvRI 10','DvRI 210','Bseg 2','Bseg 10','Bseg 210','FOMO','Marc','SlAg','Fluxo','Vwap 0','Vwap 0,20','Vwap 0,40','Vwap 0,50','Vwap 0,60','Vwap 0,75','Vwap 1,00','50%','1delta','2deltas','1MDelta','Cirilo','BarraG','8-17','8 mm','PA','St10'];
 const ENTRY_STATES={planejado:{label:'📋 Planejado',cls:'sel-plan'},atrasado:{label:'⏰ Atrasado',cls:'sel-gold'},emotivo:{label:'🔥 Emotivo',cls:'sel-danger'},medo_falha:{label:'😨 Medo falha',cls:'sel-danger'},oportunidade:{label:'💡 Oportunidade',cls:'sel-gold'},cirilo:{label:'🎯 Cirilo',cls:'sel-cirilo'},desfocado:{label:'🌀 Desfocado',cls:'sel-danger'},revanche:{label:'⚡ Revanche',cls:'sel-danger'}};
 
 // ── STATE ─────────────────────────────────────
@@ -965,8 +977,9 @@ let chatHistory=[],isTyping=false,notifPermission=false;
 let sleepQuality=null;
 let pilares={alma:[],corpo:[],espirito:[],pessoas:[]};
 let visits=[];  // [{client, time, note, done, value_est}]
+let hesReasons=[];let hesSetups=[];
 let selectedSetups=[],setupUsage={};
-let newOpState=null,newOpPartial=null,newOpExit=null,newOpSetups=[];
+let newOpStates=[],newOpPartials=[],newOpExits=[],newOpSetups=[];
 let newOpAdh={e1:false,no_e3:false,stop:false,partial:false,entry:false,size:false};
 
 // ── CÁLCULO RESULTADO POR OP ──────────────────
@@ -1057,18 +1070,19 @@ function toggleOpSetup(name){const idx=newOpSetups.indexOf(name);if(idx>=0) newO
 
 // ── PARCIAL/ADIÇÃO ────────────────────────────
 function selNewOpPartial(btn){
-  document.querySelectorAll('#new-op-partial-btns .os-btn').forEach(b=>b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold'));
-  newOpPartial=btn.dataset.v;
-  // Medo = vermelho, Calc = verde
-  btn.classList.add(btn.dataset.v.includes('Medo')?'sel-danger':'sel-plan');
+  const v=btn.dataset.v;
+  const idx=newOpPartials.indexOf(v);
+  if(idx>=0){newOpPartials.splice(idx,1);btn.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold');}
+  else{newOpPartials.push(v);btn.classList.add(v.includes('Medo')?'sel-danger':'sel-plan');}
 }
 
 // ── MOTIVO DE SAÍDA ───────────────────────────
 function selNewOpExit(btn){
-  document.querySelectorAll('#new-op-exit-btns .os-btn').forEach(b=>b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold'));
-  newOpExit=btn.dataset.v;
+  const v=btn.dataset.v;
   const dangerExits=['MEDO','STOPMESA'];
-  btn.classList.add(dangerExits.includes(btn.dataset.v)?'sel-danger':'sel-plan');
+  const idx=newOpExits.indexOf(v);
+  if(idx>=0){newOpExits.splice(idx,1);btn.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold');}
+  else{newOpExits.push(v);btn.classList.add(dangerExits.includes(v)?'sel-danger':'sel-plan');}
 }
 
 // ── FRASE ÂNCORA ─────────────────────────────
@@ -1208,11 +1222,10 @@ function updateSetupInfo(){const info=document.getElementById('setup-sel-info'),
 
 // ── NOVA OPERAÇÃO — com estado emocional ──────
 function selNewOpState(btn){
-  document.querySelectorAll('#new-op-state-btns .os-btn').forEach(b=>{b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold');});
   const v=btn.dataset.v;
-  newOpState=v;
-  const cfg=ENTRY_STATES[v];
-  if(cfg) btn.classList.add(cfg.cls);
+  const idx=newOpStates.indexOf(v);
+  if(idx>=0){newOpStates.splice(idx,1);btn.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold');}
+  else{newOpStates.push(v);const cfg=ENTRY_STATES[v];if(cfg) btn.classList.add(cfg.cls);}
 }
 
 function addOp(){
@@ -1232,7 +1245,7 @@ function addOp(){
   if(isNaN(pts)){showToast('Informe os pontos',true);return;}
   const result_brl=lots>0?pts*lots*10:null;
   const capture_pct=mfe&&pts>0?Math.round(pts/mfe*100):null;
-  tradeOps.push({dir,pts,lots:lots||null,result_brl,mfe,mae,capture_pct,note,time,entry_state:newOpState,emo_intensity:emo,exec_score:execScore,adh_items:{...newOpAdh},partial_reason:newOpPartial,exit_reason:newOpExit,setups:[...newOpSetups]});
+  tradeOps.push({dir,pts,lots:lots||null,result_brl,mfe,mae,capture_pct,note,time,entry_states:[...newOpStates],emo_intensity:emo,exec_score:execScore,adh_items:{...newOpAdh},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups]});
   newOpSetups.forEach(s=>{setupUsage[s]=(setupUsage[s]||0)+1;});
   localStorage.setItem('setup_usage',JSON.stringify(setupUsage));
   renderOps();
@@ -1245,9 +1258,9 @@ function addOp(){
   const mfeEl2=document.getElementById('op-mfe');if(mfeEl2) mfeEl2.value='';
   const maeEl2=document.getElementById('op-mae');if(maeEl2) maeEl2.value='';
   const mfeIns=document.getElementById('op-mfe-insight');if(mfeIns) mfeIns.style.display='none';
-  ['#new-op-state-btns','#new-op-partial-btns','#new-op-exit-btns'].forEach(sel=>document.querySelectorAll(sel+' .os-btn').forEach(b=>b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold')));
+  ['#new-op-state-btns','#new-op-partial-btns','#new-op-exit-btns'].forEach(sel=>document.querySelectorAll(sel+' .os-btn').forEach(b=>{b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold');}));
   document.querySelectorAll('#new-op-adh-grid .adh-item').forEach(el=>{el.classList.remove('yes');const d=el.querySelector('.adh-dot');if(d) d.style.background='var(--b2)';const t=el.querySelector('.adh-text');if(t) t.style.color='var(--dim)';});
-  newOpState=null;newOpPartial=null;newOpExit=null;newOpSetups=[];
+  newOpStates=[];newOpPartials=[];newOpExits=[];newOpSetups=[];
   newOpAdh={e1:false,no_e3:false,stop:false,partial:false,entry:false,size:false};
   const searchEl=document.getElementById('op-setup-search');if(searchEl) searchEl.value='';
   renderOpSetupTags('');
@@ -1293,17 +1306,17 @@ function renderOps(){
       <!-- resumo sempre visível -->
       <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;padding-top:5px;border-top:1px solid var(--b1)">
         ${(op.setups||[]).length?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--td);color:var(--teal)">📋 ${(op.setups||[]).join(' · ')}</span>`:''}
-        ${op.partial_reason?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:${op.partial_reason.includes('Medo')?'var(--rd)':'var(--td)'};color:${op.partial_reason.includes('Medo')?'var(--red)':'var(--teal)'}">${op.partial_reason}</span>`:''}
-        ${op.exit_reason?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:${['MEDO','STOPMESA'].includes(op.exit_reason)?'var(--rd)':'var(--gd)'};color:${['MEDO','STOPMESA'].includes(op.exit_reason)?'var(--red)':'var(--green)'}">↗ ${op.exit_reason}</span>`:''}
-        ${op.entry_state?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--s3);color:var(--dim)">${op.entry_state}</span>`:''}
+        ${partialReasons.map(r=>`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:${r.includes('Medo')?'var(--rd)':'var(--td)'};color:${r.includes('Medo')?'var(--red)':'var(--teal)'}">${r}</span>`).join('')}
+        ${exitReasons.map(r=>`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:${dangerExits.includes(r)?'var(--rd)':'var(--gd)'};color:${dangerExits.includes(r)?'var(--red)':'var(--green)'}">${r}</span>`).join('')}
+        ${stateLabels.length?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--s3);color:var(--dim)">${stateLabels.join(' + ')}</span>`:''}
       </div>
       <div class="op-detail">
         <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px">
           <span style="font-size:9px;background:var(--s3);border:1px solid var(--b1);padding:2px 8px;border-radius:8px;color:var(--dim)">${stateLabel}</span>
           <span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${emoColor}">emo:${op.emo_intensity||5}/10</span>
           <span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${execColor}">exec:${op.exec_score||5}/10</span>
-          ${op.partial_reason?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${partialColor}">${op.partial_reason}</span>`:''}
-          ${op.exit_reason?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${exitColor}">saída:${op.exit_reason}</span>`:''}
+          ${partialReasons.map(r=>`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${r.includes('Medo')?'var(--red)':'var(--teal)'}">${r}</span>`).join('')}
+          ${exitReasons.map(r=>`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${dangerExits.includes(r)?'var(--red)':'var(--green)'}">↗${r}</span>`).join('')}
         </div>
         ${adhChips?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">${adhChips}</div>`:''}
         ${setupsStr?`<div style="font-size:9px;color:var(--teal);margin-bottom:6px">📋 ${setupsStr}</div>`:''}
@@ -1333,16 +1346,40 @@ function renderOps(){
 }
 
 // ── HESITAÇÕES ────────────────────────────────
+function toggleHesReason(btn){
+  const v=btn.dataset.v;
+  const idx=hesReasons.indexOf(v);
+  if(idx>=0){hesReasons.splice(idx,1);btn.classList.remove('sel-danger','sel-plan','sel-gold');}
+  else{hesReasons.push(v);btn.classList.add('sel-danger');}
+}
+function renderHesSetupTags(filter){
+  const grid=document.getElementById('hes-setup-tags');if(!grid) return;
+  const f=(filter||'').toLowerCase();
+  const sorted=[...ALL_SETUPS].sort((a,b)=>{const ca=setupUsage[a]||0,cb=setupUsage[b]||0;if(cb!==ca)return cb-ca;return a.localeCompare(b);});
+  const filtered=f?sorted.filter(s=>s.toLowerCase().includes(f)):sorted;
+  grid.innerHTML=filtered.map(s=>{const sel=hesSetups.includes(s);return`<button class="setup-tag${sel?' sel':''}" onclick="toggleHesSetup('${s}')">${esc(s)}</button>`;}).join('');
+}
+function filterHesSetups(v){renderHesSetupTags(v);}
+function toggleHesSetup(name){const idx=hesSetups.indexOf(name);if(idx>=0)hesSetups.splice(idx,1);else hesSetups.push(name);renderHesSetupTags(document.getElementById('hes-setup-search')?.value||'');}
+
 function addHes(){
   const time=document.getElementById('hes-time').value||nowHM();
   const dir=document.getElementById('hes-dir').value;
   const pts=parseFloat(document.getElementById('hes-pts').value);
-  const reason=document.getElementById('hes-reason').value;
+  const mfe=parseFloat(document.getElementById('hes-mfe')?.value)||null;
+  const mae=parseFloat(document.getElementById('hes-mae')?.value)||null;
   if(isNaN(pts)||pts<=0){showToast('Informe os pontos estimados',true);return;}
-  hesitations.push({time,dir,pts,reason});
+  hesitations.push({time,dir,pts,reasons:[...hesReasons],setups:[...hesSetups],mfe,mae});
   renderHes();
   document.getElementById('hes-pts').value='';
   document.getElementById('hes-time').value=nowHM();
+  const hm=document.getElementById('hes-mfe');if(hm) hm.value='';
+  const hmae=document.getElementById('hes-mae');if(hmae) hmae.value='';
+  // Reset reason buttons and setups
+  document.querySelectorAll('#hes-reason-btns .os-btn').forEach(b=>b.classList.remove('sel-danger','sel-plan','sel-gold'));
+  hesReasons=[];hesSetups=[];
+  renderHesSetupTags('');
+  const hs=document.getElementById('hes-setup-search');if(hs) hs.value='';
 }
 function removeHes(idx){hesitations.splice(idx,1);renderHes();}
 function renderHes(){
@@ -1352,11 +1389,11 @@ function renderHes(){
       <div class="hes-row-top">
         <span class="hes-time">${h.time}</span>
         <span class="hes-dir">${h.dir==='C'?'▲ C':'▼ V'}</span>
-        <span style="font-size:9px;color:var(--dim)">${esc(h.reason)}</span>
-        <span class="hes-pts">+${h.pts}pts</span>
+        <span style="font-size:9px;color:#e88080">${(h.reasons||[h.reason]).filter(Boolean).join(' · ')||'—'}</span>
+        <span class="hes-pts">+${h.pts}pts${h.mfe?' · MFE '+h.mfe+'pts':''}</span>
         <button class="hes-del" onclick="removeHes(${i})">×</button>
       </div>
-    </div>`).join('');
+      ${(h.setups||[]).length?`<div style="font-size:8px;color:var(--teal);margin-top:4px;padding-left:2px">📋 ${(h.setups||[]).join(' · ')}</div>`:''}    </div>`).join('');
   const summary=document.getElementById('hes-summary');
   if(!hesitations.length){if(summary) summary.style.display='none';return;}
   if(summary) summary.style.display='block';
@@ -1445,6 +1482,7 @@ function bootApp(){
   const app=document.getElementById('app');app.style.display='flex';app.style.flexDirection='column';app.style.height='100dvh';
   const hm=nowHM();
   ['op-time','hes-time'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value) el.value=hm;});
+  renderHesSetupTags('');
   loadTodayForms();renderBriefing();renderAnchorPhrase();initNotifications();startNotifScheduler();
 }
 function todayISO(){const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;}
@@ -2236,5 +2274,6 @@ ALTER TABLE sistema_joey
 -- partial_reason, exit_reason, setups[] — tudo dentro do array de operações.
 ────────────────────────────────────────────── -->
 
+<datalist id="pregao-times"><option value="08:00"><option value="08:05"><option value="08:10"><option value="08:15"><option value="08:20"><option value="08:25"><option value="08:30"><option value="08:35"><option value="08:40"><option value="08:45"><option value="08:50"><option value="08:55"><option value="09:00"><option value="09:05"><option value="09:10"><option value="09:15"><option value="09:20"><option value="09:25"><option value="09:30"><option value="09:35"><option value="09:40"><option value="09:45"><option value="09:50"><option value="09:55"><option value="10:00"><option value="10:05"><option value="10:10"><option value="10:15"><option value="10:20"><option value="10:25"><option value="10:30"><option value="10:35"><option value="10:40"><option value="10:45"><option value="10:50"><option value="10:55"><option value="11:00"><option value="11:05"><option value="11:10"><option value="11:15"><option value="11:20"><option value="11:25"><option value="11:30"><option value="11:35"><option value="11:40"><option value="11:45"><option value="11:50"><option value="11:55"><option value="12:00"><option value="12:05"><option value="12:10"><option value="12:15"><option value="12:20"><option value="12:25"><option value="12:30"><option value="12:35"><option value="12:40"><option value="12:45"><option value="12:50"><option value="12:55"><option value="13:00"><option value="13:05"><option value="13:10"><option value="13:15"><option value="13:20"><option value="13:25"><option value="13:30"><option value="13:35"><option value="13:40"><option value="13:45"><option value="13:50"><option value="13:55"><option value="14:00"><option value="14:05"><option value="14:10"><option value="14:15"><option value="14:20"><option value="14:25"><option value="14:30"><option value="14:35"><option value="14:40"><option value="14:45"><option value="14:50"><option value="14:55"><option value="15:00"><option value="15:05"><option value="15:10"><option value="15:15"><option value="15:20"><option value="15:25"><option value="15:30"><option value="15:35"><option value="15:40"><option value="15:45"><option value="15:50"><option value="15:55"><option value="16:00"><option value="16:05"><option value="16:10"><option value="16:15"><option value="16:20"><option value="16:25"><option value="16:30"><option value="16:35"><option value="16:40"><option value="16:45"><option value="16:50"><option value="16:55"><option value="17:00"><option value="17:05"><option value="17:10"><option value="17:15"><option value="17:20"><option value="17:25"><option value="17:30"><option value="17:35"><option value="17:40"><option value="17:45"><option value="17:50"><option value="17:55"></datalist>
 </body>
 </html>
