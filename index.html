@@ -580,8 +580,21 @@ tr:hover td{background:var(--s2)}
               <option value="V">▼ V</option>
             </select>
             <input class="add-inp" id="op-lots" type="number" placeholder="Lotes" min="1" step="1" style="min-width:0" oninput="calcOpResult()">
-            <input class="add-inp" id="op-pts" type="number" placeholder="Pontos (ex: +10)" style="min-width:0" oninput="calcOpResult()">
+            <input class="add-inp" id="op-pts" type="number" placeholder="Pontos saída (ex: +10)" style="min-width:0" oninput="calcOpResult()">
           </div>
+
+          <!-- MFE / MAE -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+            <div>
+              <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--teal);margin-bottom:4px">MFE — máx a favor</div>
+              <input class="add-inp" id="op-mfe" type="number" placeholder="Pts (ex: 18)" style="width:100%" oninput="calcOpResult()">
+            </div>
+            <div>
+              <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--red);margin-bottom:4px">MAE — máx contra</div>
+              <input class="add-inp" id="op-mae" type="number" placeholder="Pts (ex: 5)" style="width:100%">
+            </div>
+          </div>
+          <div id="op-mfe-insight" style="font-size:9px;color:var(--dim);margin-bottom:8px;padding:5px 9px;background:var(--s3);border-radius:6px;display:none"></div>
 
           <!-- Resultado R$ calculado automaticamente -->
           <div id="op-calc-result" style="font-size:10px;color:var(--dim);margin-bottom:10px;padding:6px 9px;background:var(--s3);border-radius:6px;display:none">
@@ -815,6 +828,10 @@ tr:hover td{background:var(--s2)}
         <div class="hm-lbl-row"><div class="hml">D</div><div class="hml">S</div><div class="hml">T</div><div class="hml">Q</div><div class="hml">Q</div><div class="hml">S</div><div class="hml">S</div></div>
         <div class="hm-grid" id="hm"></div>
       </div>
+      <!-- ANÁLISE ESTATÍSTICA AVANÇADA -->
+      <div class="card-lbl" style="padding:0 2px;margin-bottom:8px;margin-top:4px">ANÁLISE ESTATÍSTICA AVANÇADA</div>
+      <div id="panel-stats" style="margin-bottom:11px"></div>
+
       <div id="insights-wrap"></div>
     </div>
 
@@ -937,7 +954,7 @@ const ANCHOR_PHRASES=[
     activation:"Pergunta: olhando esta semana como dado puro, qual foi o padrão mais importante que você quer replicar ou eliminar?"
   }
 ];
-const ALL_SETUPS=['Op1','Op2','MetN','DupPr','DivOc','Cont','Emotivo','DnçVw','FlCtVw','MOLEQUE','RtMeSg','D-1','News','Aj 0,5','Aj 0,75','Aj 1,0','Aj 1,25','Aj 1,5','Fec','Fec 0,5','Fec 0,75','Fec 1,00','Fec 1,25','Fec 1,50','Ab','DvR 2','DvR 10','DvR 210','DvI 2','DvI 5','DvI 10','DvI 210','DvRI 2','DvRI 10','DvRI 210','Bseg 2','Bseg 10','Bseg 210','FOMO','Marc','SlAg','Fluxo','Vwap 0','Vwap 0,20','Vwap 0,50','Vwap 0,60','Vwap 0,75','Vwap 1,00','Cirilo','BarraG','8-17','8 mm','PA','St10'];
+const ALL_SETUPS=['Op1','Op2','MetN','DupPr','DivOc','Cont','Emotivo','DnçVw','FlCtVw','MOLEQUE','RtMeSg','D-1','News','Aj','Aj 0,5','Aj 0,75','Aj 1,0','Aj 1,25','Aj 1,5','Fec','Fec 0,5','Fec 0,75','Fec 1,00','Fec 1,25','Fec 1,50','Ab','DvR 2','DvR 10','DvR 210','DvI 2','DvI 5','DvI 10','DvI 210','DvRI 2','DvRI 10','DvRI 210','Bseg 2','Bseg 10','Bseg 210','FOMO','Marc','SlAg','Fluxo','Vwap 0','Vwap 0,20','Vwap 0,40','Vwap 0,50','Vwap 0,60','Vwap 0,75','Vwap 1,00','50%','Cirilo','BarraG','8-17','8 mm','PA','St10'];
 const ENTRY_STATES={planejado:{label:'📋 Planejado',cls:'sel-plan'},atrasado:{label:'⏰ Atrasado',cls:'sel-gold'},emotivo:{label:'🔥 Emotivo',cls:'sel-danger'},medo_falha:{label:'😨 Medo falha',cls:'sel-danger'},oportunidade:{label:'💡 Oportunidade',cls:'sel-gold'},cirilo:{label:'🎯 Cirilo',cls:'sel-cirilo'},desfocado:{label:'🌀 Desfocado',cls:'sel-danger'},revanche:{label:'⚡ Revanche',cls:'sel-danger'}};
 
 // ── STATE ─────────────────────────────────────
@@ -956,14 +973,25 @@ let newOpAdh={e1:false,no_e3:false,stop:false,partial:false,entry:false,size:fal
 function calcOpResult(){
   const pts=parseFloat(document.getElementById('op-pts')?.value)||0;
   const lots=parseFloat(document.getElementById('op-lots')?.value)||0;
+  const mfe=parseFloat(document.getElementById('op-mfe')?.value)||0;
   const el=document.getElementById('op-calc-result');
   const val=document.getElementById('op-calc-val');
+  const mfeInsight=document.getElementById('op-mfe-insight');
   if(pts!==0&&lots>0){
-    const r=pts*lots*10; // pts × lotes × R$10/ponto
+    const r=pts*lots*10;
     if(el) el.style.display='block';
     if(val){val.textContent=`R$ ${r.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})}`;val.style.color=r>0?'var(--green)':r<0?'var(--red)':'var(--hi)';}
   } else {
     if(el) el.style.display='none';
+  }
+  // MFE insight: taxa de captura
+  if(mfe>0&&pts>0&&mfeInsight){
+    const capture=Math.round(pts/mfe*100);
+    const captureColor=capture>=80?'var(--green)':capture>=55?'var(--gold)':'var(--red)';
+    mfeInsight.style.display='block';
+    mfeInsight.innerHTML=`Taxa de captura: <strong style="color:${captureColor}">${capture}%</strong> do potencial (saiu em ${pts}pts de ${mfe}pts disponíveis)`;
+  } else if(mfeInsight){
+    mfeInsight.style.display='none';
   }
 }
 
@@ -1199,9 +1227,12 @@ function addOp(){
   const emo=emoEl?parseInt(emoEl.value):5;
   const execEl=document.getElementById('new-op-exec');
   const execScore=execEl?parseInt(execEl.value):5;
+  const mfe=parseFloat(document.getElementById('op-mfe')?.value)||null;
+  const mae=parseFloat(document.getElementById('op-mae')?.value)||null;
   if(isNaN(pts)){showToast('Informe os pontos',true);return;}
   const result_brl=lots>0?pts*lots*10:null;
-  tradeOps.push({dir,pts,lots:lots||null,result_brl,note,time,entry_state:newOpState,emo_intensity:emo,exec_score:execScore,adh_items:{...newOpAdh},partial_reason:newOpPartial,exit_reason:newOpExit,setups:[...newOpSetups]});
+  const capture_pct=mfe&&pts>0?Math.round(pts/mfe*100):null;
+  tradeOps.push({dir,pts,lots:lots||null,result_brl,mfe,mae,capture_pct,note,time,entry_state:newOpState,emo_intensity:emo,exec_score:execScore,adh_items:{...newOpAdh},partial_reason:newOpPartial,exit_reason:newOpExit,setups:[...newOpSetups]});
   newOpSetups.forEach(s=>{setupUsage[s]=(setupUsage[s]||0)+1;});
   localStorage.setItem('setup_usage',JSON.stringify(setupUsage));
   renderOps();
@@ -1211,6 +1242,9 @@ function addOp(){
   if(emoEl){emoEl.value=5;document.getElementById('new-op-emo-val').textContent='5';}
   if(execEl){execEl.value=5;document.getElementById('new-op-exec-val').textContent='5';}
   const calcEl=document.getElementById('op-calc-result');if(calcEl) calcEl.style.display='none';
+  const mfeEl2=document.getElementById('op-mfe');if(mfeEl2) mfeEl2.value='';
+  const maeEl2=document.getElementById('op-mae');if(maeEl2) maeEl2.value='';
+  const mfeIns=document.getElementById('op-mfe-insight');if(mfeIns) mfeIns.style.display='none';
   ['#new-op-state-btns','#new-op-partial-btns','#new-op-exit-btns'].forEach(sel=>document.querySelectorAll(sel+' .os-btn').forEach(b=>b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold')));
   document.querySelectorAll('#new-op-adh-grid .adh-item').forEach(el=>{el.classList.remove('yes');const d=el.querySelector('.adh-dot');if(d) d.style.background='var(--b2)';const t=el.querySelector('.adh-text');if(t) t.style.color='var(--dim)';});
   newOpState=null;newOpPartial=null;newOpExit=null;newOpSetups=[];
@@ -1273,6 +1307,10 @@ function renderOps(){
         </div>
         ${adhChips?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">${adhChips}</div>`:''}
         ${setupsStr?`<div style="font-size:9px;color:var(--teal);margin-bottom:6px">📋 ${setupsStr}</div>`:''}
+        ${(op.mfe||op.mae)?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">
+          ${op.mfe?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--td);color:var(--teal)">MFE ${op.mfe}pts${op.capture_pct!=null?' · captura '+op.capture_pct+'%':''}</span>`:''}
+          ${op.mae?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--rd);color:var(--red)">MAE ${op.mae}pts</span>`:''}
+        </div>`:''}`
         ${op.note?`<div style="font-size:10px;color:var(--text);line-height:1.6;background:var(--s3);border-radius:6px;padding:7px 9px">${esc(op.note)}</div>`:''}
         <textarea class="op-note-inp" id="op-corr-${i}" placeholder="Correção: o que executaria diferente? (escreva agora)" style="width:100%;min-height:32px;font-size:9px;margin-top:5px" oninput="autoResizeTA(this);saveOpCorr(${i},this.value)">${esc(op.corr||'')||''}</textarea>
       </div>
@@ -1640,7 +1678,7 @@ function dayScore(d){const p=(d.energia||0)+(d.disciplina||0)+(d.clareza||0);con
 function renderDash(){
   const data=getFiltered().sort((a,b)=>a.date_iso.localeCompare(b.date_iso));
   renderDailyPanel();
-  renderScoreRing(data);renderKPIBlock(data);renderBehavKPIs(data);renderHeatmapDash();renderInsightsBlock(data);renderSetupEfficiency();renderHesPanel();
+  renderScoreRing(data);renderKPIBlock(data);renderBehavKPIs(data);renderHeatmapDash();renderInsightsBlock(data);renderSetupEfficiency();renderHesPanel();renderStatsPanel();
   setTimeout(()=>{renderCorrChart(data);renderLineChart(data);renderWRMoodChart(data);renderStateResChart(data);},60);
 }
 
@@ -1946,6 +1984,111 @@ function renderStateResChart(data){
     ctx.fillStyle='#424a6a';ctx.font='7px Geist Mono';ctx.fillText(e.state.slice(0,6),x,h-4);
     ctx.fillStyle=color;ctx.font='bold 8px Geist Mono';ctx.fillText(e.avgPts.toFixed(0)+'p',x+1,e.avgPts>=0?y-3:y+barH+9);
   });
+}
+
+// ── ANÁLISE ESTATÍSTICA AVANÇADA ─────────────
+function renderStatsPanel(){
+  const el=document.getElementById('panel-stats');if(!el) return;
+  const allOps=[];
+  allData.forEach(d=>(d.t_ops_detail||[]).forEach(op=>allOps.push({...op,date:d.date_iso})));
+  if(allOps.length<5){
+    el.innerHTML='<div style="font-size:10px;color:var(--dim);text-align:center;padding:8px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r)">Mín. 5 operações para análise estatística. Registre MFE em cada op para análise de captura.</div>';
+    return;
+  }
+
+  // ── Expectância por setup (método institucional) ──
+  const bySetup={};
+  allOps.forEach(op=>(op.setups||[]).forEach(s=>{
+    if(!bySetup[s]) bySetup[s]={wins:[],losses:[],pts:[],capture:[]};
+    if(op.pts>0) bySetup[s].wins.push(op.pts); else bySetup[s].losses.push(op.pts);
+    bySetup[s].pts.push(op.pts);
+    if(op.capture_pct!=null) bySetup[s].capture.push(op.capture_pct);
+  }));
+  const setupStats=Object.entries(bySetup).filter(([,v])=>v.pts.length>=2).map(([s,v])=>{
+    const n=v.pts.length,wr=v.wins.length/n;
+    const avgWin=v.wins.length?v.wins.reduce((a,b)=>a+b,0)/v.wins.length:0;
+    const avgLoss=v.losses.length?Math.abs(v.losses.reduce((a,b)=>a+b,0)/v.losses.length):0;
+    const expectancy=wr*avgWin-(1-wr)*avgLoss; // E[pts/op]
+    const mean=v.pts.reduce((a,b)=>a+b,0)/n;
+    const variance=v.pts.reduce((a,b)=>a+(b-mean)**2,0)/n;
+    const stddev=Math.sqrt(variance);
+    const sharpe=stddev>0?mean/stddev:0; // Sharpe simplificado
+    const avgCapture=v.capture.length?Math.round(v.capture.reduce((a,b)=>a+b,0)/v.capture.length):null;
+    return{s,n,wr:Math.round(wr*100),avgWin:avgWin.toFixed(1),avgLoss:avgLoss.toFixed(1),expectancy,sharpe,avgCapture};
+  }).sort((a,b)=>b.expectancy-a.expectancy);
+
+  // ── MFE/MAE análise geral ──
+  const opsWithMFE=allOps.filter(op=>op.mfe&&op.pts>0);
+  const avgCapture=opsWithMFE.length?Math.round(opsWithMFE.reduce((a,o)=>a+(o.capture_pct||0),0)/opsWithMFE.length):null;
+  const earlyExits=opsWithMFE.filter(op=>op.capture_pct<60).length;
+  const bestCapture=opsWithMFE.length?Math.max(...opsWithMFE.map(o=>o.capture_pct||0)):null;
+
+  // ── Drawdown máximo (estilo institucional) ──
+  const sortedDays=[...allData].sort((a,b)=>a.date_iso.localeCompare(b.date_iso));
+  const resultsFPA=sortedDays.filter(d=>d.t_result_fpa!=null).map(d=>d.t_result_fpa);
+  let peak=0,cum=0,maxDD=0;
+  resultsFPA.forEach(r=>{cum+=r;if(cum>peak) peak=cum;const dd=peak-cum;if(dd>maxDD) maxDD=dd;});
+  const totalFPA=resultsFPA.reduce((a,b)=>a+b,0);
+  const sharpeGeral=resultsFPA.length>1?(()=>{const m=totalFPA/resultsFPA.length;const v=resultsFPA.reduce((a,r)=>a+(r-m)**2,0)/resultsFPA.length;return v>0?(m/Math.sqrt(v)).toFixed(2):'N/A';})():'N/A';
+
+  // HTML: KPIs estatísticos
+  const statKpis=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:12px">
+    <div style="background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:'Fraunces',serif;font-size:1.4rem;color:${parseFloat(sharpeGeral)>0.5?'var(--green)':parseFloat(sharpeGeral)>0?'var(--gold)':'var(--red)'}">${sharpeGeral}</div>
+      <div style="font-size:7px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Sharpe F+PA</div>
+      <div style="font-size:8px;color:var(--dim);margin-top:2px">>0.5 = bom</div>
+    </div>
+    <div style="background:var(--s1);border:1px solid rgba(232,64,64,.2);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:'Fraunces',serif;font-size:1.4rem;color:var(--red)">R$${Math.round(maxDD).toLocaleString('pt-BR')}</div>
+      <div style="font-size:7px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Drawdown máx</div>
+      <div style="font-size:8px;color:var(--dim);margin-top:2px">F+PA histórico</div>
+    </div>
+    <div style="background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:'Fraunces',serif;font-size:1.4rem;color:${avgCapture&&avgCapture>=70?'var(--green)':avgCapture?'var(--gold)':'var(--dim)'}">${avgCapture!=null?avgCapture+'%':'—'}</div>
+      <div style="font-size:7px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Captura MFE</div>
+      <div style="font-size:8px;color:var(--dim);margin-top:2px">${opsWithMFE.length} ops</div>
+    </div>
+  </div>`;
+
+  // MFE insight
+  const mfeHtml=opsWithMFE.length>=3?`<div style="background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:9px 11px;margin-bottom:10px">
+    <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px">📐 Análise MFE/MAE</div>
+    <div style="font-size:10px;color:var(--text);line-height:1.7">
+      Captura média: <strong style="color:${avgCapture>=70?'var(--green)':'var(--gold)'}">${avgCapture}%</strong> do potencial de cada trade.<br>
+      Saídas antecipadas (&lt;60% captura): <strong style="color:var(--red)">${earlyExits}</strong> de ${opsWithMFE.length} ops registradas.<br>
+      ${earlyExits>opsWithMFE.length*0.4?'<span style="color:var(--red)">⚠️ Padrão de saída precoce detectado — revisar gestão de posição.</span>':'<span style="color:var(--green)">✓ Boa aderência ao alvo.</span>'}
+    </div>
+  </div>`:opsWithMFE.length>0?`<div style="font-size:9px;color:var(--dim);margin-bottom:10px;padding:7px 10px;background:var(--s2);border-radius:6px">Registre MFE em mais ${3-opsWithMFE.length} op(s) para análise de captura completa</div>`:'';
+
+  // Expectância por setup
+  const setupHtml=setupStats.length?`
+    <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:8px">Expectância por setup (E[pts/op])</div>
+    <div style="display:flex;flex-direction:column;gap:5px">
+    ${setupStats.slice(0,6).map(e=>{
+      const eColor=e.expectancy>0?'var(--green)':e.expectancy>-3?'var(--gold)':'var(--red)';
+      return`<div style="background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:8px 11px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+          <span style="font-size:10px;color:var(--hi)">${esc(e.s)}</span>
+          <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+            <span style="font-size:8px;color:var(--dim)">n=${e.n}</span>
+            <span style="font-size:8px;padding:1px 6px;border-radius:5px;background:${e.wr>=65?'var(--gd)':'var(--rd)'};color:${e.wr>=65?'var(--green)':'var(--red)'}">${e.wr}%WR</span>
+            <span style="font-size:9px;font-weight:500;color:${eColor}">E=${e.expectancy>=0?'+':''}${e.expectancy.toFixed(1)}pts</span>
+            <span style="font-size:8px;color:var(--dim)">Sharpe ${e.sharpe.toFixed(2)}</span>
+            ${e.avgCapture!=null?`<span style="font-size:8px;color:var(--teal)">${e.avgCapture}%cap</span>`:''}
+          </div>
+        </div>
+        <div style="font-size:8px;color:var(--dim)">Ganho médio: +${e.avgWin}pts · Perda média: -${e.avgLoss}pts</div>
+      </div>`;
+    }).join('')}
+    </div>`:'<div style="font-size:9px;color:var(--dim);padding:7px 10px;background:var(--s2);border-radius:6px">Selecione o setup em cada operação para calcular expectância por setup</div>';
+
+  el.innerHTML=`<div style="background:var(--s1);border:1px solid rgba(78,124,248,.2);border-radius:var(--r);padding:13px">
+    <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
+      <span>📊 Métricas institucionais</span>
+      <span style="font-size:7px;color:var(--dim)">Sharpe · Expectância · MFE</span>
+    </div>
+    ${statKpis}${mfeHtml}${setupHtml}
+  </div>`;
 }
 
 function renderLog(){
