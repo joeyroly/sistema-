@@ -799,10 +799,15 @@ tr:hover td{background:var(--s2)}
         <div class="cs">Estado pessoal → resultado operacional</div>
         <canvas id="c-wr-mood" height="110"></canvas>
       </div>
+      <!-- PAINEL HESITAÇÕES -->
+      <div class="card-lbl" style="padding:0 2px;margin-bottom:8px;margin-top:4px">HESITAÇÕES — CUSTO E PADRÕES</div>
+      <div id="panel-hesitacoes" style="margin-bottom:11px"></div>
+
       <div class="chart-card">
-        <div class="ct">Gatilho da entrada vs resultado</div>
-        <div class="cs">Qual estado gera mais resultado</div>
+        <div class="ct">Gatilho da entrada vs resultado médio por op</div>
+        <div class="cs">Qual estado gera mais pontos/op</div>
         <canvas id="c-state-res" height="110"></canvas>
+        <div id="state-res-fallback" style="display:none;font-size:10px;color:var(--dim);text-align:center;padding:8px">Registre o gatilho em cada operação para ativar este gráfico</div>
       </div>
       <div class="chart-card">
         <div class="ct">Mapa de calor · consistência</div>
@@ -1251,6 +1256,13 @@ function renderOps(){
         <button class="op-expand" onclick="toggleOpExpand(${i})">▾</button>
         <button class="op-del" onclick="removeOp(${i})">×</button>
       </div>
+      <!-- resumo sempre visível -->
+      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;padding-top:5px;border-top:1px solid var(--b1)">
+        ${(op.setups||[]).length?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--td);color:var(--teal)">📋 ${(op.setups||[]).join(' · ')}</span>`:''}
+        ${op.partial_reason?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:${op.partial_reason.includes('Medo')?'var(--rd)':'var(--td)'};color:${op.partial_reason.includes('Medo')?'var(--red)':'var(--teal)'}">${op.partial_reason}</span>`:''}
+        ${op.exit_reason?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:${['MEDO','STOPMESA'].includes(op.exit_reason)?'var(--rd)':'var(--gd)'};color:${['MEDO','STOPMESA'].includes(op.exit_reason)?'var(--red)':'var(--green)'}">↗ ${op.exit_reason}</span>`:''}
+        ${op.entry_state?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--s3);color:var(--dim)">${op.entry_state}</span>`:''}
+      </div>
       <div class="op-detail">
         <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px">
           <span style="font-size:9px;background:var(--s3);border:1px solid var(--b1);padding:2px 8px;border-radius:8px;color:var(--dim)">${stateLabel}</span>
@@ -1447,13 +1459,22 @@ function renderBriefing(){
     const totals=PILAR_KEYS.map(k=>{const arr=yE.pilares[k]||[];return{k,done:arr.filter(i=>i.done).length,total:arr.length};}).filter(p=>p.total>0);
     if(totals.length) pilarSummary=totals.map(p=>`${p.k}:${p.done}/${p.total}`).join(' ');
   }
+  // Só mostra linhas com dado real
+  const bRow=(icon,lbl,val)=>val&&val!=='—'?`<div class="briefing-row"><span class="briefing-icon">${icon}</span><div class="briefing-content"><div class="briefing-lbl">${lbl}</div><div class="briefing-text">${esc(val)}</div></div></div>`:'';
+  // Trade de ontem
+  const yOps=yE.t_ops_detail||[];
+  const yWR=yOps.length?Math.round(yOps.filter(o=>o.pts>0).length/yOps.length*100):null;
+  const yBRL=yOps.filter(o=>o.result_brl!=null).reduce((a,o)=>a+(o.result_brl||0),0);
+  const yOpsStr=yOps.length?`${yOps.length} ops · WR ${yWR}% · ${yBRL!==0?'R$'+(yBRL>=0?'+':'')+yBRL.toLocaleString('pt-BR'):yOps.reduce((a,o)=>a+o.pts,0)+'pts'}`:null;
   let html=`
-    <div class="briefing-row"><span class="briefing-icon">✅</span><div class="briefing-content"><div class="briefing-lbl">Acerto de ontem</div><div class="briefing-text">${esc(win)}</div></div></div>
-    <div class="briefing-row"><span class="briefing-icon">⚠️</span><div class="briefing-content"><div class="briefing-lbl">Erro — não repetir</div><div class="briefing-text">${esc(fail)}</div></div></div>
-    <div class="briefing-row"><span class="briefing-icon">🌙</span><div class="briefing-content"><div class="briefing-lbl">Sono de ontem</div><div class="briefing-text">${esc(sleepStr)}</div></div></div>
-    <div class="briefing-row"><span class="briefing-icon">⬟</span><div class="briefing-content"><div class="briefing-lbl">Pilares de ontem</div><div class="briefing-text">${esc(pilarSummary)}</div></div></div>
-    <div class="briefing-row"><span class="briefing-icon">◎</span><div class="briefing-content"><div class="briefing-lbl">Intenção de hoje</div><div class="briefing-text">${esc(yE.intent||'—')}</div></div></div>
-    <div class="briefing-row"><span class="briefing-icon">◆</span><div class="briefing-content"><div class="briefing-lbl">MIT de hoje</div><div class="briefing-text">${esc(yE.mit||'—')}</div></div></div>`;
+    ${bRow('✅','Acerto de ontem',win)}
+    ${bRow('⚠️','Erro — não repetir',fail)}
+    ${bRow('🌙','Sono de ontem',sleepStr!=='—'?sleepStr:null)}
+    ${bRow('⬟','Pilares de ontem',pilarSummary!=='—'?pilarSummary:null)}
+    ${bRow('📈','Trade de ontem',yOpsStr)}
+    ${bRow('◎','Intenção de hoje',yE.intent)}
+    ${bRow('◆','MIT de hoje',yE.mit)}
+  `;
   const ag=yE.agenda||[];
   if(ag.length) html+=`<div class="briefing-row"><span class="briefing-icon">📅</span><div class="briefing-content"><div class="briefing-lbl">Agenda de hoje</div>${ag.map(a=>`<div class="briefing-text" style="margin-bottom:2px"><span style="color:var(--blue)">${a.time}</span> · ${esc(a.text)}</div>`).join('')}</div></div>`;
   // Alerta de sono antes de operar
@@ -1619,7 +1640,7 @@ function dayScore(d){const p=(d.energia||0)+(d.disciplina||0)+(d.clareza||0);con
 function renderDash(){
   const data=getFiltered().sort((a,b)=>a.date_iso.localeCompare(b.date_iso));
   renderDailyPanel();
-  renderScoreRing(data);renderKPIBlock(data);renderBehavKPIs(data);renderHeatmapDash();renderInsightsBlock(data);renderSetupEfficiency();
+  renderScoreRing(data);renderKPIBlock(data);renderBehavKPIs(data);renderHeatmapDash();renderInsightsBlock(data);renderSetupEfficiency();renderHesPanel();
   setTimeout(()=>{renderCorrChart(data);renderLineChart(data);renderWRMoodChart(data);renderStateResChart(data);},60);
 }
 
@@ -1681,6 +1702,92 @@ function renderDailyPanel(){
       </div>
       ${trendStr?`<div style="margin-bottom:8px;display:flex;gap:5px;flex-wrap:wrap">${trendStr}${todaySetupStr}</div>`:''}
       ${alertsHtml||'<div style="font-size:10px;color:var(--dim);text-align:center;padding:6px">Sem alertas — tudo dentro do padrão</div>'}
+    </div>`;
+}
+
+// ── PAINEL DE HESITAÇÕES ─────────────────────
+function renderHesPanel(){
+  const el=document.getElementById('panel-hesitacoes');if(!el) return;
+  // Coleta todas as hesitações de todo o histórico
+  const allHes=[];
+  allData.forEach(d=>(d.t_hesitations||[]).forEach(h=>allHes.push({...h,date:d.date_iso,energia:d.energia,sleep_quality:d.sleep_quality,mood:d.mood_pre||d.mood})));
+  if(!allHes.length){
+    el.innerHTML='<div style="font-size:10px;color:var(--dim);text-align:center;padding:8px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r)">Sem hesitações registradas ainda — registre na aba Trade</div>';
+    return;
+  }
+  const totalPts=allHes.reduce((a,h)=>a+h.pts,0);
+  const totalBRL=totalPts*100;
+  // Por motivo
+  const byReason={};
+  allHes.forEach(h=>{if(!byReason[h.reason]) byReason[h.reason]={pts:0,n:0};byReason[h.reason].pts+=h.pts;byReason[h.reason].n++;});
+  const topReasons=Object.entries(byReason).sort((a,b)=>b[1].pts-a[1].pts).slice(0,5);
+  // Por horário
+  const byHour={};
+  allHes.forEach(h=>{const hr=h.time&&h.time.split(':')[0];if(hr){if(!byHour[hr]) byHour[hr]={pts:0,n:0};byHour[hr].pts+=h.pts;byHour[hr].n++;}});
+  const peakHour=Object.entries(byHour).sort((a,b)=>b[1].pts-a[1].pts)[0];
+  // Por energia: hesitação com energia alta vs baixa
+  const hesHighE=allHes.filter(h=>h.energia>=7);const hesLowE=allHes.filter(h=>h.energia<=4);
+  const avgPtsHighE=hesHighE.length?hesHighE.reduce((a,h)=>a+h.pts,0)/hesHighE.length:null;
+  const avgPtsLowE=hesLowE.length?hesLowE.reduce((a,h)=>a+h.pts,0)/hesLowE.length:null;
+  // Tendência: últimos 30d vs anteriores
+  const sorted=[...allData].sort((a,b)=>a.date_iso.localeCompare(b.date_iso));
+  const l30Hes=[];sorted.slice(-30).forEach(d=>(d.t_hesitations||[]).forEach(h=>l30Hes.push(h)));
+  const prev30Hes=[];sorted.slice(-60,-30).forEach(d=>(d.t_hesitations||[]).forEach(h=>prev30Hes.push(h)));
+  const l30Pts=l30Hes.reduce((a,h)=>a+h.pts,0);
+  const p30Pts=prev30Hes.reduce((a,h)=>a+h.pts,0);
+  const trend=p30Pts>0?(l30Pts-p30Pts)/p30Pts*100:null;
+
+  // KPIs
+  const kpis=`<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:10px">
+    <div style="background:var(--rd);border:1px solid rgba(232,64,64,.2);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:'Fraunces',serif;font-size:1.5rem;color:var(--red)">${allHes.length}</div>
+      <div style="font-size:8px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Total ops</div>
+    </div>
+    <div style="background:var(--rd);border:1px solid rgba(232,64,64,.2);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:'Fraunces',serif;font-size:1.5rem;color:var(--red)">${totalPts}pts</div>
+      <div style="font-size:8px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Pts perdidos</div>
+    </div>
+    <div style="background:var(--rd);border:1px solid rgba(232,64,64,.2);border-radius:8px;padding:10px;text-align:center">
+      <div style="font-family:'Fraunces',serif;font-size:1.4rem;color:var(--red)">R$${(totalBRL/1000).toFixed(0)}k</div>
+      <div style="font-size:8px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-top:2px">Custo total</div>
+    </div>
+  </div>`;
+  // Tendência 30d
+  const trendHtml=trend!==null?`<div style="font-size:9px;padding:5px 10px;border-radius:7px;background:${trend<0?'var(--gd)':'var(--rd)'};color:${trend<0?'var(--green)':'var(--red)'};margin-bottom:10px">${trend<0?'↓ Melhora':'↑ Piora'}: custo de hesitação ${Math.abs(trend).toFixed(0)}% ${trend<0?'menor':'maior'} nos últimos 30d vs 30d anteriores</div>`:'' ;
+  // Por motivo: ranking visual
+  const maxPts=topReasons.length?topReasons[0][1].pts:1;
+  const reasonsHtml=topReasons.map(([r,v])=>`
+    <div style="margin-bottom:6px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px">
+        <span style="font-size:9px;color:var(--text)">${esc(r)}</span>
+        <span style="font-size:9px;color:var(--red)">${v.pts}pts · n=${v.n}</span>
+      </div>
+      <div style="height:4px;background:var(--b2);border-radius:2px">
+        <div style="height:4px;width:${Math.round(v.pts/maxPts*100)}%;background:var(--red);border-radius:2px"></div>
+      </div>
+    </div>`).join('');
+  // Insight energia
+  const energyHtml=(avgPtsHighE!=null&&avgPtsLowE!=null)?`
+    <div style="background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:9px 11px;margin-top:8px">
+      <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px">💡 Energia × hesitação</div>
+      <div style="font-size:10px;color:var(--text);line-height:1.6">
+        Com energia ≥7: deixou ${avgPtsHighE.toFixed(0)}pts/hes na mesa.<br>
+        Com energia ≤4: deixou ${avgPtsLowE.toFixed(0)}pts/hes na mesa.<br>
+        <span style="color:var(--dim)">Você hesita mais em estados ${avgPtsHighE>avgPtsLowE?'de alta':'de baixa'} energia.</span>
+      </div>
+    </div>`:'' ;
+
+  el.innerHTML=`
+    <div style="background:var(--s1);border:1px solid rgba(232,64,64,.2);border-radius:var(--r);padding:13px">
+      <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--red);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+        <span>⚠️ Custo da hesitação</span>
+        ${peakHour?`<span style="font-size:9px;color:var(--dim)">Pico: ${peakHour[0]}h (${peakHour[1].n}x)</span>`:''}
+      </div>
+      ${kpis}
+      ${trendHtml}
+      <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:8px">Por motivo (top 5)</div>
+      ${reasonsHtml}
+      ${energyHtml}
     </div>`;
 }
 
@@ -1818,7 +1925,14 @@ function renderStateResChart(data){
   const ctx=c.getContext('2d');const W=c.parentElement.offsetWidth-30;
   c.width=W*2;c.height=110*2;ctx.scale(2,2);const w=W,h=110;ctx.clearRect(0,0,w,h);
   const allOps=[];data.forEach(d=>(d.t_ops_detail||[]).forEach(op=>{if(op.entry_state) allOps.push(op);}));
-  if(!allOps.length){ctx.fillStyle='#424a6a';ctx.font='10px Geist Mono';ctx.fillText('Registre o gatilho de cada operação',8,55);return;}
+  const fallback=document.getElementById('state-res-fallback');
+  if(!allOps.length){
+    c.style.display='none';
+    if(fallback) fallback.style.display='block';
+    return;
+  }
+  c.style.display='block';
+  if(fallback) fallback.style.display='none';
   const byState={};allOps.forEach(op=>{if(!byState[op.entry_state]) byState[op.entry_state]={pts:0,n:0,w:0};byState[op.entry_state].pts+=op.pts;byState[op.entry_state].n++;if(op.pts>0) byState[op.entry_state].w++;});
   const entries=Object.entries(byState).map(([s,v])=>({state:s,avgPts:v.pts/v.n,wr:Math.round(v.w/v.n*100),n:v.n})).sort((a,b)=>b.avgPts-a.avgPts);
   const pad={t:8,r:8,b:24,l:8};const bw=(w-pad.l-pad.r)/entries.length-4,ch=h-pad.t-pad.b;
