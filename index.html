@@ -1293,6 +1293,7 @@ function renderOps(){
     // Adesão chips
     const adhItems=op.adh_items||{};
     const adhChips=Object.entries(adhItems).filter(([,v])=>v).map(([k])=>`<span style="font-size:8px;padding:1px 6px;border-radius:6px;background:var(--gd);border:1px solid rgba(48,196,120,.3);color:var(--green)">${k}</span>`).join('');
+    const emoColor=op.emo_intensity>=8?'var(--red)':op.emo_intensity>=6?'var(--gold)':op.emo_intensity>=4?'var(--blue)':'var(--green)';
     const execColor=op.exec_score>=8?'var(--green)':op.exec_score>=5?'var(--blue)':'var(--red)';
     return`<div class="op-card" id="opcard-${i}">
       <div class="op-card-top">
