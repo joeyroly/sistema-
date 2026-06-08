@@ -1282,11 +1282,11 @@ function toggleOpExpand(idx){
 function renderOps(){
   const el=document.getElementById('op-list');if(!el) return;
   el.innerHTML=tradeOps.map((op,i)=>{
-    const stateLabel=op.entry_state&&ENTRY_STATES[op.entry_state]?ENTRY_STATES[op.entry_state].label:op.entry_state||'—';
-    const emoColor=op.emo_intensity>=8?'var(--red)':op.emo_intensity>=6?'var(--gold)':op.emo_intensity>=4?'var(--blue)':'var(--green)';
+    const stateLabels=(op.entry_states||[op.entry_state]).filter(Boolean).map(s=>ENTRY_STATES[s]?ENTRY_STATES[s].label:s);
+    const stateLabel=stateLabels.join(' + ')||'—';
     const dangerExits=['MEDO','STOPMESA'];
-    const exitColor=op.exit_reason&&dangerExits.includes(op.exit_reason)?'var(--red)':'var(--green)';
-    const partialColor=op.partial_reason&&op.partial_reason.includes('Medo')?'var(--red)':'var(--teal)';
+    const exitReasons=op.exit_reasons||(op.exit_reason?[op.exit_reason]:[]);
+    const partialReasons=op.partial_reasons||(op.partial_reason?[op.partial_reason]:[]);
     const setupsStr=(op.setups||[]).join(' · ')||null;
     const brlStr=op.result_brl!=null?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${op.result_brl>=0?'var(--green)':'var(--red)'}">R$${op.result_brl>=0?'+':''}${op.result_brl.toLocaleString('pt-BR')}</span>`:'';
     const lotsStr=op.lots?`<span style="font-size:9px;padding:2px 7px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:var(--dim)">${op.lots}L</span>`:'';
