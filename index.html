@@ -1136,6 +1136,7 @@ function renderVisits(){
         <div class="visit-name">${esc(v.client)}</div>
         <div class="visit-meta">${v.time?v.time+' · ':''}${v.note?esc(v.note):'sem objetivo registrado'}</div>
       </div>
+      ${!v.done?`<button onclick="hesitacaoVisita(${i})" style="background:rgba(232,64,64,.12);border:1px solid rgba(232,64,64,.3);border-radius:6px;color:var(--red);font-size:8px;padding:3px 8px;cursor:pointer;white-space:nowrap;font-family:'Geist Mono',monospace" title="Registrar como hesitação de negócio">⚠️ Não fui</button>`:''}
       <button class="visit-del" onclick="removeVisit(${i})">×</button>
     </div>`).join('');
 
@@ -1153,18 +1154,40 @@ function renderVisits(){
   const costText=document.getElementById('visit-cost-text');
   if(notDone.length>0&&costRow){
     costRow.style.display='block';
-    // Busca histórico de valor médio por visita se disponível
-    const allVisitDays=allData.filter(d=>d.visits&&d.visits.some&&d.visits.some(v=>v.done));
     if(costText){
       if(notDone.length===1){
-        costText.innerHTML=`<strong>${esc(notDone[0].client)}</strong> ainda não foi visitado. Se o horário passar sem ação, registre como hesitação de negócio — o padrão é o mesmo do trade.`;
+        costText.innerHTML=`<strong>${esc(notDone[0].client)}</strong> ainda não foi visitado. Toque em <strong style="color:var(--red)">⚠️ Não fui</strong> para registrar como hesitação de negócio.`;
       } else {
-        costText.innerHTML=`${notDone.length} visitas planejadas não realizadas. Cada uma representa uma janela de oportunidade que fechou.`;
+        costText.innerHTML=`${notDone.length} visitas não realizadas. Toque em <strong style="color:var(--red)">⚠️ Não fui</strong> em cada uma para registrar.`;
       }
     }
   } else if(costRow){
     costRow.style.display='none';
   }
+}
+
+function hesitacaoVisita(idx){
+  const v=visits[idx];
+  if(!v) return;
+  // Registra automaticamente na lista de hesitações com motivo "negócio"
+  const time=v.time||nowHM();
+  hesitations.push({
+    time,
+    dir:'—',
+    pts:0,
+    reasons:['visita não realizada'],
+    setups:[],
+    mfe:null,mae:null,
+    visit_client:v.client,
+    visit_note:v.note||''
+  });
+  renderHes();
+  // Marca como "não feita" com flag
+  visits[idx].skipped=true;
+  renderVisits();
+  showToast(`Hesitação de negócio registrada — ${v.client}`);
+  // Navega para aba Trade para o usuário ver
+  // Não força navegação — só toast
 }
 
 function loadVisits(data){
