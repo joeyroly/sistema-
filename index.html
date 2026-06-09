@@ -353,7 +353,7 @@ tr:hover td{background:var(--s2)}
     <div class="brand"><div class="brand-pulse"></div>Sistema Joey</div>
     <div class="top-right">
       <div class="top-date" id="top-date">—</div>
-      <button id="notif-btn" onclick="requestNotifPermission()" style="display:none;background:none;border:1px solid rgba(78,124,248,.3);border-radius:8px;padding:3px 8px;font-size:9px;color:var(--dim);cursor:pointer;font-family:'Geist Mono',monospace" title="Ativar notificações">🔔</button>
+      <button id="notif-btn" onclick="requestNotifPermission()" style="background:none;border:1px solid rgba(232,160,32,.5);border-radius:8px;padding:3px 9px;font-size:10px;color:var(--gold);cursor:pointer;font-family:'Geist Mono',monospace;letter-spacing:.5px" title="Ativar notificações">🔔 ativar</button>
       <div class="badge-online" id="badge-online">●</div>
     </div>
   </div>
@@ -1832,32 +1832,46 @@ self.addEventListener('message',e=>{
   }
 }
 async function initNotifications(){
-  if(!('Notification' in window)) return;
   const btn=document.getElementById('notif-btn');
+  if(!('Notification' in window)){
+    // Browser sem suporte — esconde botão
+    if(btn) btn.style.display='none';
+    return;
+  }
   if(Notification.permission==='granted'){
     notifPermission=true;
-    if(btn) btn.style.display='none';
+    if(btn) btn.style.display='none';  // já ativo, esconde
   } else if(Notification.permission==='denied'){
-    if(btn){btn.style.display='inline-flex';btn.textContent='🔔 off';btn.title='Notificações bloqueadas — habilite em Ajustes > Safari > Notificações';}
-  } else {
-    // 'default' — não perguntado ainda
-    if(btn){btn.style.display='inline-flex';btn.style.borderColor='rgba(232,160,32,.5)';btn.style.color='var(--gold)';btn.textContent='🔔 ativar';}
+    // Bloqueado — mostra diferente
+    if(btn){btn.textContent='🔔 bloq';btn.style.color='var(--red)';btn.style.borderColor='rgba(232,64,64,.4)';btn.title='Bloqueado — ative em Ajustes > Safari > Notificações';}
   }
+  // 'default': botão já está visível e dourado por padrão no HTML
 }
 
 async function requestNotifPermission(){
-  if(!('Notification' in window)){showToast('Notificações não suportadas neste browser',true);return;}
-  if(Notification.permission==='denied'){showToast('Bloqueado — ative em Ajustes > Safari > Notificações',true);return;}
-  const p=await Notification.requestPermission();
-  notifPermission=p==='granted';
   const btn=document.getElementById('notif-btn');
-  if(p==='granted'){
-    if(btn) btn.style.display='none';
-    showToast('Notificações ativadas ✓');
-    // Dispara notificação de teste imediata via SW
-    fireNotifViaSW('✅ Notificações ativas','Sistema Joey vai te avisar nos horários configurados.');
-  } else {
-    showToast('Permissão negada — ative manualmente em Ajustes',true);
+  if(!('Notification' in window)){
+    showToast('Notificações não suportadas — use Safari com iOS 16.4+',true);
+    return;
+  }
+  if(Notification.permission==='denied'){
+    showToast('Bloqueado. Vá em: Ajustes › Safari › Notificações › Sistema Joey › Permitir',true);
+    return;
+  }
+  try{
+    const p=await Notification.requestPermission();
+    notifPermission=p==='granted';
+    if(p==='granted'){
+      if(btn) btn.style.display='none';
+      showToast('✅ Notificações ativadas!');
+      // Teste imediato
+      setTimeout(()=>fireNotifViaSW('✅ Sistema Joey','Notificações funcionando. Você será avisado nos horários configurados.'),1000);
+    } else {
+      if(btn){btn.textContent='🔔 negado';btn.style.color='var(--red)';}
+      showToast('Permissão negada. Ative em Ajustes › Notificações',true);
+    }
+  }catch(e){
+    showToast('Erro: '+e.message,true);
   }
 }
 function startNotifScheduler(){checkScheduledNotifs();setInterval(checkScheduledNotifs,60000);}
