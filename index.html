@@ -313,6 +313,21 @@ tr:hover td{background:var(--s2)}
 .visit-del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px;padding:0 2px;align-self:center}
 .visit-del:hover{color:var(--red)}
 .visit-cost-row{background:rgba(232,64,64,.06);border:1px solid rgba(232,64,64,.2);border-radius:7px;padding:9px 11px;margin-top:8px;display:none}
+
+/* ── MODAL PORQUÊ NÃO FUI ── */
+.skip-modal{position:fixed;inset:0;background:rgba(6,8,16,.85);backdrop-filter:blur(8px);z-index:300;display:flex;align-items:flex-end;padding:16px}
+.skip-modal-box{width:100%;max-width:480px;margin:0 auto;background:var(--s1);border:1px solid rgba(232,64,64,.3);border-radius:16px;padding:20px}
+.skip-modal-title{font-size:11px;color:var(--hi);margin-bottom:4px;font-weight:500}
+.skip-modal-sub{font-size:10px;color:var(--dim);margin-bottom:14px;line-height:1.5}
+.skip-reason-grid{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.skip-reason-btn{padding:6px 12px;border-radius:14px;background:var(--s2);border:1px solid var(--b1);font-size:9px;color:var(--dim);cursor:pointer;font-family:'Geist Mono',monospace;transition:all .15s}
+.skip-reason-btn.sel{background:var(--rd);border-color:var(--red);color:var(--red)}
+.skip-reasons-selected{font-size:9px;color:var(--dim);margin-bottom:8px;min-height:16px}
+
+/* ── PAINEL DE EVOLUÇÃO DE VISITAS ── */
+.visit-stat{background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:10px;text-align:center}
+.visit-stat-val{font-family:'Fraunces',serif;font-size:1.4rem;color:var(--hi)}
+.visit-stat-lbl{font-size:7px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-top:3px}
 </style>
 </head>
 <body>
@@ -455,11 +470,18 @@ tr:hover td{background:var(--s2)}
             <!-- Form nova visita -->
             <div style="display:grid;grid-template-columns:1fr 64px auto;gap:6px;margin-top:6px">
               <input class="add-inp" id="visit-client-inp" placeholder="Nome do cliente…" onkeydown="if(event.key==='Enter'){addVisit();event.preventDefault()}">
-              <input class="time-inp" id="visit-time-inp" type="time" value="14:00">
+              <input class="time-inp" id="visit-time-inp" type="time" value="14:00" title="Horário da visita" onchange="calcPrepTime()">
               <button class="add-btn" onclick="addVisit()">+</button>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;margin-top:5px;padding:7px 10px;background:var(--s3);border-radius:7px;border:1px solid var(--b1)">
+              <span style="font-size:9px;color:var(--dim)">🚿 Preparação:</span>
+              <input class="time-inp" id="visit-prep-inp" type="time" value="13:30" style="flex:0;width:70px;font-size:10px;padding:4px 6px;border-color:var(--purp);color:var(--purp)" title="Horário para começar a se preparar (banho + roupa)">
+              <span style="font-size:9px;color:var(--dim)" id="visit-prep-label">30 min antes da visita — alerta automático</span>
             </div>
             <input class="add-inp" id="visit-note-inp" placeholder="Objetivo da visita — o que você vai propor…" style="width:100%;margin-top:5px" onkeydown="if(event.key==='Enter'){addVisit();event.preventDefault()}">
           </div>
+          <!-- PAINEL EVOLUÇÃO VISITAS -->
+          <div id="visit-evolution" style="margin-top:12px;display:none"></div>
         </div>
       </div>
 
@@ -1107,16 +1129,31 @@ function renderAnchorPhrase(){
 }
 
 // ── TRACKER VISITAS ───────────────────────────
+function calcPrepTime(){
+  const visitTime=document.getElementById('visit-time-inp')?.value;
+  if(!visitTime) return;
+  const [h,m]=visitTime.split(':').map(Number);
+  let prepMins=h*60+m-30;if(prepMins<0) prepMins=0;
+  const ph=Math.floor(prepMins/60),pm=prepMins%60;
+  const prepStr=`${String(ph).padStart(2,'0')}:${String(pm).padStart(2,'0')}`;
+  const prepInp=document.getElementById('visit-prep-inp');
+  if(prepInp) prepInp.value=prepStr;
+  const lbl=document.getElementById('visit-prep-label');
+  if(lbl) lbl.textContent=`${prepStr} · 30 min antes — alerta automático`;
+}
+
 function addVisit(){
   const client=document.getElementById('visit-client-inp')?.value.trim();
   const time=document.getElementById('visit-time-inp')?.value||'';
+  const prep_time=document.getElementById('visit-prep-inp')?.value||'';
   const note=document.getElementById('visit-note-inp')?.value.trim()||'';
   if(!client){showToast('Informe o nome do cliente',true);return;}
-  visits.push({client,time,note,done:false});
+  visits.push({client,time,prep_time,note,done:false});
   renderVisits();
   const ci=document.getElementById('visit-client-inp');if(ci) ci.value='';
   const ni=document.getElementById('visit-note-inp');if(ni) ni.value='';
   const ti=document.getElementById('visit-time-inp');if(ti) ti.value='14:00';
+  const pi=document.getElementById('visit-prep-inp');if(pi) pi.value='13:30';
   if(ci) ci.focus();
 }
 
@@ -1134,7 +1171,7 @@ function renderVisits(){
       <div class="visit-check${v.done?' chk':''}" onclick="toggleVisit(${i})">${v.done?'✓':''}</div>
       <div class="visit-info">
         <div class="visit-name">${esc(v.client)}</div>
-        <div class="visit-meta">${v.time?v.time+' · ':''}${v.note?esc(v.note):'sem objetivo registrado'}</div>
+        <div class="visit-meta">${v.prep_time?`🚿 ${v.prep_time} → `:''}${v.time?v.time+' · ':''}${v.note?esc(v.note):'sem objetivo registrado'}</div>
       </div>
       ${!v.done?`<button onclick="hesitacaoVisita(${i})" style="background:rgba(232,64,64,.12);border:1px solid rgba(232,64,64,.3);border-radius:6px;color:var(--red);font-size:8px;padding:3px 8px;cursor:pointer;white-space:nowrap;font-family:'Geist Mono',monospace" title="Registrar como hesitação de negócio">⚠️ Não fui</button>`:''}
       <button class="visit-del" onclick="removeVisit(${i})">×</button>
@@ -1166,28 +1203,124 @@ function renderVisits(){
   }
 }
 
+// ── MODAL PORQUÊ NÃO FUI ─────────────────────
+let skipModalIdx=null;
+let skipReasons=[];
+
 function hesitacaoVisita(idx){
-  const v=visits[idx];
-  if(!v) return;
-  // Registra automaticamente na lista de hesitações com motivo "negócio"
-  const time=v.time||nowHM();
-  hesitations.push({
-    time,
-    dir:'—',
+  const v=visits[idx];if(!v) return;
+  skipModalIdx=idx;skipReasons=[];
+  // Reset modal
+  document.querySelectorAll('.skip-reason-btn').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('skip-reasons-selected').textContent='';
+  const noteEl=document.getElementById('skip-note');if(noteEl) noteEl.value='';
+  const clientEl=document.getElementById('skip-modal-client');
+  if(clientEl) clientEl.innerHTML=`<strong style="color:var(--hi)">${esc(v.client)}</strong>${v.time?' · '+v.time:''} — registrar hesitação de negócio.`;
+  document.getElementById('skip-modal').style.display='flex';
+}
+
+function toggleSkipReason(btn){
+  const v=btn.dataset.v;
+  const idx=skipReasons.indexOf(v);
+  if(idx>=0){skipReasons.splice(idx,1);btn.classList.remove('sel');}
+  else{skipReasons.push(v);btn.classList.add('sel');}
+  const el=document.getElementById('skip-reasons-selected');
+  if(el) el.textContent=skipReasons.length?'Motivos: '+skipReasons.join(', '):'';
+}
+
+function closeSkipModal(){
+  document.getElementById('skip-modal').style.display='none';
+  skipModalIdx=null;skipReasons=[];
+}
+
+function confirmSkipModal(){
+  const idx=skipModalIdx;
+  const v=visits[idx];if(!v) return;
+  const note=document.getElementById('skip-note')?.value.trim()||'';
+  // Registra na lista de hesitações do trade como tipo "negócio"
+  const record={
+    time:v.time||nowHM(),
+    dir:'NEG',
     pts:0,
-    reasons:['visita não realizada'],
+    reasons:skipReasons.length?[...skipReasons]:['sem motivo registrado'],
     setups:[],
     mfe:null,mae:null,
+    type:'negocio',
     visit_client:v.client,
-    visit_note:v.note||''
-  });
-  renderHes();
-  // Marca como "não feita" com flag
-  visits[idx].skipped=true;
+    visit_note:v.note||'',
+    skip_note:note
+  };
+  // Salva no histórico de visitas do dia para tracking separado
+  if(!visits[idx].skips) visits[idx].skips=[];
+  visits[idx].skips.push({date:todayISO(),reasons:[...skipReasons],note});
   renderVisits();
-  showToast(`Hesitação de negócio registrada — ${v.client}`);
-  // Navega para aba Trade para o usuário ver
-  // Não força navegação — só toast
+  renderVisitEvolution();
+  closeSkipModal();
+  showToast('Hesitação de negócio registrada ⚠️');
+}
+
+function renderVisitEvolution(){
+  const el=document.getElementById('visit-evolution');if(!el) return;
+  // Coleta histórico de todas as visitas de todos os dias
+  const allVisitDays=allData.filter(d=>d.visits&&d.visits.length);
+  if(!allVisitDays.length&&!visits.length){el.style.display='none';return;}
+  el.style.display='block';
+
+  // Calcula stats históricos
+  let totalPlanned=0,totalDone=0,totalSkipped=0;
+  const skipReasonCount={};
+  const byMonth={};
+
+  allVisitDays.forEach(d=>{
+    const month=d.date_iso.slice(0,7);
+    if(!byMonth[month]) byMonth[month]={planned:0,done:0};
+    (d.visits||[]).forEach(v=>{
+      totalPlanned++;byMonth[month].planned++;
+      if(v.done){totalDone++;byMonth[month].done++;}
+      (v.skips||[]).forEach(s=>{
+        totalSkipped++;
+        (s.reasons||[]).forEach(r=>{skipReasonCount[r]=(skipReasonCount[r]||0)+1;});
+      });
+    });
+  });
+  // Inclui visitas do dia atual (ainda não salvas)
+  visits.forEach(v=>{
+    totalPlanned++;
+    if(v.done) totalDone++;
+    (v.skips||[]).forEach(s=>{totalSkipped++;(s.reasons||[]).forEach(r=>{skipReasonCount[r]=(skipReasonCount[r]||0)+1;});});
+  });
+
+  const execRate=totalPlanned>0?Math.round(totalDone/totalPlanned*100):0;
+  const topReasons=Object.entries(skipReasonCount).sort((a,b)=>b[1]-a[1]).slice(0,4);
+
+  // Tendência: últimos 30d
+  const recent30=allVisitDays.filter(d=>{const cutoff=new Date();cutoff.setDate(cutoff.getDate()-30);return new Date(d.date_iso)>=cutoff;});
+  let r30planned=0,r30done=0;
+  recent30.forEach(d=>(d.visits||[]).forEach(v=>{r30planned++;if(v.done) r30done++;}));
+  const rate30=r30planned>0?Math.round(r30done/r30planned*100):null;
+
+  const rateColor=execRate>=70?'var(--green)':execRate>=50?'var(--gold)':'var(--red)';
+  const trendHtml=rate30!=null?`<div style="font-size:9px;padding:4px 9px;border-radius:6px;background:${rate30>=70?'var(--gd)':rate30>=50?'var(--od)':'var(--rd)'};color:${rate30>=70?'var(--green)':rate30>=50?'var(--gold)':'var(--red)'};margin-bottom:10px">Últimos 30d: ${rate30}% de execução (${r30done}/${r30planned} visitas)</div>`:'';
+
+  const reasonsHtml=topReasons.length?`
+    <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:7px">Motivos de não-ida (top ${topReasons.length})</div>
+    ${topReasons.map(([r,n])=>`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px"><span style="font-size:10px;color:var(--text)">${esc(r)}</span><span style="font-size:9px;padding:1px 8px;border-radius:8px;background:var(--rd);color:var(--red)">${n}x</span></div>`).join('')}
+    <div style="font-size:9px;color:var(--dim);margin-top:6px;line-height:1.5">O motivo mais frequente é o padrão real a tratar — não os outros.</div>`:'';
+
+  const goggins=execRate<50?`<div style="background:rgba(232,64,64,.06);border:1px solid rgba(232,64,64,.2);border-radius:7px;padding:9px 11px;margin-top:8px;font-size:10px;color:var(--text);line-height:1.5;font-style:italic">"Você não vai porque está confortável. Conforto é o inimigo." — Execute 1 visita hoje, independente do resultado.</div>`:'';
+
+  el.innerHTML=`
+    <div style="background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:13px">
+      <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:10px">📊 Evolução de visitas</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:10px">
+        <div class="visit-stat"><div class="visit-stat-val" style="color:${rateColor}">${execRate}%</div><div class="visit-stat-lbl">Taxa exec</div></div>
+        <div class="visit-stat"><div class="visit-stat-val" style="color:var(--green)">${totalDone}</div><div class="visit-stat-lbl">Realizadas</div></div>
+        <div class="visit-stat"><div class="visit-stat-val" style="color:var(--red)">${totalSkipped}</div><div class="visit-stat-lbl">Hesitações</div></div>
+      </div>
+      ${trendHtml}
+      ${reasonsHtml}
+      ${goggins}
+    </div>`;
 }
 
 function loadVisits(data){
@@ -1515,7 +1648,7 @@ function bootApp(){
   const hm=nowHM();
   ['op-time','hes-time'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value) el.value=hm;});
   renderHesSetupTags('');
-  loadTodayForms();renderBriefing();renderAnchorPhrase();initNotifications();startNotifScheduler();
+  loadTodayForms();renderBriefing();renderAnchorPhrase();renderVisitEvolution();initNotifications();startNotifScheduler();
 }
 function todayISO(){const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;}
 function todayEntry(){return allData.find(e=>e.date_iso===todayISO())||{};}
@@ -1578,6 +1711,11 @@ function renderBriefing(){
     ${bRow('⬟','Pilares de ontem',pilarSummary!=='—'?pilarSummary:null)}
     ${bRow('📈','Trade de ontem',yOpsStr)}
     ${bRow('◎','Intenção de hoje',yE.intent)}
+    ${(()=>{
+      const yVisits=(yE.visits||[]).filter(v=>!v.done&&v.time);
+      if(!yVisits.length) return '';
+      return yVisits.map(v=>`<div class="briefing-row"><span class="briefing-icon">🤝</span><div class="briefing-content"><div class="briefing-lbl">Visita planejada${v.prep_time?' · 🚿 preparar '+v.prep_time:''}</div><div class="briefing-text"><span style="color:var(--blue)">${v.time}</span> · ${esc(v.client)}${v.note?' — '+esc(v.note):''}</div></div></div>`).join('');
+    })()}
     ${bRow('◆','MIT de hoje',yE.mit)}
   `;
   const ag=yE.agenda||[];
@@ -1628,7 +1766,7 @@ async function savePessoal(){
     intent:document.getElementById('f-intent').value.trim(),
     mit:document.getElementById('f-mit').value.trim(),
     agenda:[...agenda],
-    visits:visits.map(v=>({client:v.client,time:v.time,note:v.note,done:v.done})),
+    visits:visits.map(v=>({client:v.client,time:v.time,note:v.note,done:v.done,skips:v.skips||[]})),
     sleep_bed:document.getElementById('sleep-bed').value||null,
     sleep_wake:document.getElementById('sleep-wake').value||null,
     sleep_quality:sleepQuality,
@@ -1699,8 +1837,28 @@ function checkScheduledNotifs(){
   });
   // Alarme contextual: diário pendente após 21h
   if(now.getHours()>=21&&!todayEntry().date_iso) showInAppBanner('🌙 Diário pendente','Você ainda não preencheu o diário de hoje.','warn');
-  // Alarme contextual: alerta de reversão (saída por medo → próximo trade é de risco)
+  // Alarme contextual: alerta de reversão
   checkRevancheAlert();
+  // Alarme de preparação para visita
+  checkVisitPrepAlert();
+}
+
+function checkVisitPrepAlert(){
+  if(!visits.length) return;
+  const now=new Date();
+  const hm=`${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const today=todayISO();
+  visits.filter(v=>!v.done&&v.prep_time).forEach((v,i)=>{
+    if(hm===v.prep_time){
+      const key='prep_'+today+'_'+i;
+      if(localStorage.getItem(key)) return;
+      localStorage.setItem(key,'1');
+      fireNotif(
+        '🚿 Hora de se preparar',
+        `Visita a ${v.client} às ${v.time}. Agora é o momento: banho, roupa, sair. Decisão já foi tomada ontem.`
+      );
+    }
+  });
 }
 
 function checkRevancheAlert(){
@@ -2429,6 +2587,30 @@ ALTER TABLE sistema_joey
 -- Os campos t_ops_detail (jsonb) já inclui: entry_state, emo_intensity,
 -- partial_reason, exit_reason, setups[] — tudo dentro do array de operações.
 ────────────────────────────────────────────── -->
+
+<!-- MODAL PORQUÊ NÃO FUI -->
+<div class="skip-modal" id="skip-modal" style="display:none" onclick="if(event.target===this)closeSkipModal()">
+  <div class="skip-modal-box">
+    <div class="skip-modal-title">⚠️ Por que não foi?</div>
+    <div class="skip-modal-sub" id="skip-modal-client">Registrar hesitação de negócio — o mesmo mecanismo do trade.</div>
+    <div class="skip-reason-grid" id="skip-reason-grid">
+      <button class="skip-reason-btn" data-v="sem tempo" onclick="toggleSkipReason(this)">⏰ Sem tempo</button>
+      <button class="skip-reason-btn" data-v="cansaço" onclick="toggleSkipReason(this)">😴 Cansaço</button>
+      <button class="skip-reason-btn" data-v="medo rejeição" onclick="toggleSkipReason(this)">😨 Medo rejeição</button>
+      <button class="skip-reason-btn" data-v="adiamento" onclick="toggleSkipReason(this)">📅 Adiamento</button>
+      <button class="skip-reason-btn" data-v="outra prioridade" onclick="toggleSkipReason(this)">🔀 Outra prioridade</button>
+      <button class="skip-reason-btn" data-v="desconforto" onclick="toggleSkipReason(this)">😬 Desconforto</button>
+      <button class="skip-reason-btn" data-v="rota" onclick="toggleSkipReason(this)">🗺️ Rota/distância</button>
+      <button class="skip-reason-btn" data-v="outro" onclick="toggleSkipReason(this)">💬 Outro</button>
+    </div>
+    <div class="skip-reasons-selected" id="skip-reasons-selected"></div>
+    <textarea class="finp" id="skip-note" placeholder="Descreva o pensamento exato que impediu a visita — o contexto interno, não a justificativa externa…" style="min-height:56px;margin-bottom:10px"></textarea>
+    <div style="display:flex;gap:8px">
+      <button onclick="closeSkipModal()" style="flex:1;padding:11px;background:var(--s2);border:1px solid var(--b1);border-radius:8px;color:var(--dim);font-family:'Geist Mono',monospace;font-size:11px;cursor:pointer">Cancelar</button>
+      <button onclick="confirmSkipModal()" style="flex:2;padding:11px;background:var(--rd);border:1px solid rgba(232,64,64,.4);border-radius:8px;color:var(--red);font-family:'Geist Mono',monospace;font-size:11px;cursor:pointer;font-weight:500">Registrar hesitação ⚠️</button>
+    </div>
+  </div>
+</div>
 
 <datalist id="pregao-times"><option value="08:00"><option value="08:05"><option value="08:10"><option value="08:15"><option value="08:20"><option value="08:25"><option value="08:30"><option value="08:35"><option value="08:40"><option value="08:45"><option value="08:50"><option value="08:55"><option value="09:00"><option value="09:05"><option value="09:10"><option value="09:15"><option value="09:20"><option value="09:25"><option value="09:30"><option value="09:35"><option value="09:40"><option value="09:45"><option value="09:50"><option value="09:55"><option value="10:00"><option value="10:05"><option value="10:10"><option value="10:15"><option value="10:20"><option value="10:25"><option value="10:30"><option value="10:35"><option value="10:40"><option value="10:45"><option value="10:50"><option value="10:55"><option value="11:00"><option value="11:05"><option value="11:10"><option value="11:15"><option value="11:20"><option value="11:25"><option value="11:30"><option value="11:35"><option value="11:40"><option value="11:45"><option value="11:50"><option value="11:55"><option value="12:00"><option value="12:05"><option value="12:10"><option value="12:15"><option value="12:20"><option value="12:25"><option value="12:30"><option value="12:35"><option value="12:40"><option value="12:45"><option value="12:50"><option value="12:55"><option value="13:00"><option value="13:05"><option value="13:10"><option value="13:15"><option value="13:20"><option value="13:25"><option value="13:30"><option value="13:35"><option value="13:40"><option value="13:45"><option value="13:50"><option value="13:55"><option value="14:00"><option value="14:05"><option value="14:10"><option value="14:15"><option value="14:20"><option value="14:25"><option value="14:30"><option value="14:35"><option value="14:40"><option value="14:45"><option value="14:50"><option value="14:55"><option value="15:00"><option value="15:05"><option value="15:10"><option value="15:15"><option value="15:20"><option value="15:25"><option value="15:30"><option value="15:35"><option value="15:40"><option value="15:45"><option value="15:50"><option value="15:55"><option value="16:00"><option value="16:05"><option value="16:10"><option value="16:15"><option value="16:20"><option value="16:25"><option value="16:30"><option value="16:35"><option value="16:40"><option value="16:45"><option value="16:50"><option value="16:55"><option value="17:00"><option value="17:05"><option value="17:10"><option value="17:15"><option value="17:20"><option value="17:25"><option value="17:30"><option value="17:35"><option value="17:40"><option value="17:45"><option value="17:50"><option value="17:55"></datalist>
 </body>
