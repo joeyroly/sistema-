@@ -1651,12 +1651,48 @@ function bootApp(){
   renderHesSetupTags('');
   loadTodayForms();renderBriefing();renderAnchorPhrase();renderVisitEvolution();initNotifications();startNotifScheduler();
 }
-function todayISO(){const n=new Date();return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')}`;}
+function todayISO(){
+  const n=new Date();
+  // Usar horário local do dispositivo, não UTC
+  const y=n.getFullYear();
+  const m=String(n.getMonth()+1).padStart(2,'0');
+  const d=String(n.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
 function todayEntry(){return allData.find(e=>e.date_iso===todayISO())||{};}
 
+function resetForms(){
+  // Limpa TUDO — chamado ao iniciar um novo dia
+  moodPre=null;moodPos=null;sleepQuality=null;
+  document.querySelectorAll('#mood-pre-grid .mo, #mood-pos-grid .mo').forEach(b=>b.classList.remove('sel'));
+  document.querySelectorAll('.sq').forEach(b=>b.classList.remove('sel'));
+  [['sl-e','sv-e'],['sl-d','sv-d'],['sl-c','sv-c'],['sl-presenca','sv-presenca']].forEach(([s,v])=>{
+    const se=document.getElementById(s),ve=document.getElementById(v);
+    if(se){se.value=5;}if(ve){ve.textContent='5';}
+  });
+  ['f-mood-pre-note','f-mood-pos-note','f-lesson','f-good','f-intent','f-mit','f-proposito'].forEach(id=>{
+    const el=document.getElementById(id);if(el) el.value='';
+  });
+  ['sleep-bed','sleep-wake'].forEach(id=>{const el=document.getElementById(id);if(el) el.value='';});
+  document.getElementById('sleep-dur-display')&&(document.getElementById('sleep-dur-display').style.display='none');
+  wins=[];fails=[];agenda=[];tradeOps=[];hesitations=[];visits=[];
+  pilares={alma:[],corpo:[],espirito:[],pessoas:[]};
+  PILAR_KEYS.forEach(k=>renderPilar(k));
+  renderList('win');renderList('fail');renderAgenda();renderOps();renderHes();renderVisits();
+  ['t-felling','t-mesa','t-pa','t-analysis','t-avoid','hes-detail'].forEach(id=>{
+    const el=document.getElementById(id);if(el) el.value='';
+  });
+  document.getElementById('t-total-fpa')&&(document.getElementById('t-total-fpa').textContent='R$ 0');
+  document.getElementById('t-total-pf')&&(document.getElementById('t-total-pf').textContent='R$ 0');
+}
+
 function loadTodayForms(){
-  const e=todayEntry();if(!e.date_iso) return;
-  if(e.mood){moodPre=e.mood_pre||e.mood;document.querySelectorAll('#mood-pre-grid .mo').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+moodPre+"'")) b.classList.add('sel');});}
+  const e=todayEntry();
+  // SEMPRE reseta antes — garante dia limpo
+  resetForms();
+  if(!e.date_iso) return;  // sem registro de hoje: formulário fica vazio
+  // Carrega dados de HOJE
+  if(e.mood_pre||e.mood){moodPre=e.mood_pre||e.mood;document.querySelectorAll('#mood-pre-grid .mo').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+moodPre+"'")) b.classList.add('sel');});}
   if(e.mood_pos){moodPos=e.mood_pos;document.querySelectorAll('#mood-pos-grid .mo').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+e.mood_pos+"'")) b.classList.add('sel');});}
   if(e.mood_pre_note){const el=document.getElementById('f-mood-pre-note');if(el) el.value=e.mood_pre_note;}
   if(e.mood_pos_note){const el=document.getElementById('f-mood-pos-note');if(el) el.value=e.mood_pos_note;}
@@ -1665,16 +1701,12 @@ function loadTodayForms(){
   wins=e.wins||[];fails=e.fails||[];agenda=e.agenda||[];tradeOps=e.t_ops_detail||[];hesitations=e.t_hesitations||[];
   renderList('win');renderList('fail');renderAgenda();renderOps();renderHes();
   ['lesson','good','intent','mit'].forEach(k=>{const el=document.getElementById('f-'+k);if(el&&e[k]) el.value=e[k];});
-  // sono
   if(e.sleep_bed){const el=document.getElementById('sleep-bed');if(el) el.value=e.sleep_bed;}
   if(e.sleep_wake){const el=document.getElementById('sleep-wake');if(el) el.value=e.sleep_wake;}
   if(e.sleep_quality){sleepQuality=e.sleep_quality;document.querySelectorAll('.sq').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+e.sleep_quality+"'")) b.classList.add('sel');});}
   if(e.sleep_bed&&e.sleep_wake) calcSleepDur();
-  // pilares
   if(e.pilares) loadPilares(e.pilares);
-  // visitas
   if(e.visits) loadVisits(e.visits);
-  // trade
   const safe=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null) el.value=val;};
   safe('t-felling',e.t_felling);safe('t-mesa',e.t_mesa);safe('t-pa',e.t_pa);
   safe('t-analysis',e.t_analysis);safe('t-avoid',e.t_avoid);
@@ -1718,6 +1750,18 @@ function renderBriefing(){
       return yVisits.map(v=>`<div class="briefing-row"><span class="briefing-icon">🤝</span><div class="briefing-content"><div class="briefing-lbl">Visita planejada${v.prep_time?' · 🚿 preparar '+v.prep_time:''}</div><div class="briefing-text"><span style="color:var(--blue)">${v.time}</span> · ${esc(v.client)}${v.note?' — '+esc(v.note):''}</div></div></div>`).join('');
     })()}
     ${bRow('◆','MIT de hoje',yE.mit)}
+    ${(()=>{
+      // Operações de ontem — revisão pré-pregão (Bernadinho: revisar o jogo anterior)
+      const yOpsAll=yE.t_ops_detail||[];
+      if(!yOpsAll.length) return '';
+      const opSummary=yOpsAll.slice(-3).map(op=>{
+        const cor=op.pts>=0?'color:var(--green)':'color:var(--red)';
+        const estado=op.entry_states?op.entry_states.join('+'): (op.entry_state||'');
+        const corrStr=op.corr?` · <em style="color:var(--dim)">"${esc(op.corr.slice(0,40))}${op.corr.length>40?'…':''}"</em>`:'';
+        return `<div style="font-size:11px;color:var(--hi);line-height:1.6"><span style="${cor}">${op.pts>=0?'+':''}${op.pts}pts</span>${estado?' · '+esc(estado):''} · ${op.time||''}${corrStr}</div>`;
+      }).join('');
+      return `<div class="briefing-row"><span class="briefing-icon">📈</span><div class="briefing-content"><div class="briefing-lbl">Últimas ops de ontem — revise antes de operar</div>${opSummary}</div></div>`;
+    })()}
   `;
   const ag=yE.agenda||[];
   if(ag.length) html+=`<div class="briefing-row"><span class="briefing-icon">📅</span><div class="briefing-content"><div class="briefing-lbl">Agenda de hoje</div>${ag.map(a=>`<div class="briefing-text" style="margin-bottom:2px"><span style="color:var(--blue)">${a.time}</span> · ${esc(a.text)}</div>`).join('')}</div></div>`;
