@@ -840,6 +840,14 @@ tr:hover td{background:var(--s2)}
         <div class="hm-lbl-row"><div class="hml">D</div><div class="hml">S</div><div class="hml">T</div><div class="hml">Q</div><div class="hml">Q</div><div class="hml">S</div><div class="hml">S</div></div>
         <div class="hm-grid" id="hm"></div>
       </div>
+      <!-- HORÁRIO × RESULTADO -->
+      <div class="card-lbl" style="padding:0 2px;margin-bottom:8px;margin-top:4px">HORÁRIO × RESULTADO</div>
+      <div id="panel-horario" style="margin-bottom:11px"></div>
+
+      <!-- ANÁLISE DE SEQUÊNCIA -->
+      <div class="card-lbl" style="padding:0 2px;margin-bottom:8px;margin-top:4px">ANÁLISE DE SEQUÊNCIA</div>
+      <div id="panel-sequencia" style="margin-bottom:11px"></div>
+
       <!-- ANÁLISE ESTATÍSTICA AVANÇADA -->
       <div class="card-lbl" style="padding:0 2px;margin-bottom:8px;margin-top:4px">ANÁLISE ESTATÍSTICA AVANÇADA</div>
       <div id="panel-stats" style="margin-bottom:11px"></div>
@@ -1622,11 +1630,12 @@ async function saveTrade(){
     t_result_pf:m,
     t_ops:ops_n,t_wins_ops:ops_w,
     t_wr:ops_n>0?Math.round(ops_w/ops_n*100):null,
-    t_emo_pre:+document.getElementById('sl-pre')?.value||5,
-    t_emo_pos:+document.getElementById('sl-pos')?.value||5,
+    mood_pre:moodPre,
+    mood_pre_note:(document.getElementById('f-mood-pre-note')?.value||'').trim(),
+    mood_pos:moodPos,
+    mood_pos_note:(document.getElementById('f-mood-pos-note')?.value||'').trim(),
     t_analysis:document.getElementById('t-analysis').value.trim(),
     t_avoid:document.getElementById('t-avoid').value.trim(),
-    // exec_score and adh now per-op in t_ops_detail
     t_ops_detail:[...tradeOps],
     t_hesitations:[...hesitations],
     t_hes_detail:document.getElementById('hes-detail').value.trim(),
@@ -1714,7 +1723,7 @@ function dayScore(d){const p=(d.energia||0)+(d.disciplina||0)+(d.clareza||0);con
 function renderDash(){
   const data=getFiltered().sort((a,b)=>a.date_iso.localeCompare(b.date_iso));
   renderDailyPanel();
-  renderScoreRing(data);renderKPIBlock(data);renderBehavKPIs(data);renderHeatmapDash();renderInsightsBlock(data);renderSetupEfficiency();renderHesPanel();renderStatsPanel();
+  renderScoreRing(data);renderKPIBlock(data);renderBehavKPIs(data);renderHeatmapDash();renderInsightsBlock(data);renderSetupEfficiency();renderHesPanel();renderHorarioPanel(data);renderSequenciaPanel(data);renderStatsPanel();
   setTimeout(()=>{renderCorrChart(data);renderLineChart(data);renderWRMoodChart(data);renderStateResChart(data);},60);
 }
 
@@ -2020,6 +2029,119 @@ function renderStateResChart(data){
     ctx.fillStyle='#424a6a';ctx.font='7px Geist Mono';ctx.fillText(e.state.slice(0,6),x,h-4);
     ctx.fillStyle=color;ctx.font='bold 8px Geist Mono';ctx.fillText(e.avgPts.toFixed(0)+'p',x+1,e.avgPts>=0?y-3:y+barH+9);
   });
+}
+
+// ── HORÁRIO × RESULTADO ──────────────────────
+function renderHorarioPanel(data){
+  const el=document.getElementById('panel-horario');if(!el) return;
+  const allOps=[];data.forEach(d=>(d.t_ops_detail||[]).forEach(op=>{if(op.time) allOps.push({...op});}));
+  if(allOps.length<5){el.innerHTML='<div style="font-size:10px;color:var(--dim);text-align:center;padding:8px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r)">Mín. 5 operações com horário para análise</div>';return;}
+
+  // Agrupar por hora
+  const byHour={};
+  allOps.forEach(op=>{
+    const hr=op.time.split(':')[0];
+    if(!byHour[hr]) byHour[hr]={pts:0,brl:0,n:0,w:0,nBrl:0};
+    byHour[hr].pts+=op.pts;byHour[hr].n++;
+    if(op.pts>0) byHour[hr].w++;
+    if(op.result_brl!=null){byHour[hr].brl+=op.result_brl;byHour[hr].nBrl++;}
+  });
+
+  // Filtrar horários de pregão (8-17)
+  const hours=Object.entries(byHour).filter(([h])=>parseInt(h)>=8&&parseInt(h)<=17).sort((a,b)=>parseInt(a[0])-parseInt(b[0]));
+  if(!hours.length){el.innerHTML='<div style="font-size:10px;color:var(--dim);text-align:center;padding:8px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r)">Nenhuma operação no horário do pregão ainda</div>';return;}
+
+  // Sharpe por hora: retorno médio / desvio padrão
+  const byHourOps={};
+  allOps.forEach(op=>{const hr=op.time.split(':')[0];if(!byHourOps[hr]) byHourOps[hr]=[];byHourOps[hr].push(op.pts);});
+
+  const maxAbsAvg=Math.max(...hours.map(([,v])=>Math.abs(v.pts/v.n)),0.1);
+
+  el.innerHTML=`<div style="background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:13px">
+    <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:12px">⏰ Desempenho por hora do pregão</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+    ${hours.map(([hr,v])=>{
+      const avgPts=v.pts/v.n;
+      const wr=Math.round(v.w/v.n*100);
+      const color=avgPts>0?'var(--green)':avgPts>-3?'var(--gold)':'var(--red)';
+      const barW=Math.round(Math.abs(avgPts)/maxAbsAvg*100);
+      // Sharpe da hora
+      const hrOps=byHourOps[hr]||[];
+      const mean=hrOps.reduce((a,b)=>a+b,0)/hrOps.length;
+      const stddev=Math.sqrt(hrOps.reduce((a,b)=>a+(b-mean)**2,0)/hrOps.length)||0.01;
+      const sharpe=(mean/stddev).toFixed(2);
+      return`<div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+          <span style="font-size:10px;color:var(--hi);min-width:28px">${hr}h</span>
+          <div style="flex:1;margin:0 8px;height:6px;background:var(--b2);border-radius:3px;overflow:hidden">
+            <div style="height:6px;width:${barW}%;background:${color};border-radius:3px"></div>
+          </div>
+          <span style="font-size:9px;color:${color};min-width:38px;text-align:right">${avgPts>=0?'+':''}${avgPts.toFixed(1)}pts</span>
+          <span style="font-size:8px;color:var(--dim);margin-left:6px;min-width:32px">WR${wr}%</span>
+          <span style="font-size:8px;color:var(--dim);margin-left:4px;min-width:28px">n=${v.n}</span>
+          <span style="font-size:8px;padding:1px 5px;border-radius:5px;margin-left:4px;background:${parseFloat(sharpe)>0.5?'var(--gd)':parseFloat(sharpe)>0?'var(--bd)':'var(--rd)'};color:${parseFloat(sharpe)>0.5?'var(--green)':parseFloat(sharpe)>0?'var(--blue)':'var(--red)'}">S${sharpe}</span>
+        </div>
+      </div>`;
+    }).join('')}
+    </div>
+    <div style="font-size:8px;color:var(--dim);margin-top:8px">S = Sharpe por hora · barras = média de pontos por operação</div>
+  </div>`;
+}
+
+// ── ANÁLISE DE SEQUÊNCIA ──────────────────────
+function renderSequenciaPanel(data){
+  const el=document.getElementById('panel-sequencia');if(!el) return;
+  // Análise: após N stops consecutivos, qual é o resultado da próxima operação?
+  const allOps=[];
+  data.forEach(d=>(d.t_ops_detail||[]).forEach(op=>allOps.push({...op,date:d.date_iso})));
+  if(allOps.length<8){el.innerHTML='<div style="font-size:10px;color:var(--dim);text-align:center;padding:8px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r)">Mín. 8 operações para análise de sequência</div>';return;}
+
+  // Sequência de resultados
+  const results=allOps.map(op=>op.pts);
+  const afterStreak={after1loss:[],after2loss:[],after3loss:[],after1win:[],after2win:[]};
+  for(let i=2;i<results.length;i++){
+    const prev1=results[i-1],prev2=results[i-2];
+    const cur=results[i];
+    if(prev1<0&&prev2<0&&i>=3&&results[i-3]<0) afterStreak.after3loss.push(cur);
+    else if(prev1<0&&prev2<0) afterStreak.after2loss.push(cur);
+    else if(prev1<0) afterStreak.after1loss.push(cur);
+    else if(prev1>0&&prev2>0) afterStreak.after2win.push(cur);
+    else if(prev1>0) afterStreak.after1win.push(cur);
+  }
+  const avgSeq=(arr)=>arr.length?(arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(1):null;
+  const wrSeq=(arr)=>arr.length?Math.round(arr.filter(v=>v>0).length/arr.length*100):null;
+
+  const rows=[
+    {label:'Após 1 stop',key:'after1loss',arr:afterStreak.after1loss,icon:'⚠️'},
+    {label:'Após 2 stops',key:'after2loss',arr:afterStreak.after2loss,icon:'🔴'},
+    {label:'Após 3+ stops',key:'after3loss',arr:afterStreak.after3loss,icon:'🛑'},
+    {label:'Após 1 win',key:'after1win',arr:afterStreak.after1win,icon:'✅'},
+    {label:'Após 2 wins',key:'after2win',arr:afterStreak.after2win,icon:'🟢'},
+  ].filter(r=>r.arr.length>=2);
+
+  if(!rows.length){el.innerHTML='<div style="font-size:10px;color:var(--dim);text-align:center;padding:8px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r)">Ainda não há sequências suficientes</div>';return;}
+
+  // Encontrar o padrão mais importante
+  const worstSeq=rows.filter(r=>r.key.includes('loss')).sort((a,b)=>(parseFloat(avgSeq(a.arr))||0)-(parseFloat(avgSeq(b.arr))||0))[0];
+
+  el.innerHTML=`<div style="background:var(--s1);border:1px solid var(--b1);border-radius:var(--r);padding:13px">
+    <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:8px">📈 Resultado da op seguinte por sequência</div>
+    ${worstSeq?`<div style="background:rgba(232,64,64,.06);border:1px solid rgba(232,64,64,.2);border-radius:7px;padding:8px 10px;margin-bottom:10px;font-size:9px;color:var(--text);line-height:1.5">⚡ ${worstSeq.label}: média da próxima op = <strong style="color:${parseFloat(avgSeq(worstSeq.arr))>=0?'var(--green)':'var(--red)'}">${avgSeq(worstSeq.arr)}pts</strong>, WR=${wrSeq(worstSeq.arr)}% (n=${worstSeq.arr.length}). ${parseFloat(avgSeq(worstSeq.arr))<0?'Risco elevado de continuidade negativa — considere pausa após esta sequência.':'Mantém desempenho positivo.'}</div>`:''}
+    <div style="display:flex;flex-direction:column;gap:5px">
+    ${rows.map(r=>{
+      const avg=avgSeq(r.arr);const wr=wrSeq(r.arr);
+      const color=parseFloat(avg)>=0?'var(--green)':'var(--red)';
+      return`<div style="display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:7px 10px">
+        <span style="font-size:12px">${r.icon}</span>
+        <span style="font-size:10px;color:var(--text);flex:1">${r.label}</span>
+        <span style="font-size:9px;color:${color};min-width:40px">${parseFloat(avg)>=0?'+':''}${avg}pts</span>
+        <span style="font-size:8px;color:var(--dim)">WR ${wr}%</span>
+        <span style="font-size:8px;color:var(--dim)">n=${r.arr.length}</span>
+      </div>`;
+    }).join('')}
+    </div>
+    <div style="font-size:8px;color:var(--dim);margin-top:8px">Baseado em ${allOps.length} operações registradas</div>
+  </div>`;
 }
 
 // ── ANÁLISE ESTATÍSTICA AVANÇADA ─────────────
