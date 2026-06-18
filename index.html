@@ -750,8 +750,8 @@ tr:hover td{background:var(--s2)}
         <div class="card-lbl" style="color:var(--red)">⚠️ Trades lidos — não executados</div>
         <div style="font-size:10px;color:var(--dim);margin-bottom:10px;line-height:1.5">Cada setup que você viu mas não entrou. Mede o custo real da hesitação.</div>
         <div class="hes-list" id="hes-list"></div>
-        <div style="display:grid;grid-template-columns:56px 56px 1fr auto;gap:6px;align-items:center;margin-bottom:8px">
-          <input class="time-inp" id="hes-time" type="time" list="pregao-times" style="font-size:10px;padding:7px 5px">
+        <div style="display:grid;grid-template-columns:90px 56px 1fr auto;gap:6px;align-items:center;margin-bottom:8px">
+          <input class="time-inp" id="hes-time" type="time" list="pregao-times" style="font-size:11px;padding:7px 6px">
           <select class="type-sel" id="hes-dir">
             <option value="C">▲ C</option><option value="V">▼ V</option>
           </select>
@@ -773,6 +773,20 @@ tr:hover td{background:var(--s2)}
           <button class="os-btn" data-v="ross" onclick="toggleHesReason(this)">📐 Ross</button>
           <button class="os-btn" data-v="outro" onclick="toggleHesReason(this)">💬 Outro</button>
         </div>
+        <!-- Segurança -->
+        <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:6px">🛡️ Segurança</div>
+        <div class="op-state-grid" id="hes-seg-btns" style="margin-bottom:8px">
+          <button class="os-btn" data-v="1°2" onclick="toggleHesSeg(this)">1°2</button>
+          <button class="os-btn" data-v="2°2" onclick="toggleHesSeg(this)">2°2</button>
+          <button class="os-btn" data-v="M2" onclick="toggleHesSeg(this)">M2</button>
+          <button class="os-btn" data-v="M10" onclick="toggleHesSeg(this)">M10</button>
+          <button class="os-btn" data-v="1°10" onclick="toggleHesSeg(this)">1°10</button>
+          <button class="os-btn" data-v="2°10" onclick="toggleHesSeg(this)">2°10</button>
+          <button class="os-btn" data-v="F2" onclick="toggleHesSeg(this)">F2</button>
+          <button class="os-btn" data-v="F10" onclick="toggleHesSeg(this)">F10</button>
+          <button class="os-btn" data-v="D2" onclick="toggleHesSeg(this)">D2</button>
+          <button class="os-btn" data-v="D10" onclick="toggleHesSeg(this)">D10</button>
+        </div>
         <!-- Setup do trade não executado -->
         <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px">Setup que você viu</div>
         <input class="setup-search" id="hes-setup-search" type="text" placeholder="Buscar setup…" oninput="filterHesSetups(this.value)" style="margin-bottom:5px">
@@ -782,7 +796,8 @@ tr:hover td{background:var(--s2)}
           <input class="add-inp" id="hes-mfe" type="number" placeholder="MFE estimado (pts)">
           <input class="add-inp" id="hes-mae" type="number" placeholder="MAE observado (pts)">
         </div>
-        <textarea class="finp" id="hes-detail" placeholder="Detalhe: o pensamento exato, o contexto, o que travou internamente…" style="margin-bottom:0;min-height:48px"></textarea>
+        <textarea class="finp" id="hes-detail" placeholder="Detalhe: o pensamento exato, o contexto, o que travou internamente…" style="margin-bottom:8px;min-height:48px"></textarea>
+        <button id="hes-add-btn" class="add-btn" onclick="addHes()" style="width:100%;padding:10px;margin-bottom:0">+ Registrar hesitação</button>
         <div id="hes-summary" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(232,64,64,.2)">
           <div style="display:flex;gap:10px;flex-wrap:wrap">
             <div style="flex:1;text-align:center;min-width:55px"><div style="font-family:'Fraunces',serif;font-size:1.3rem;color:var(--red)" id="hes-count-val">0</div><div style="font-size:8px;color:var(--dim);text-transform:uppercase;margin-top:2px">Hesitações</div></div>
@@ -1049,7 +1064,7 @@ let chatHistory=[],isTyping=false,notifPermission=false;
 let sleepQuality=null;
 let pilares={alma:[],corpo:[],espirito:[],pessoas:[]};
 let visits=[];  // [{client, time, note, done, value_est}]
-let hesReasons=[];let hesSetups=[];
+let hesReasons=[];let hesSetups=[];let hesSegs=[];
 let selectedSetups=[],setupUsage={};
 let newOpStates=[],newOpPartials=[],newOpExits=[],newOpSetups=[],newOpSegs=[];
 let newOpAdh={e1:false,no_e3:false,stop:false,entry:false,size:false};
@@ -1171,6 +1186,7 @@ function loadTradeForms(dateISO){
   preChecklist={planejamento:false,visualizacao:false,chegada45:false,regioes:false,stopdia:false};
   document.querySelectorAll('#mood-pre-grid .mo, #mood-pos-grid .mo').forEach(b=>b.classList.remove('sel'));
   tradeOps=[];hesitations=[];
+  hesReasons=[];hesSetups=[];hesSegs=[];editingHesIdx=null;editingOpIdx=null;
   ['f-mood-pre-note','f-mood-pos-note','t-analysis','t-avoid','hes-detail'].forEach(id=>{const el=document.getElementById(id);if(el) el.value='';});
   ['t-felling','t-mesa','t-pa'].forEach(id=>{const el=document.getElementById(id);if(el) el.value='';});
   renderOps();renderHes();renderPreChecklist();
@@ -1702,11 +1718,19 @@ function renderOps(){
 }
 
 // ── HESITAÇÕES ────────────────────────────────
+let editingHesIdx=null;
+
 function toggleHesReason(btn){
   const v=btn.dataset.v;
   const idx=hesReasons.indexOf(v);
   if(idx>=0){hesReasons.splice(idx,1);btn.classList.remove('sel-danger','sel-plan','sel-gold');}
   else{hesReasons.push(v);btn.classList.add('sel-danger');}
+}
+function toggleHesSeg(btn){
+  const v=btn.dataset.v;
+  const idx=hesSegs.indexOf(v);
+  if(idx>=0){hesSegs.splice(idx,1);btn.classList.remove('sel-gold','sel-plan');}
+  else{hesSegs.push(v);btn.classList.add('sel-gold');}
 }
 function renderHesSetupTags(filter){
   const grid=document.getElementById('hes-setup-tags');if(!grid) return;
@@ -1718,26 +1742,67 @@ function renderHesSetupTags(filter){
 function filterHesSetups(v){renderHesSetupTags(v);}
 function toggleHesSetup(name){const idx=hesSetups.indexOf(name);if(idx>=0)hesSetups.splice(idx,1);else hesSetups.push(name);renderHesSetupTags(document.getElementById('hes-setup-search')?.value||'');}
 
+function clearHesForm(){
+  editingHesIdx=null;
+  document.getElementById('hes-pts').value='';
+  document.getElementById('hes-time').value=nowHM();
+  const hm=document.getElementById('hes-mfe');if(hm) hm.value='';
+  const hmae=document.getElementById('hes-mae');if(hmae) hmae.value='';
+  const detail=document.getElementById('hes-detail');if(detail) detail.value='';
+  document.querySelectorAll('#hes-reason-btns .os-btn').forEach(b=>b.classList.remove('sel-danger','sel-plan','sel-gold'));
+  document.querySelectorAll('#hes-seg-btns .os-btn').forEach(b=>b.classList.remove('sel-gold','sel-plan'));
+  hesReasons=[];hesSetups=[];hesSegs=[];
+  renderHesSetupTags('');
+  const hs=document.getElementById('hes-setup-search');if(hs) hs.value='';
+  const btn=document.getElementById('hes-add-btn');
+  if(btn){btn.textContent='+ Registrar hesitação';btn.style.background='';}
+}
+
 function addHes(){
   const time=document.getElementById('hes-time').value||nowHM();
   const dir=document.getElementById('hes-dir').value;
   const pts=parseFloat(document.getElementById('hes-pts').value);
   const mfe=parseFloat(document.getElementById('hes-mfe')?.value)||null;
   const mae=parseFloat(document.getElementById('hes-mae')?.value)||null;
+  const detail=document.getElementById('hes-detail')?.value.trim()||'';
   if(isNaN(pts)||pts<=0){showToast('Informe os pontos estimados',true);return;}
-  hesitations.push({time,dir,pts,reasons:[...hesReasons],setups:[...hesSetups],mfe,mae});
+  const hesData={time,dir,pts,reasons:[...hesReasons],setups:[...hesSetups],segs:[...hesSegs],mfe,mae,detail};
+  if(editingHesIdx!==null){
+    hesitations[editingHesIdx]=hesData;
+    showToast('Hesitação #'+(editingHesIdx+1)+' atualizada ✓');
+  } else {
+    hesitations.push(hesData);
+  }
+  clearHesForm();
   renderHes();
-  document.getElementById('hes-pts').value='';
-  document.getElementById('hes-time').value=nowHM();
-  const hm=document.getElementById('hes-mfe');if(hm) hm.value='';
-  const hmae=document.getElementById('hes-mae');if(hmae) hmae.value='';
-  // Reset reason buttons and setups
-  document.querySelectorAll('#hes-reason-btns .os-btn').forEach(b=>b.classList.remove('sel-danger','sel-plan','sel-gold'));
-  hesReasons=[];hesSetups=[];
+}
+
+function removeHes(idx){hesitations.splice(idx,1);if(editingHesIdx===idx) clearHesForm();renderHes();}
+
+function editHes(idx){
+  const h=hesitations[idx];if(!h) return;
+  editingHesIdx=idx;
+  const safe=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null) el.value=val;};
+  safe('hes-time',h.time);safe('hes-pts',h.pts);safe('hes-mfe',h.mfe||'');safe('hes-mae',h.mae||'');
+  safe('hes-detail',h.detail||'');
+  const dirEl=document.getElementById('hes-dir');if(dirEl) dirEl.value=h.dir;
+  // Reasons
+  hesReasons=[...(h.reasons||[])];
+  document.querySelectorAll('#hes-reason-btns .os-btn').forEach(b=>{b.classList.remove('sel-danger','sel-plan','sel-gold');if(hesReasons.includes(b.dataset.v)) b.classList.add('sel-danger');});
+  // Segs
+  hesSegs=[...(h.segs||[])];
+  document.querySelectorAll('#hes-seg-btns .os-btn').forEach(b=>{b.classList.remove('sel-gold','sel-plan');if(hesSegs.includes(b.dataset.v)) b.classList.add('sel-gold');});
+  // Setups
+  hesSetups=[...(h.setups||[])];
   renderHesSetupTags('');
   const hs=document.getElementById('hes-setup-search');if(hs) hs.value='';
+  const btn=document.getElementById('hes-add-btn');
+  if(btn){btn.textContent='✓ Salvar edição hesitação';btn.style.background='var(--purp)';}
+  // Scroll to form
+  const form=document.getElementById('hes-reason-btns');if(form) form.scrollIntoView({behavior:'smooth',block:'nearest'});
+  showToast('Editando hesitação #'+(idx+1));
 }
-function removeHes(idx){hesitations.splice(idx,1);renderHes();}
+
 function renderHes(){
   const el=document.getElementById('hes-list');if(!el) return;
   el.innerHTML=hesitations.map((h,i)=>`
@@ -1747,9 +1812,12 @@ function renderHes(){
         <span class="hes-dir">${h.dir==='C'?'▲ C':'▼ V'}</span>
         <span style="font-size:9px;color:#e88080">${(h.reasons||[h.reason]).filter(Boolean).join(' · ')||'—'}</span>
         <span class="hes-pts">+${h.pts}pts${h.mfe?' · MFE '+h.mfe+'pts':''}</span>
+        <button onclick="editHes(${i})" style="background:none;border:1px solid rgba(78,124,248,.4);border-radius:5px;color:var(--blue);font-size:9px;padding:2px 6px;cursor:pointer;font-family:'Geist Mono',monospace" title="Editar">✏️</button>
         <button class="hes-del" onclick="removeHes(${i})">×</button>
       </div>
-      ${(h.setups||[]).length?`<div style="font-size:8px;color:var(--teal);margin-top:4px;padding-left:2px">📋 ${(h.setups||[]).join(' · ')}</div>`:''}    </div>`).join('');
+      ${(h.segs||[]).length?`<div style="font-size:8px;color:var(--gold);margin-top:3px;padding-left:2px">🛡️ ${(h.segs||[]).join(' · ')}</div>`:''}
+      ${(h.setups||[]).length?`<div style="font-size:8px;color:var(--teal);margin-top:3px;padding-left:2px">📋 ${(h.setups||[]).join(' · ')}</div>`:''}
+    </div>`).join('');
   const summary=document.getElementById('hes-summary');
   if(!hesitations.length){if(summary) summary.style.display='none';return;}
   if(summary) summary.style.display='block';
