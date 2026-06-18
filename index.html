@@ -619,14 +619,14 @@ tr:hover td{background:var(--s2)}
           <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:9px">Nova operação</div>
 
           <!-- Linha 1: horário, direção, lotes, pontos -->
-          <div style="display:grid;grid-template-columns:56px 56px 60px 1fr;gap:6px;margin-bottom:10px">
-            <input class="time-inp" id="op-time" type="time" list="pregao-times" style="font-size:10px;padding:7px 5px">
+          <div style="display:grid;grid-template-columns:90px 56px 60px 70px;gap:6px;margin-bottom:10px">
+            <input class="time-inp" id="op-time" type="time" list="pregao-times" style="font-size:11px;padding:7px 6px">
             <select class="type-sel" id="op-dir">
               <option value="C">▲ C</option>
               <option value="V">▼ V</option>
             </select>
             <input class="add-inp" id="op-lots" type="number" placeholder="Lotes" min="1" step="1" style="min-width:0" oninput="calcOpResult()">
-            <input class="add-inp" id="op-pts" type="number" placeholder="Pontos saída (ex: +10)" style="min-width:0" oninput="calcOpResult()">
+            <input class="add-inp" id="op-pts" type="number" placeholder="Pts" style="min-width:0" oninput="calcOpResult()">
           </div>
 
           <!-- MFE / MAE -->
@@ -665,6 +665,21 @@ tr:hover td{background:var(--s2)}
             <button class="os-btn" data-v="desfocado" onclick="selNewOpState(this)">🌀 Desfocado</button>
             <button class="os-btn" data-v="revanche" onclick="selNewOpState(this)">⚡ Revanche</button>
             <button class="os-btn" data-v="ross" onclick="selNewOpState(this)">📐 Ross</button>
+          </div>
+
+          <!-- Segurança -->
+          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:6px">🛡️ Segurança</div>
+          <div class="op-state-grid" id="new-op-seg-btns" style="margin-bottom:10px">
+            <button class="os-btn" data-v="1°2" onclick="selNewOpSeg(this)">1°2</button>
+            <button class="os-btn" data-v="2°2" onclick="selNewOpSeg(this)">2°2</button>
+            <button class="os-btn" data-v="M2" onclick="selNewOpSeg(this)">M2</button>
+            <button class="os-btn" data-v="M10" onclick="selNewOpSeg(this)">M10</button>
+            <button class="os-btn" data-v="1°10" onclick="selNewOpSeg(this)">1°10</button>
+            <button class="os-btn" data-v="2°10" onclick="selNewOpSeg(this)">2°10</button>
+            <button class="os-btn" data-v="F2" onclick="selNewOpSeg(this)">F2</button>
+            <button class="os-btn" data-v="F10" onclick="selNewOpSeg(this)">F10</button>
+            <button class="os-btn" data-v="D2" onclick="selNewOpSeg(this)">D2</button>
+            <button class="os-btn" data-v="D10" onclick="selNewOpSeg(this)">D10</button>
           </div>
 
           <!-- Parcial ou adição -->
@@ -706,7 +721,7 @@ tr:hover td{background:var(--s2)}
 
           <!-- Estado emocional + execução — por operação -->
           <div class="op-emo-row" style="margin-bottom:5px">
-            <span class="op-emo-lbl">Emo. intensidade</span>
+            <span class="op-emo-lbl">MEDO</span>
             <input type="range" min="1" max="10" value="5" id="new-op-emo" oninput="document.getElementById('new-op-emo-val').textContent=this.value;calcOpResult()">
             <span class="op-emo-val" id="new-op-emo-val">5</span>
           </div>
@@ -1036,7 +1051,7 @@ let pilares={alma:[],corpo:[],espirito:[],pessoas:[]};
 let visits=[];  // [{client, time, note, done, value_est}]
 let hesReasons=[];let hesSetups=[];
 let selectedSetups=[],setupUsage={};
-let newOpStates=[],newOpPartials=[],newOpExits=[],newOpSetups=[];
+let newOpStates=[],newOpPartials=[],newOpExits=[],newOpSetups=[],newOpSegs=[];
 let newOpAdh={e1:false,no_e3:false,stop:false,entry:false,size:false};
 let preChecklist={planejamento:false,visualizacao:false,chegada45:false,regioes:false,stopdia:false};
 let tradeEditDate=null; // null = today, 'YYYY-MM-DD' = other day
@@ -1223,6 +1238,14 @@ function selNewOpExit(btn){
   const idx=newOpExits.indexOf(v);
   if(idx>=0){newOpExits.splice(idx,1);btn.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold');}
   else{newOpExits.push(v);btn.classList.add(dangerExits.includes(v)?'sel-danger':'sel-plan');}
+}
+
+// ── SEGURANÇA ─────────────────────────────────
+function selNewOpSeg(btn){
+  const v=btn.dataset.v;
+  const idx=newOpSegs.indexOf(v);
+  if(idx>=0){newOpSegs.splice(idx,1);btn.classList.remove('sel-gold','sel-plan');}
+  else{newOpSegs.push(v);btn.classList.add('sel-gold');}
 }
 
 // ── FRASE ÂNCORA ─────────────────────────────
@@ -1519,7 +1542,7 @@ function addOp(){
   if(isNaN(pts)){showToast('Informe os pontos',true);return;}
   const result_brl=lots>0?pts*lots*10:null;
   const capture_pct=mfe&&pts>0?Math.round(pts/mfe*100):null;
-  const opData={dir,pts,lots:lots||null,result_brl,mfe,mae,capture_pct,note,time,entry_states:[...newOpStates],emo_intensity:emo,exec_score:execScore,adh_items:{...newOpAdh},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups]};
+  const opData={dir,pts,lots:lots||null,result_brl,mfe,mae,capture_pct,note,time,entry_states:[...newOpStates],emo_intensity:emo,exec_score:execScore,adh_items:{...newOpAdh},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups],segs:[...newOpSegs]};
   if(editingOpIdx!==null){
     // Edit mode: preserve corr from existing
     opData.corr=tradeOps[editingOpIdx]?.corr||'';
@@ -1560,6 +1583,9 @@ function editOp(idx){
   newOpExits=[...(op.exit_reasons||[op.exit_reason].filter(Boolean))];
   const dangerE=['MEDO','STOPMESA'];
   document.querySelectorAll('#new-op-exit-btns .os-btn').forEach(b=>{b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold');if(newOpExits.includes(b.dataset.v)) b.classList.add(dangerE.includes(b.dataset.v)?'sel-danger':'sel-plan');});
+  // Segs
+  newOpSegs=[...(op.segs||[])];
+  document.querySelectorAll('#new-op-seg-btns .os-btn').forEach(b=>{b.classList.remove('sel-gold','sel-plan');if(newOpSegs.includes(b.dataset.v)) b.classList.add('sel-gold');});
   // Adh
   newOpAdh={...{e1:false,no_e3:false,stop:false,entry:false,size:false},...(op.adh_items||{})};
   document.querySelectorAll('#new-op-adh-grid .adh-item').forEach(el=>{const k=el.dataset.k;el.classList.toggle('yes',newOpAdh[k]===true);});
@@ -1583,15 +1609,15 @@ function clearNewOpForm(){
   const mfeEl2=document.getElementById('op-mfe');if(mfeEl2) mfeEl2.value='';
   const maeEl2=document.getElementById('op-mae');if(maeEl2) maeEl2.value='';
   const mfeIns=document.getElementById('op-mfe-insight');if(mfeIns) mfeIns.style.display='none';
-  ['#new-op-state-btns','#new-op-partial-btns','#new-op-exit-btns'].forEach(sel=>document.querySelectorAll(sel+' .os-btn').forEach(b=>{b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold');}));
+  ['#new-op-state-btns','#new-op-partial-btns','#new-op-exit-btns','#new-op-seg-btns'].forEach(sel=>document.querySelectorAll(sel+' .os-btn').forEach(b=>{b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold');}));
   document.querySelectorAll('#new-op-adh-grid .adh-item').forEach(el=>{el.classList.remove('yes');const d=el.querySelector('.adh-dot');if(d) d.style.background='var(--b2)';const t=el.querySelector('.adh-text');if(t) t.style.color='var(--dim)';});
-  newOpStates=[];newOpPartials=[];newOpExits=[];newOpSetups=[];
+  newOpStates=[];newOpPartials=[];newOpExits=[];newOpSetups=[];newOpSegs=[];
   newOpAdh={e1:false,no_e3:false,stop:false,entry:false,size:false};
   const searchEl=document.getElementById('op-setup-search');if(searchEl) searchEl.value='';
   renderOpSetupTags('');
   const info=document.getElementById('op-setup-sel-info');if(info) info.style.display='none';
   const names=document.getElementById('op-setup-sel-names');if(names) names.textContent='—';
-  const opT=document.getElementById('op-time');if(opT) opT.value=nowHM();
+  const opT=document.getElementById('op-time');if(opT) opT.value='09:00';
   const addBtn=document.querySelector('button[onclick="addOp()"]');
   if(addBtn){addBtn.textContent='+ Registrar operação';addBtn.style.background='';}
 }
@@ -1635,6 +1661,7 @@ function renderOps(){
       <!-- resumo sempre visível -->
       <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;padding-top:5px;border-top:1px solid var(--b1)">
         ${(op.setups||[]).length?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--td);color:var(--teal)">📋 ${(op.setups||[]).join(' · ')}</span>`:''}
+        ${(op.segs||[]).map(s=>`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--od);color:var(--gold)">🛡️${s}</span>`).join('')}
         ${partialReasons.map(r=>`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:${r.includes('Medo')?'var(--rd)':'var(--td)'};color:${r.includes('Medo')?'var(--red)':'var(--teal)'}">${r}</span>`).join('')}
         ${exitReasons.map(r=>`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:${dangerExits.includes(r)?'var(--rd)':'var(--gd)'};color:${dangerExits.includes(r)?'var(--red)':'var(--green)'}">${r}</span>`).join('')}
         ${stateLabels.length?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--s3);color:var(--dim)">${stateLabels.join(' + ')}</span>`:''}
@@ -1810,7 +1837,8 @@ function bootApp(){
   document.getElementById('loader').style.display='none';
   const app=document.getElementById('app');app.style.display='flex';app.style.flexDirection='column';app.style.height='100dvh';
   const hm=nowHM();
-  ['op-time','hes-time'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value) el.value=hm;});
+  ['hes-time'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value) el.value=hm;});
+  const opT=document.getElementById('op-time');if(opT&&!opT.value) opT.value='09:00';
   renderHesSetupTags('');
   loadTodayForms();renderBriefing();renderAnchorPhrase();renderVisitEvolution();renderYesterdayReview();initNotifications();startNotifScheduler();
   // Set trade date selector default
@@ -2191,7 +2219,7 @@ function goPage(id,btn){
   document.getElementById('pg-'+id).classList.add('active');btn.classList.add('active');
   const scroll=document.getElementById('scroll');if(scroll) scroll.scrollTop=0;
   if(id==='dash'){currentPeriod='all';document.querySelectorAll('.ptab').forEach((b,i)=>b.classList.toggle('active',i===3));document.getElementById('dash-period-lbl').textContent='Todo o histórico';renderDash();}
-  if(id==='trade'){const hm=nowHM();const opT=document.getElementById('op-time'),hesT=document.getElementById('hes-time');if(opT&&!opT.value) opT.value=hm;if(hesT&&!hesT.value) hesT.value=hm;renderYesterdayReview();}
+  if(id==='trade'){const opT=document.getElementById('op-time'),hesT=document.getElementById('hes-time');if(opT&&!opT.value) opT.value='09:00';if(hesT&&!hesT.value) hesT.value=nowHM();renderYesterdayReview();}
   if(id==='log') setTimeout(()=>renderLog(),60);
   if(id==='claude') scrollBottom();
 }
