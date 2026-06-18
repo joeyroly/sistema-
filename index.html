@@ -569,12 +569,35 @@ tr:hover td{background:var(--s2)}
     <!-- ── TRADE ── -->
     <div id="pg-trade" class="page">
       <div class="pg-title">Diário de Trade</div>
-      <div class="pg-sub" id="pg-trade-date">—</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+        <div class="pg-sub" id="pg-trade-date" style="margin-bottom:0;flex:1">—</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:9px;color:var(--dim)">Data:</span>
+          <input type="date" id="trade-date-sel" style="background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:5px 9px;font-family:'Geist Mono',monospace;font-size:10px;color:var(--hi);outline:none;cursor:pointer" onchange="switchTradeDate(this.value)">
+        </div>
+      </div>
+      <div style="font-size:9px;color:var(--dim);margin-bottom:14px;line-height:1.4" id="trade-date-notice" style="display:none"></div>
+
+      <!-- ANÁLISE DE ONTEM — aparece acima do pré-pregão como lembrete -->
+      <div id="yesterday-trade-review" style="display:none"></div>
 
       <!-- ESTADO PRÉ-PREGÃO -->
       <div class="card">
         <div class="card-lbl">🌅 Estado pré-pregão</div>
         <div style="font-size:9px;color:var(--dim);margin-bottom:10px;line-height:1.5">Antes de abrir o mercado — preencha ao chegar</div>
+
+        <!-- Checklist pré-mercado -->
+        <div style="background:var(--s3);border:1px solid var(--b1);border-radius:8px;padding:10px 11px;margin-bottom:11px">
+          <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:8px">✅ Checklist pré-mercado</div>
+          <div style="display:flex;flex-direction:column;gap:5px" id="pre-checklist">
+            <div class="adh-item" onclick="togglePreCheck(this,'planejamento')" data-k="planejamento"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">📋 Realizou planejamento pré-mercado?</div></div>
+            <div class="adh-item" onclick="togglePreCheck(this,'visualizacao')" data-k="visualizacao"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">🧠 Fez visualização?</div></div>
+            <div class="adh-item" onclick="togglePreCheck(this,'chegada45')" data-k="chegada45"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">⏰ Chegou 45 min antes?</div></div>
+            <div class="adh-item" onclick="togglePreCheck(this,'regioes')" data-k="regioes"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">🗺️ Mapeou regiões de entradas?</div></div>
+            <div class="adh-item" onclick="togglePreCheck(this,'stopdia')" data-k="stopdia"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">🛑 Definiu stop do dia?</div></div>
+          </div>
+        </div>
+
         <div class="mood-grid" id="mood-pre-grid">
           <button class="mo" onclick="selMoodPre(this,'focado')">⚡<br>Focado</button>
           <button class="mo" onclick="selMoodPre(this,'calmo')">🌊<br>Calmo</button>
@@ -641,6 +664,7 @@ tr:hover td{background:var(--s2)}
             <button class="os-btn" data-v="cirilo" onclick="selNewOpState(this)">🎯 Cirilo</button>
             <button class="os-btn" data-v="desfocado" onclick="selNewOpState(this)">🌀 Desfocado</button>
             <button class="os-btn" data-v="revanche" onclick="selNewOpState(this)">⚡ Revanche</button>
+            <button class="os-btn" data-v="ross" onclick="selNewOpState(this)">📐 Ross</button>
           </div>
 
           <!-- Parcial ou adição -->
@@ -667,6 +691,7 @@ tr:hover td{background:var(--s2)}
             <button class="os-btn" data-v="MEDO" onclick="selNewOpExit(this)">⚠️ Medo</button>
             <button class="os-btn" data-v="STOPMESA" onclick="selNewOpExit(this)">🛑 Stop Mesa</button>
             <button class="os-btn" data-v="AlvoFin" onclick="selNewOpExit(this)">💰 Alvo Fin</button>
+            <button class="os-btn" data-v="Ross" onclick="selNewOpExit(this)">📐 Ross</button>
           </div>
 
           <!-- Adesão ao sistema — por operação -->
@@ -675,7 +700,6 @@ tr:hover td{background:var(--s2)}
             <div class="adh-item" onclick="toggleOpAdh(this,'e1')" data-k="e1"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">E1 respeitado</div></div>
             <div class="adh-item" onclick="toggleOpAdh(this,'no_e3')" data-k="no_e3"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">Sem E3</div></div>
             <div class="adh-item" onclick="toggleOpAdh(this,'stop')" data-k="stop"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">Stop correto</div></div>
-            <div class="adh-item" onclick="toggleOpAdh(this,'partial')" data-k="partial"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">Parcial executado</div></div>
             <div class="adh-item" onclick="toggleOpAdh(this,'entry')" data-k="entry"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">Entrada com sinal</div></div>
             <div class="adh-item" onclick="toggleOpAdh(this,'size')" data-k="size"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">Tamanho correto</div></div>
           </div>
@@ -731,6 +755,7 @@ tr:hover td{background:var(--s2)}
           <button class="os-btn" data-v="medo horário" onclick="toggleHesReason(this)">⏰ Medo horário</button>
           <button class="os-btn" data-v="medo tarde" onclick="toggleHesReason(this)">🌅 Medo tarde</button>
           <button class="os-btn" data-v="prox hr sair" onclick="toggleHesReason(this)">🚗 Prox sair</button>
+          <button class="os-btn" data-v="ross" onclick="toggleHesReason(this)">📐 Ross</button>
           <button class="os-btn" data-v="outro" onclick="toggleHesReason(this)">💬 Outro</button>
         </div>
         <!-- Setup do trade não executado -->
@@ -896,6 +921,7 @@ tr:hover td{background:var(--s2)}
         <table>
           <thead><tr><th>Data</th><th>Humor</th><th>En</th><th>R$</th><th>WR%</th></tr></thead>
           <tbody id="log-body"></tbody>
+          <tfoot id="log-foot"></tfoot>
         </table>
       </div>
     </div>
@@ -998,7 +1024,7 @@ const ANCHOR_PHRASES=[
   }
 ];
 const ALL_SETUPS=['Op1','Op2','MetN','DupPr','DivOc','Cont','Emotivo','DnçVw','FlCtVw','MOLEQUE','RtMeSg','D-1','News','Aj','Aj 0,5','Aj 0,75','Aj 1,0','Aj 1,25','Aj 1,5','Fec','Fec 0,5','Fec 0,75','Fec 1,00','Fec 1,25','Fec 1,50','Ab','DvR 2','DvR 10','DvR 210','DvI 2','DvI 5','DvI 10','DvI 210','DvRI 2','DvRI 10','DvRI 210','Bseg 2','Bseg 10','Bseg 210','FOMO','Marc','SlAg','Fluxo','Vwap 0','Vwap 0,20','Vwap 0,25','Vwap 0,40','Vwap 0,50','Vwap 0,60','Vwap 0,75','Vwap 1,00','50%','1delta','2deltas','1MDelta','MRc2','MRc10','MIr2','MIf5','RtM5','Rt50I2','Rt50I5','Cirilo','BarraG','8-17','8 mm','PA','St10'];
-const ENTRY_STATES={planejado:{label:'📋 Planejado',cls:'sel-plan'},atrasado:{label:'⏰ Atrasado',cls:'sel-gold'},emotivo:{label:'🔥 Emotivo',cls:'sel-danger'},medo_falha:{label:'😨 Medo falha',cls:'sel-danger'},oportunidade:{label:'💡 Oportunidade',cls:'sel-gold'},cirilo:{label:'🎯 Cirilo',cls:'sel-cirilo'},desfocado:{label:'🌀 Desfocado',cls:'sel-danger'},revanche:{label:'⚡ Revanche',cls:'sel-danger'}};
+const ENTRY_STATES={planejado:{label:'📋 Planejado',cls:'sel-plan'},atrasado:{label:'⏰ Atrasado',cls:'sel-gold'},emotivo:{label:'🔥 Emotivo',cls:'sel-danger'},medo_falha:{label:'😨 Medo falha',cls:'sel-danger'},oportunidade:{label:'💡 Oportunidade',cls:'sel-gold'},cirilo:{label:'🎯 Cirilo',cls:'sel-cirilo'},desfocado:{label:'🌀 Desfocado',cls:'sel-danger'},revanche:{label:'⚡ Revanche',cls:'sel-danger'},ross:{label:'📐 Ross',cls:'sel-plan'}};
 
 // ── STATE ─────────────────────────────────────
 let SB=null,useOffline=false,allData=[],currentPeriod='all';
@@ -1011,7 +1037,10 @@ let visits=[];  // [{client, time, note, done, value_est}]
 let hesReasons=[];let hesSetups=[];
 let selectedSetups=[],setupUsage={};
 let newOpStates=[],newOpPartials=[],newOpExits=[],newOpSetups=[];
-let newOpAdh={e1:false,no_e3:false,stop:false,partial:false,entry:false,size:false};
+let newOpAdh={e1:false,no_e3:false,stop:false,entry:false,size:false};
+let preChecklist={planejamento:false,visualizacao:false,chegada45:false,regioes:false,stopdia:false};
+let tradeEditDate=null; // null = today, 'YYYY-MM-DD' = other day
+let editingOpIdx=null;  // null = new op, number = editing existing
 
 // ── CÁLCULO RESULTADO POR OP ──────────────────
 function calcOpResult(){
@@ -1087,6 +1116,86 @@ function calcTotals(){
 // ── ESTADO PRÉ/PÓS ───────────────────────────
 function selMoodPre(btn,mood){document.querySelectorAll('#mood-pre-grid .mo').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');moodPre=mood;}
 function selMoodPos(btn,mood){document.querySelectorAll('#mood-pos-grid .mo').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');moodPos=mood;}
+
+// ── PRE-CHECKLIST ─────────────────────────────
+function togglePreCheck(el,key){const isYes=el.classList.contains('yes');el.classList.toggle('yes',!isYes);preChecklist[key]=!isYes;}
+function renderPreChecklist(){
+  document.querySelectorAll('#pre-checklist .adh-item').forEach(el=>{
+    const k=el.dataset.k;el.classList.toggle('yes',preChecklist[k]===true);
+    const dot=el.querySelector('.adh-dot');if(dot) dot.style.background=preChecklist[k]?'var(--green)':'var(--b2)';
+    const txt=el.querySelector('.adh-text');if(txt) txt.style.color=preChecklist[k]?'var(--green)':'var(--dim)';
+  });
+}
+
+// ── DATE SWITCHER — lançar trades de outros dias ──
+function tradeDateISO(){return tradeEditDate||todayISO();}
+function tradeEntry(){return allData.find(e=>e.date_iso===tradeDateISO())||{};}
+
+function switchTradeDate(iso){
+  // Save current trade form first (silently, no toast) if today was loaded
+  tradeEditDate=iso||null;
+  const sel=document.getElementById('trade-date-sel');
+  const notice=document.getElementById('trade-date-notice');
+  const today=todayISO();
+  if(iso&&iso!==today){
+    if(notice){notice.style.display='block';const d=new Date(iso+'T12:00:00');notice.textContent=`✏️ Editando: ${d.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'})} — dados serão salvos nesta data.`;}
+    document.getElementById('pg-trade-date').textContent=new Date(iso+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'});
+  } else {
+    tradeEditDate=null;
+    if(sel) sel.value=today;
+    if(notice){notice.style.display='none';}
+    updateTradeDateDisplay();
+  }
+  loadTradeForms(tradeDateISO());
+}
+
+function loadTradeForms(dateISO){
+  const e=allData.find(d=>d.date_iso===dateISO)||{};
+  // Reset trade fields
+  moodPre=null;moodPos=null;
+  preChecklist={planejamento:false,visualizacao:false,chegada45:false,regioes:false,stopdia:false};
+  document.querySelectorAll('#mood-pre-grid .mo, #mood-pos-grid .mo').forEach(b=>b.classList.remove('sel'));
+  tradeOps=[];hesitations=[];
+  ['f-mood-pre-note','f-mood-pos-note','t-analysis','t-avoid','hes-detail'].forEach(id=>{const el=document.getElementById(id);if(el) el.value='';});
+  ['t-felling','t-mesa','t-pa'].forEach(id=>{const el=document.getElementById(id);if(el) el.value='';});
+  renderOps();renderHes();renderPreChecklist();
+  document.getElementById('t-total-fpa')&&(document.getElementById('t-total-fpa').textContent='R$ 0');
+  document.getElementById('t-total-pf')&&(document.getElementById('t-total-pf').textContent='R$ 0');
+  if(!e.date_iso) return;
+  if(e.mood_pre||e.mood){moodPre=e.mood_pre||e.mood;document.querySelectorAll('#mood-pre-grid .mo').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+moodPre+"'")) b.classList.add('sel');});}
+  if(e.mood_pos){moodPos=e.mood_pos;document.querySelectorAll('#mood-pos-grid .mo').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+e.mood_pos+"'")) b.classList.add('sel');});}
+  if(e.mood_pre_note){const el=document.getElementById('f-mood-pre-note');if(el) el.value=e.mood_pre_note;}
+  if(e.mood_pos_note){const el=document.getElementById('f-mood-pos-note');if(el) el.value=e.mood_pos_note;}
+  if(e.pre_checklist) Object.assign(preChecklist,e.pre_checklist);
+  renderPreChecklist();
+  tradeOps=e.t_ops_detail||[];hesitations=e.t_hesitations||[];
+  renderOps();renderHes();
+  const safe=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null) el.value=val;};
+  safe('t-felling',e.t_felling);safe('t-mesa',e.t_mesa);safe('t-pa',e.t_pa);
+  safe('t-analysis',e.t_analysis);safe('t-avoid',e.t_avoid);
+  if(e.t_hes_detail){const el=document.getElementById('hes-detail');if(el) el.value=e.t_hes_detail;}
+  if(document.getElementById('t-felling')) calcTotals();
+}
+
+// ── ANÁLISE DE ONTEM no topo do Trade ────────
+function renderYesterdayReview(){
+  const el=document.getElementById('yesterday-trade-review');if(!el) return;
+  // Só mostrar quando estamos no dia de hoje
+  if(tradeEditDate&&tradeEditDate!==todayISO()){el.style.display='none';return;}
+  const yesterday=new Date();yesterday.setDate(yesterday.getDate()-1);
+  const yISO=`${yesterday.getFullYear()}-${String(yesterday.getMonth()+1).padStart(2,'0')}-${String(yesterday.getDate()).padStart(2,'0')}`;
+  const yE=allData.find(e=>e.date_iso===yISO);
+  if(!yE||(!(yE.t_analysis)&&!(yE.t_avoid))){el.style.display='none';return;}
+  const d=yesterday.toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short'});
+  let html=`<div style="background:linear-gradient(135deg,#0d1428,#100d1c);border:1px solid rgba(140,100,240,.25);border-radius:var(--r);padding:14px;margin-bottom:11px;position:relative;overflow:hidden">
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--purp),var(--blue))"></div>
+    <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--purp);margin-bottom:10px">🔁 Revisão de ontem · ${d}</div>`;
+  if(yE.t_analysis){html+=`<div style="margin-bottom:8px"><div style="font-size:8px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">O que esse dia ensinou:</div><div style="font-size:10px;color:var(--text);line-height:1.6;background:var(--s3);border-radius:6px;padding:8px 10px">${esc(yE.t_analysis)}</div></div>`;}
+  if(yE.t_avoid){html+=`<div><div style="font-size:8px;color:var(--red);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">⚑ Evitar hoje:</div><div style="font-size:11px;color:var(--red);font-weight:500;background:rgba(232,64,64,.08);border:1px solid rgba(232,64,64,.2);border-radius:6px;padding:8px 10px">${esc(yE.t_avoid)}</div></div>`;}
+  html+=`</div>`;
+  el.innerHTML=html;
+  el.style.display='block';
+}
 
 // ── SETUP POR TRADE ───────────────────────────
 function renderOpSetupTags(filter){
@@ -1410,15 +1519,66 @@ function addOp(){
   if(isNaN(pts)){showToast('Informe os pontos',true);return;}
   const result_brl=lots>0?pts*lots*10:null;
   const capture_pct=mfe&&pts>0?Math.round(pts/mfe*100):null;
-  tradeOps.push({dir,pts,lots:lots||null,result_brl,mfe,mae,capture_pct,note,time,entry_states:[...newOpStates],emo_intensity:emo,exec_score:execScore,adh_items:{...newOpAdh},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups]});
-  newOpSetups.forEach(s=>{setupUsage[s]=(setupUsage[s]||0)+1;});
-  localStorage.setItem('setup_usage',JSON.stringify(setupUsage));
+  const opData={dir,pts,lots:lots||null,result_brl,mfe,mae,capture_pct,note,time,entry_states:[...newOpStates],emo_intensity:emo,exec_score:execScore,adh_items:{...newOpAdh},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups]};
+  if(editingOpIdx!==null){
+    // Edit mode: preserve corr from existing
+    opData.corr=tradeOps[editingOpIdx]?.corr||'';
+    tradeOps[editingOpIdx]=opData;
+    showToast('Operação #'+(editingOpIdx+1)+' atualizada ✓');
+  } else {
+    tradeOps.push(opData);
+    newOpSetups.forEach(s=>{setupUsage[s]=(setupUsage[s]||0)+1;});
+    localStorage.setItem('setup_usage',JSON.stringify(setupUsage));
+  }
+  clearNewOpForm();
   renderOps();
+}
+
+function editOp(idx){
+  const op=tradeOps[idx];if(!op) return;
+  editingOpIdx=idx;
+  // Populate form with existing op data
+  const safe=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null) el.value=val;};
+  safe('op-time',op.time);safe('op-pts',op.pts);safe('op-lots',op.lots||'');safe('op-mfe',op.mfe||'');safe('op-mae',op.mae||'');
+  const dirEl=document.getElementById('op-dir');if(dirEl) dirEl.value=op.dir;
+  const emoEl=document.getElementById('new-op-emo');if(emoEl){emoEl.value=op.emo_intensity||5;document.getElementById('new-op-emo-val').textContent=op.emo_intensity||5;}
+  const execEl=document.getElementById('new-op-exec');if(execEl){execEl.value=op.exec_score||5;document.getElementById('new-op-exec-val').textContent=op.exec_score||5;}
+  const noteEl=document.getElementById('new-op-note');if(noteEl) noteEl.value=op.note||'';
+  // Setups
+  newOpSetups=[...(op.setups||[])];
+  renderOpSetupTags('');
+  const info=document.getElementById('op-setup-sel-info'),names=document.getElementById('op-setup-sel-names');
+  if(names) names.textContent=newOpSetups.length?newOpSetups.join(', '):'—';
+  if(info) info.style.display=newOpSetups.length?'block':'none';
+  // Entry states
+  newOpStates=[...(op.entry_states||[op.entry_state].filter(Boolean))];
+  document.querySelectorAll('#new-op-state-btns .os-btn').forEach(b=>{b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold');if(newOpStates.includes(b.dataset.v)){const cfg=ENTRY_STATES[b.dataset.v];if(cfg) b.classList.add(cfg.cls);}});
+  // Partials
+  newOpPartials=[...(op.partial_reasons||[op.partial_reason].filter(Boolean))];
+  document.querySelectorAll('#new-op-partial-btns .os-btn').forEach(b=>{b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold');if(newOpPartials.includes(b.dataset.v)) b.classList.add(b.dataset.v.includes('Medo')?'sel-danger':'sel-plan');});
+  // Exits
+  newOpExits=[...(op.exit_reasons||[op.exit_reason].filter(Boolean))];
+  const dangerE=['MEDO','STOPMESA'];
+  document.querySelectorAll('#new-op-exit-btns .os-btn').forEach(b=>{b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold');if(newOpExits.includes(b.dataset.v)) b.classList.add(dangerE.includes(b.dataset.v)?'sel-danger':'sel-plan');});
+  // Adh
+  newOpAdh={...{e1:false,no_e3:false,stop:false,entry:false,size:false},...(op.adh_items||{})};
+  document.querySelectorAll('#new-op-adh-grid .adh-item').forEach(el=>{const k=el.dataset.k;el.classList.toggle('yes',newOpAdh[k]===true);});
+  calcOpResult();
+  // Update button label
+  const addBtn=document.querySelector('#new-op-adh-grid')?.parentElement?.querySelector('button[onclick="addOp()"]');
+  if(addBtn){addBtn.textContent='✓ Salvar edição';addBtn.style.background='var(--purp)';}
+  // Scroll to form
+  const form=document.getElementById('new-op-adh-grid');if(form) form.scrollIntoView({behavior:'smooth',block:'nearest'});
+  showToast('Editando operação #'+(idx+1)+' — altere e salve');
+}
+
+function clearNewOpForm(){
+  editingOpIdx=null;
   document.getElementById('op-pts').value='';
   const lotsEl=document.getElementById('op-lots');if(lotsEl) lotsEl.value='';
-  if(noteEl){noteEl.value='';noteEl.style.height='40px';}
-  if(emoEl){emoEl.value=5;document.getElementById('new-op-emo-val').textContent='5';}
-  if(execEl){execEl.value=5;document.getElementById('new-op-exec-val').textContent='5';}
+  const noteEl=document.getElementById('new-op-note');if(noteEl){noteEl.value='';noteEl.style.height='40px';}
+  const emoEl=document.getElementById('new-op-emo');if(emoEl){emoEl.value=5;document.getElementById('new-op-emo-val').textContent='5';}
+  const execEl=document.getElementById('new-op-exec');if(execEl){execEl.value=5;document.getElementById('new-op-exec-val').textContent='5';}
   const calcEl=document.getElementById('op-calc-result');if(calcEl) calcEl.style.display='none';
   const mfeEl2=document.getElementById('op-mfe');if(mfeEl2) mfeEl2.value='';
   const maeEl2=document.getElementById('op-mae');if(maeEl2) maeEl2.value='';
@@ -1426,17 +1586,19 @@ function addOp(){
   ['#new-op-state-btns','#new-op-partial-btns','#new-op-exit-btns'].forEach(sel=>document.querySelectorAll(sel+' .os-btn').forEach(b=>{b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold');}));
   document.querySelectorAll('#new-op-adh-grid .adh-item').forEach(el=>{el.classList.remove('yes');const d=el.querySelector('.adh-dot');if(d) d.style.background='var(--b2)';const t=el.querySelector('.adh-text');if(t) t.style.color='var(--dim)';});
   newOpStates=[];newOpPartials=[];newOpExits=[];newOpSetups=[];
-  newOpAdh={e1:false,no_e3:false,stop:false,partial:false,entry:false,size:false};
+  newOpAdh={e1:false,no_e3:false,stop:false,entry:false,size:false};
   const searchEl=document.getElementById('op-setup-search');if(searchEl) searchEl.value='';
   renderOpSetupTags('');
   const info=document.getElementById('op-setup-sel-info');if(info) info.style.display='none';
   const names=document.getElementById('op-setup-sel-names');if(names) names.textContent='—';
   const opT=document.getElementById('op-time');if(opT) opT.value=nowHM();
+  const addBtn=document.querySelector('button[onclick="addOp()"]');
+  if(addBtn){addBtn.textContent='+ Registrar operação';addBtn.style.background='';}
 }
 
 function nowHM(){const n=new Date();return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
 
-function removeOp(idx){tradeOps.splice(idx,1);renderOps();}
+function removeOp(idx){tradeOps.splice(idx,1);if(editingOpIdx===idx) clearNewOpForm();renderOps();}
 function saveOpCorr(idx,val){if(tradeOps[idx]) tradeOps[idx].corr=val;}
 
 function toggleOpExpand(idx){
@@ -1467,6 +1629,7 @@ function renderOps(){
         <span class="op-res" style="color:${op.pts>=0?'var(--green)':'var(--red)'}">${op.pts>=0?'+':''}${op.pts}pts</span>
         ${op.result_brl!=null?`<span class="op-res" style="font-size:9px;color:${op.result_brl>=0?'var(--green)':'var(--red)'}">R$${op.result_brl>=0?'+':''}${op.result_brl.toLocaleString('pt-BR')}</span>`:''}
         <button class="op-expand" onclick="toggleOpExpand(${i})">▾</button>
+        <button onclick="editOp(${i})" style="background:none;border:1px solid rgba(78,124,248,.4);border-radius:5px;color:var(--blue);font-size:9px;padding:2px 7px;cursor:pointer;font-family:'Geist Mono',monospace" title="Editar operação">✏️</button>
         <button class="op-del" onclick="removeOp(${i})">×</button>
       </div>
       <!-- resumo sempre visível -->
@@ -1649,7 +1812,9 @@ function bootApp(){
   const hm=nowHM();
   ['op-time','hes-time'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value) el.value=hm;});
   renderHesSetupTags('');
-  loadTodayForms();renderBriefing();renderAnchorPhrase();renderVisitEvolution();initNotifications();startNotifScheduler();
+  loadTodayForms();renderBriefing();renderAnchorPhrase();renderVisitEvolution();renderYesterdayReview();initNotifications();startNotifScheduler();
+  // Set trade date selector default
+  const tradeSel=document.getElementById('trade-date-sel');if(tradeSel) tradeSel.value=todayISO();
 }
 function todayISO(){
   const n=new Date();
@@ -1660,10 +1825,15 @@ function todayISO(){
   return `${y}-${m}-${d}`;
 }
 function todayEntry(){return allData.find(e=>e.date_iso===todayISO())||{};}
+function updateTradeDateDisplay(){
+  const n=new Date();const s=`${DAYS[n.getDay()]}, ${n.getDate()} ${MONTHS[n.getMonth()]}`;
+  document.getElementById('pg-trade-date').textContent=s;
+}
 
 function resetForms(){
   // Limpa TUDO — chamado ao iniciar um novo dia
   moodPre=null;moodPos=null;sleepQuality=null;
+  preChecklist={planejamento:false,visualizacao:false,chegada45:false,regioes:false,stopdia:false};
   document.querySelectorAll('#mood-pre-grid .mo, #mood-pos-grid .mo').forEach(b=>b.classList.remove('sel'));
   document.querySelectorAll('.sq').forEach(b=>b.classList.remove('sel'));
   [['sl-e','sv-e'],['sl-d','sv-d'],['sl-c','sv-c'],['sl-presenca','sv-presenca']].forEach(([s,v])=>{
@@ -1684,14 +1854,21 @@ function resetForms(){
   });
   document.getElementById('t-total-fpa')&&(document.getElementById('t-total-fpa').textContent='R$ 0');
   document.getElementById('t-total-pf')&&(document.getElementById('t-total-pf').textContent='R$ 0');
+  renderPreChecklist();
 }
 
 function loadTodayForms(){
   const e=todayEntry();
   // SEMPRE reseta antes — garante dia limpo
   resetForms();
+  // Init trade date selector
+  const tradeSel=document.getElementById('trade-date-sel');
+  if(tradeSel) tradeSel.value=todayISO();
+  tradeEditDate=null;
+  const notice=document.getElementById('trade-date-notice');
+  if(notice) notice.style.display='none';
   if(!e.date_iso) return;  // sem registro de hoje: formulário fica vazio
-  // Carrega dados de HOJE
+  // Carrega dados de HOJE — pessoal
   if(e.mood_pre||e.mood){moodPre=e.mood_pre||e.mood;document.querySelectorAll('#mood-pre-grid .mo').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+moodPre+"'")) b.classList.add('sel');});}
   if(e.mood_pos){moodPos=e.mood_pos;document.querySelectorAll('#mood-pos-grid .mo').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+e.mood_pos+"'")) b.classList.add('sel');});}
   if(e.mood_pre_note){const el=document.getElementById('f-mood-pre-note');if(el) el.value=e.mood_pre_note;}
@@ -1711,6 +1888,8 @@ function loadTodayForms(){
   safe('t-felling',e.t_felling);safe('t-mesa',e.t_mesa);safe('t-pa',e.t_pa);
   safe('t-analysis',e.t_analysis);safe('t-avoid',e.t_avoid);
   if(e.t_hes_detail){const el=document.getElementById('hes-detail');if(el) el.value=e.t_hes_detail;}
+  if(e.pre_checklist) Object.assign(preChecklist,e.pre_checklist);
+  renderPreChecklist();
   if(document.getElementById('t-felling')) calcTotals();
 }
 
@@ -1828,9 +2007,14 @@ async function saveTrade(){
   const p=parseFloat(document.getElementById('t-pa').value)||0;
   const m=parseFloat(document.getElementById('t-mesa').value)||0;
   const ops_n=tradeOps.length,ops_w=tradeOps.filter(o=>o.pts>0).length;
+  const dateISO=tradeDateISO();
+  const existing=allData.find(d=>d.date_iso===dateISO)||{};
+  const d=new Date(dateISO+'T12:00:00');
   const entry={
-    ...todayEntry(),
-    date_iso:todayISO(),date_label:new Date().toLocaleDateString('pt-BR'),day_of_week:new Date().getDay(),
+    ...existing,
+    date_iso:dateISO,
+    date_label:d.toLocaleDateString('pt-BR'),
+    day_of_week:d.getDay(),
     t_felling:f,t_pa:p,t_mesa:m,
     t_result_fpa:f+p,
     t_result_pf:m,
@@ -1845,8 +2029,9 @@ async function saveTrade(){
     t_ops_detail:[...tradeOps],
     t_hesitations:[...hesitations],
     t_hes_detail:document.getElementById('hes-detail').value.trim(),
+    pre_checklist:{...preChecklist},
   };
-  try{await saveToDB(entry);showToast('Diário de trade salvo ✓');}
+  try{await saveToDB(entry);showToast('Diário de trade salvo ✓'+(tradeEditDate&&tradeEditDate!==todayISO()?' ('+d.toLocaleDateString('pt-BR',{day:'2-digit',month:'short'})+')':''));}
   catch(e){showToast('Erro: '+e.message.slice(0,40),true);console.error(e);}
   finally{btn.disabled=false;btn.textContent='Salvar diário de trade';}
 }
@@ -2006,7 +2191,7 @@ function goPage(id,btn){
   document.getElementById('pg-'+id).classList.add('active');btn.classList.add('active');
   const scroll=document.getElementById('scroll');if(scroll) scroll.scrollTop=0;
   if(id==='dash'){currentPeriod='all';document.querySelectorAll('.ptab').forEach((b,i)=>b.classList.toggle('active',i===3));document.getElementById('dash-period-lbl').textContent='Todo o histórico';renderDash();}
-  if(id==='trade'){const hm=nowHM();const opT=document.getElementById('op-time'),hesT=document.getElementById('hes-time');if(opT&&!opT.value) opT.value=hm;if(hesT&&!hesT.value) hesT.value=hm;}
+  if(id==='trade'){const hm=nowHM();const opT=document.getElementById('op-time'),hesT=document.getElementById('hes-time');if(opT&&!opT.value) opT.value=hm;if(hesT&&!hesT.value) hesT.value=hm;renderYesterdayReview();}
   if(id==='log') setTimeout(()=>renderLog(),60);
   if(id==='claude') scrollBottom();
 }
@@ -2556,6 +2741,12 @@ function renderLog(){
   if(c){const ctx=c.getContext('2d');const W=c.parentElement.offsetWidth-30;c.width=W*2;c.height=110*2;ctx.scale(2,2);const w=W,h=110;ctx.clearRect(0,0,w,h);const td=sorted.filter(d=>d.t_result_fpa!=null||d.t_result!=null);if(td.length>1){let cum=0;const pts=td.map(d=>{cum+=(d.t_result_fpa!=null?d.t_result_fpa:d.t_result||0);return cum;});const mn=Math.min(...pts),mx=Math.max(...pts);const pad={t:10,r:8,b:18,l:42};const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;ctx.beginPath();pts.forEach((v,i)=>{const x=pad.l+(i/(pts.length-1))*cw;const y=pad.t+ch-((v-mn)/(mx-mn||1))*ch;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.strokeStyle=cum>=0?'#30c478':'#e84040';ctx.lineWidth=1.8;ctx.stroke();ctx.lineTo(pad.l+cw,pad.t+ch);ctx.lineTo(pad.l,pad.t+ch);ctx.closePath();ctx.fillStyle=(cum>=0?'#30c47818':'#e8404018');ctx.fill();ctx.fillStyle='#424a6a';ctx.font='8px Geist Mono';ctx.fillText('R$ '+Math.round(pts[pts.length-1]).toLocaleString('pt-BR'),pad.l,pad.t+8);}else{ctx.fillStyle='#424a6a';ctx.font='10px Geist Mono';ctx.fillText('Sem dados de trade ainda',10,55);}}
   const cd=document.getElementById('c-day');if(cd){const ctx=cd.getContext('2d');const W=cd.parentElement.offsetWidth-30;cd.width=W*2;cd.height=100*2;ctx.scale(2,2);const w=W,h=100;ctx.clearRect(0,0,w,h);const byDay=Array(7).fill(null).map(()=>({s:0,n:0}));allData.forEach(d=>{byDay[d.day_of_week].s+=d.energia;byDay[d.day_of_week].n++;});const avgs=byDay.map(d=>d.n?d.s/d.n:0);const pad={t:8,r:8,b:20,l:8};const bw=(w-pad.l-pad.r)/7-4,ch=h-pad.t-pad.b;avgs.forEach((v,i)=>{const x=pad.l+i*(bw+4),bh=(v/10)*ch,y=pad.t+ch-bh;const isMax=v===Math.max(...avgs)&&v>0;ctx.fillStyle=isMax?'#4e7cf8':'#1a2038';ctx.fillRect(x,y,bw,bh);ctx.fillStyle=isMax?'#4e7cf8':'#424a6a';ctx.font='8px Geist Mono';ctx.fillText(DAYS[i].slice(0,3),x,h-4);if(v>0){ctx.fillStyle='#b0b8d8';ctx.font='7px Geist Mono';ctx.fillText(v.toFixed(1),x+bw/2-8,y-3);}});}
   const tbody=document.getElementById('log-body');if(!allData.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:24px;color:#424a6a">Nenhuma entrada ainda</td></tr>';return;}
+  // Calculate totals
+  const allWithFPA=allData.filter(d=>d.t_result_fpa!=null||d.t_result!=null);
+  const allWithPF=allData.filter(d=>d.t_result_pf!=null);
+  const totalFPA=allWithFPA.reduce((a,d)=>a+(d.t_result_fpa!=null?d.t_result_fpa:d.t_result||0),0);
+  const totalPF=allWithPF.reduce((a,d)=>a+(d.t_result_pf||0),0);
+  const totalWR=allData.filter(d=>d.t_wr).length?Math.round(allData.filter(d=>d.t_wr).reduce((a,d)=>a+(d.t_wr||0),0)/allData.filter(d=>d.t_wr).length):null;
   tbody.innerHTML=[...allData].sort((a,b)=>b.date_iso.localeCompare(a.date_iso)).slice(0,60).map(d=>{
     const m=MOODS[d.mood_pre||d.mood]||MOODS.calmo;
     const resFPA=d.t_result_fpa!=null?d.t_result_fpa:d.t_result;
@@ -2566,6 +2757,20 @@ function renderLog(){
     const wr=d.t_wr;const wrStr=wr?`<span style="color:${wr>=65?'var(--green)':wr>=50?'var(--gold)':'var(--red)'}">${wr}%</span>`:'—';
     return`<tr><td style="color:#424a6a;white-space:nowrap;font-size:10px">${(d.date_label||d.date_iso).slice(0,8)}</td><td><span class="mc" style="background:${m.bg};color:${m.c}">${m.e}</span></td><td style="color:var(--blue);font-weight:500">${d.energia||'—'}</td><td style="font-size:9px">${resStr}</td><td>${wrStr}</td></tr>`;
   }).join('');
+  // Totals footer
+  const tfoot=document.getElementById('log-foot');
+  if(tfoot){
+    const fpaColor=totalFPA>=0?'var(--green)':'var(--red)';
+    const pfColor=totalPF>=0?'var(--green)':'var(--red)';
+    tfoot.innerHTML=`<tr style="border-top:2px solid var(--b1);background:var(--s2)">
+      <td style="font-size:9px;color:var(--dim);font-weight:500;padding:10px" colspan="3">TOTAL (${allData.length} dias)</td>
+      <td style="font-size:9px;padding:10px">
+        ${allWithFPA.length?`<span style="color:${fpaColor};font-weight:500">F+PA ${totalFPA>=0?'+':''}${Math.round(totalFPA).toLocaleString('pt-BR')}</span>`:''}
+        ${allWithPF.length?`<span style="color:${pfColor}"> · PF ${totalPF>=0?'+':''}${Math.round(totalPF).toLocaleString('pt-BR')}</span>`:''}
+      </td>
+      <td style="font-size:9px;padding:10px">${totalWR?`<span style="color:${totalWR>=65?'var(--green)':totalWR>=50?'var(--gold)':'var(--red)'}">${totalWR}%</span>`:'—'}</td>
+    </tr>`;
+  }
 }
 
 // ── CLAUDE CHAT ───────────────────────────────
