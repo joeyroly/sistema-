@@ -959,9 +959,21 @@ tr:hover td{background:var(--s2)}
     <!-- ── CLAUDE ── -->
     <div id="pg-claude" class="page">
       <div class="chat-shell">
-        <button onclick="exportParaClaude()" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--blue),var(--purp));border:none;border-radius:10px;color:#fff;font-family:'Geist Mono',monospace;font-size:11px;font-weight:500;cursor:pointer;margin-bottom:10px;letter-spacing:.5px">
-          📋 Copiar relatório completo para colar no Claude.ai
-        </button>
+        <!-- Export com seletor de período -->
+        <div style="background:var(--s2);border:1px solid var(--b1);border-radius:10px;padding:10px;margin-bottom:10px">
+          <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:8px">📋 Exportar relatório para análise</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+            <button class="ptab active" id="exp-7" onclick="setExpPeriod(7,this)">7 dias</button>
+            <button class="ptab" id="exp-14" onclick="setExpPeriod(14,this)">14 dias</button>
+            <button class="ptab" id="exp-30" onclick="setExpPeriod(30,this)">30 dias</button>
+            <button class="ptab" id="exp-90" onclick="setExpPeriod(90,this)">90 dias</button>
+            <button class="ptab" id="exp-0" onclick="setExpPeriod(0,this)" style="grid-column:1/-1">📊 Todo o período</button>
+          </div>
+          <div style="font-size:9px;color:var(--dim);margin-bottom:8px" id="exp-period-info">Últimos 7 dias selecionados</div>
+          <button onclick="exportParaClaude()" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--blue),var(--purp));border:none;border-radius:10px;color:#fff;font-family:'Geist Mono',monospace;font-size:11px;font-weight:500;cursor:pointer;letter-spacing:.5px">
+            📋 Copiar relatório e colar no Claude.ai
+          </button>
+        </div>
         <div class="qbtns">
           <button class="qbtn" onclick="qmsg('Como estou indo essa semana?')">Esta semana</button>
           <button class="qbtn" onclick="qmsg('Qual a correlação entre sono e meus resultados de trade?')">Sono vs Trade</button>
@@ -2103,6 +2115,9 @@ async function saveTrade(){
   const p=parseFloat(document.getElementById('t-pa').value)||0;
   const m=parseFloat(document.getElementById('t-mesa').value)||0;
   const ops_n=tradeOps.length,ops_w=tradeOps.filter(o=>o.pts>0).length;
+  // Adesão: média correta de adh_items por operação (entrada E saída)
+  const adhScoresSave=tradeOps.map(op=>calcAdhScore(op)).filter(v=>v!==null);
+  const t_adh=adhScoresSave.length?Math.round(adhScoresSave.reduce((a,v)=>a+v,0)/adhScoresSave.length*10)/10:null;
   const dateISO=tradeDateISO();
   const existing=allData.find(d=>d.date_iso===dateISO)||{};
   const d=new Date(dateISO+'T12:00:00');
@@ -2116,6 +2131,7 @@ async function saveTrade(){
     t_result_pf:m,
     t_ops:ops_n,t_wins_ops:ops_w,
     t_wr:ops_n>0?Math.round(ops_w/ops_n*100):null,
+    t_adh:t_adh,
     mood_pre:moodPre,
     mood_pre_note:(document.getElementById('f-mood-pre-note')?.value||'').trim(),
     mood_pos:moodPos,
@@ -2870,73 +2886,8 @@ function renderLog(){
 }
 
 // ── CLAUDE CHAT ───────────────────────────────
-function buildCtx(){
-  if(!allData.length) return'Nenhuma entrada no diário ainda.';
-  const sorted=[...allData].sort((a,b)=>a.date_iso.localeCompare(b.date_iso));
-  const l7=sorted.slice(-7),l30=sorted.slice(-30);
-  const avgM=(arr,k)=>arr.length?(arr.reduce((a,d)=>a+(d[k]||0),0)/arr.length).toFixed(1):'N/A';
-  const streak=calcStreak();
-  const td30=l30.filter(d=>d.t_result_fpa!=null||d.t_result_pf!=null);
-  const totalFPA30=td30.reduce((a,d)=>a+(d.t_result_fpa||0),0);
-  const totalPF30=td30.reduce((a,d)=>a+(d.t_result_pf||0),0);
-  const allOps=[];sorted.forEach(d=>(d.t_ops_detail||[]).forEach(op=>allOps.push({...op,date:d.date_iso,mood:d.mood_pre||d.mood,energia:d.energia,sleep_quality:d.sleep_quality})));
-  // Exit reason stats
-  const byExit={};allOps.filter(op=>op.exit_reason).forEach(op=>{if(!byExit[op.exit_reason]) byExit[op.exit_reason]={pts:0,n:0};byExit[op.exit_reason].pts+=op.pts;byExit[op.exit_reason].n++;});
-  const exitStr=Object.entries(byExit).sort((a,b)=>b[1].n-a[1].n).map(([s,v])=>`${s}:n=${v.n},avg=${( v.pts/v.n).toFixed(0)}pts`).join(' | ')||'sem dados';
-  // Partial reason stats
-  const byPartial={};allOps.filter(op=>op.partial_reason).forEach(op=>{if(!byPartial[op.partial_reason]) byPartial[op.partial_reason]={pts:0,n:0};byPartial[op.partial_reason].pts+=op.pts;byPartial[op.partial_reason].n++;});
-  const partialStr=Object.entries(byPartial).map(([s,v])=>`${s}:n=${v.n}`).join(' | ')||'sem dados';
-  // Mood pre vs pos delta
-  const deltaDays=sorted.filter(d=>d.mood_pre&&d.mood_pos&&d.mood_pre!==d.mood_pos);
-  const moodDeltaStr=deltaDays.length?`${deltaDays.length} dias com mudança de estado pré→pós`:'poucos dados';
-  const byState={};allOps.filter(op=>op.entry_state).forEach(op=>{if(!byState[op.entry_state]) byState[op.entry_state]={pts:0,n:0,w:0};byState[op.entry_state].pts+=op.pts;byState[op.entry_state].n++;if(op.pts>0) byState[op.entry_state].w++;});
-  const stateStr=Object.entries(byState).map(([s,v])=>`${s}:${v.pts.toFixed(0)}pts avg=${( v.pts/v.n).toFixed(0)} WR=${Math.round(v.w/v.n*100)}% n=${v.n}`).join(' | ')||'sem dados';
-  const highEmoOps=allOps.filter(op=>op.emo_intensity>=8);const avgHighEmoR=highEmoOps.length?highEmoOps.reduce((a,o)=>a+o.pts,0)/highEmoOps.length:null;
-  const planOps=allOps.filter(op=>op.entry_state==='planejado');const dangerOps=allOps.filter(op=>['emotivo','medo_falha','desfocado','revanche'].includes(op.entry_state));
-  const pilarCompletion={};PILAR_KEYS.forEach(k=>{const days=sorted.filter(d=>d.pilares&&d.pilares[k]&&d.pilares[k].length>0);const done=days.filter(d=>d.pilares[k].every(i=>i.done)).length;pilarCompletion[k]=`${done}/${days.length}dias completo`;});
-  const sleepAll=sorted.filter(d=>d.sleep_bed&&d.sleep_wake);const avgSleepMins=sleepAll.length?sleepAll.reduce((a,d)=>a+(calcSleepMins(d.sleep_bed,d.sleep_wake)||0),0)/sleepAll.length:null;
-  return`SISTEMA PESSOAL — JOEY v3
-Data: ${new Date().toLocaleDateString('pt-BR')} | Entradas: ${allData.length} | Sequência: ${streak}d
-
-PERFIL:
-Economista, trader WDOL (WDOLFUT), 3 contas (Felling/PF/PA-Price). Win rate histórico ~68%. Modelo E1+E2 sem E3. Stop máx 15pts da média. Parcial em 10pts. Mentor: Cirilo. Metodologia científica-comportamental.
-
-7 DIAS — PESSOAL:
-Energia:${avgM(l7,'energia')} Disc:${avgM(l7,'disciplina')} Clar:${avgM(l7,'clareza')} (${l7.length}/7 dias preenchidos)
-
-30 DIAS — TRADE:
-Felling+PA: R$${Math.round(totalFPA30).toLocaleString('pt-BR')} | PF: R$${Math.round(totalPF30).toLocaleString('pt-BR')}
-WR:${td30.filter(d=>d.t_wr).length?Math.round(avg(td30.filter(d=>d.t_wr),'t_wr'))+'%':'N/A'} | Adesão:${avgM(td30,'t_adh')}/10
-
-SONO:
-Média: ${avgSleepMins?`${Math.floor(avgSleepMins/60)}h${Math.round(avgSleepMins%60)}m`:'sem dados'} | Registros: ${sleepAll.length}
-
-ESTADO EMOCIONAL — DELTA PRÉ×PÓS:
-${moodDeltaStr}
-
-4 PILARES (histórico):
-Alma:${pilarCompletion.alma} Corpo:${pilarCompletion.corpo} Espírito:${pilarCompletion.espirito} Pessoas:${pilarCompletion.pessoas}
-
-GATILHOS DE ENTRADA × RESULTADO (por operação):
-${stateStr}
-
-MOTIVO DE SAÍDA × RESULTADO:
-${exitStr}
-
-PARCIAL/ADIÇÃO — POR QUÊ:
-${partialStr}
-
-OPERAÇÕES COM INTENSIDADE EMOCIONAL ALTA (≥8/10):
-n=${highEmoOps.length} | média pts: ${avgHighEmoR!==null?avgHighEmoR.toFixed(1):'sem dados'}
-Planejadas: n=${planOps.length} | Emotivas/medo/desfoco/revanche: n=${dangerOps.length}
-
-ANÁLISE POR LOTES (E1 puro vs com adição):
-Total ops com lotes registrados: ${allOps.filter(o=>o.lots).length}
-E1 puro (sem adição E2/E3): n=${allOps.filter(o=>!o.partial_reason||!o.partial_reason.startsWith('E')).length}
-
-ÚLTIMAS 10 ENTRADAS:
-${sorted.slice(-10).map(d=>`[${d.date_label}] pré:${d.mood_pre||d.mood||'—'} pós:${d.mood_pos||'—'} E:${d.energia||'—'} sono:${d.sleep_quality||'—'} adh:${d.t_adh||'—'} FPA:${d.t_result_fpa!=null?Math.round(d.t_result_fpa):'—'} PF:${d.t_result_pf!=null?Math.round(d.t_result_pf):'—'} WR:${d.t_wr||'—'}%`).join('\n')}`;
-}
+// buildCtx legado — alias para o novo com todo o período
+function buildCtx(){return buildCtxFull(0);}
 
 async function sendMsg(){
   const inp=document.getElementById('chat-inp'),msg=inp.value.trim();
@@ -2946,8 +2897,8 @@ async function sendMsg(){
   try{
     const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:`Você é mentor científico-comportamental de Joey, trader WDOL.
 
-Acesso completo ao histórico:
-${buildCtx()}
+Acesso completo ao histórico (${exportDays>0?'últimos '+exportDays+' dias':'todo o período'}):
+${buildCtx(exportDays)}
 
 COMO ANALISAR:
 - Use metodologia comportamental: identifique padrões ABC (Antecedente→Comportamento→Consequência)
@@ -2972,9 +2923,295 @@ function autoResize(el){el.style.height='auto';el.style.height=Math.min(el.scrol
 function mdHtml(t){return esc(t).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\*(.+?)\*/g,'<em>$1</em>').replace(/_(.+?)_/g,'<em>$1</em>').replace(/\n/g,'<br>');}
 
 // ── EXPORT ────────────────────────────────────
+let exportDays=7; // 0 = todos
+
+function setExpPeriod(days,btn){
+  exportDays=days;
+  document.querySelectorAll('#pg-claude .ptab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  const el=document.getElementById('exp-period-info');
+  if(el){
+    if(days===0) el.textContent=`Todo o período selecionado (${allData.length} entradas)`;
+    else el.textContent=`Últimos ${days} dias selecionados`;
+  }
+}
+
+function calcAdhScore(op){
+  // Correto: usa adh_items (por operação) ou adh_entry (legado)
+  const items=op.adh_items||{};
+  const keys=Object.keys(items);
+  if(!keys.length) return null;
+  const trueCount=keys.filter(k=>items[k]).length;
+  return Math.round(trueCount/keys.length*10*10)/10; // 0-10
+}
+
+function getExitReasons(op){
+  // Suporta tanto exit_reasons[] (novo) quanto exit_reason (legado singular)
+  if(op.exit_reasons&&op.exit_reasons.length) return op.exit_reasons;
+  if(op.exit_reason) return [op.exit_reason];
+  return [];
+}
+
+function getEntryStates(op){
+  if(op.entry_states&&op.entry_states.length) return op.entry_states;
+  if(op.entry_state) return [op.entry_state];
+  return [];
+}
+
+function buildCtxFull(days){
+  if(!allData.length) return 'Nenhuma entrada no diário ainda.';
+  const cutoff=days>0?new Date(Date.now()-days*86400000):null;
+  const sorted=[...allData]
+    .filter(d=>!cutoff||new Date(d.date_iso+'T12:00:00')>=cutoff)
+    .sort((a,b)=>a.date_iso.localeCompare(b.date_iso));
+  if(!sorted.length) return 'Sem dados no período selecionado.';
+  const fmtN=(v,dec=1)=>v!=null?Number(v).toFixed(dec):'—';
+  const pct=(v,t)=>t>0?Math.round(v/t*100)+'%':'—';
+  const avgArr=(arr)=>arr.length?arr.reduce((a,v)=>a+v,0)/arr.length:null;
+  const avgField=(arr,k)=>{const v=arr.map(d=>d[k]).filter(x=>x!=null);return v.length?fmtN(avgArr(v)):'—';};
+  const n=v=>v!=null?v:'—';
+  // ── OPERAÇÕES ──
+  const allOps=[];
+  sorted.forEach(d=>(d.t_ops_detail||[]).forEach(op=>allOps.push({
+    ...op,date:d.date_iso,mood_pre:d.mood_pre||d.mood,mood_pos:d.mood_pos,
+    energia:d.energia,disciplina:d.disciplina,clareza:d.clareza,
+    sleep_quality:d.sleep_quality,
+    sleep_mins:d.sleep_bed&&d.sleep_wake?calcSleepMins(d.sleep_bed,d.sleep_wake):null,
+  })));
+  const wins2=allOps.filter(o=>o.pts>0),losses2=allOps.filter(o=>o.pts<0);
+  const totalPts=allOps.reduce((a,o)=>a+o.pts,0);
+  const avgPtsW=wins2.length?avgArr(wins2.map(o=>o.pts)):null;
+  const avgPtsL=losses2.length?avgArr(losses2.map(o=>o.pts)):null;
+  const payoff=avgPtsW&&avgPtsL?Math.abs(avgPtsW/avgPtsL):null;
+  // MFE/MAE
+  const opsWithMFE=allOps.filter(o=>o.mfe!=null&&o.mfe>0);
+  const opsWithMAE=allOps.filter(o=>o.mae!=null&&o.mae>0);
+  const avgMFE=opsWithMFE.length?avgArr(opsWithMFE.map(o=>o.mfe)):null;
+  const avgMAE=opsWithMAE.length?avgArr(opsWithMAE.map(o=>o.mae)):null;
+  const winsWithMFE=opsWithMFE.filter(o=>o.pts>0);
+  const avgCapture=winsWithMFE.length?avgArr(winsWithMFE.map(o=>Math.min(100,Math.round(o.pts/o.mfe*100)))):null;
+  const leftOnTable=winsWithMFE.filter(o=>o.mfe>o.pts);
+  const avgLeftPts=leftOnTable.length?avgArr(leftOnTable.map(o=>o.mfe-o.pts)):null;
+  const maeWins2=allOps.filter(o=>o.pts>0&&o.mae!=null);
+  const maeLoss2=allOps.filter(o=>o.pts<0&&o.mae!=null);
+  const avgMAEWin=maeWins2.length?avgArr(maeWins2.map(o=>o.mae)):null;
+  const avgMAELoss=maeLoss2.length?avgArr(maeLoss2.map(o=>o.mae)):null;
+  const opsWithLots=allOps.filter(o=>o.lots);
+  const avgLots=opsWithLots.length?avgArr(opsWithLots.map(o=>o.lots)):null;
+  // Financeiro
+  const td=sorted.filter(d=>d.t_result_fpa!=null||d.t_result!=null);
+  const totalFPA=td.reduce((a,d)=>a+(d.t_result_fpa!=null?d.t_result_fpa:d.t_result||0),0);
+  const totalPF=sorted.filter(d=>d.t_result_pf!=null).reduce((a,d)=>a+(d.t_result_pf||0),0);
+  const avgDayFPA=td.length?totalFPA/td.length:null;
+  const posDays=td.filter(d=>(d.t_result_fpa||0)>0).length;
+  const negDays=td.filter(d=>(d.t_result_fpa||0)<0).length;
+  let peak=0,maxDD=0,cum=0;td.forEach(d=>{cum+=(d.t_result_fpa||0);if(cum>peak)peak=cum;const dd=peak-cum;if(dd>maxDD)maxDD=dd;});
+  // Por horário
+  const byHour={};allOps.forEach(op=>{const hr=op.time?op.time.split(':')[0]:'??';if(!byHour[hr])byHour[hr]={n:0,w:0,pts:0};byHour[hr].n++;byHour[hr].pts+=op.pts;if(op.pts>0)byHour[hr].w++;});
+  const hourStr=Object.entries(byHour).sort((a,b)=>+a[0]-+b[0]).map(([h,v])=>`${h}h:n=${v.n},WR=${pct(v.w,v.n)},avg=${fmtN(v.pts/v.n,0)}pts`).join(' | ')||'sem dados';
+  // Gatilhos entrada
+  const byState={};allOps.forEach(op=>{(op.entry_states&&op.entry_states.length?op.entry_states:op.entry_state?[op.entry_state]:[]).forEach(s=>{if(!byState[s])byState[s]={pts:0,n:0,w:0};byState[s].pts+=op.pts;byState[s].n++;if(op.pts>0)byState[s].w++;});});
+  const stateStr=Object.entries(byState).sort((a,b)=>b[1].n-a[1].n).map(([s,v])=>`  ${s}: n=${v.n} WR=${pct(v.w,v.n)} avg=${fmtN(v.pts/v.n,0)}pts total=${fmtN(v.pts,0)}pts`).join('\n')||'sem dados';
+  // Motivo saída
+  const byExit={};allOps.forEach(op=>{getExitReasons(op).forEach(r=>{if(!byExit[r])byExit[r]={pts:0,n:0,w:0};byExit[r].pts+=op.pts;byExit[r].n++;if(op.pts>0)byExit[r].w++;});});
+  const exitStr=Object.entries(byExit).sort((a,b)=>b[1].n-a[1].n).map(([r,v])=>`  ${r}: n=${v.n} WR=${pct(v.w,v.n)} avg=${fmtN(v.pts/v.n,0)}pts total=${fmtN(v.pts,0)}pts`).join('\n')||'sem dados';
+  // Parcial
+  const byPartial={};allOps.forEach(op=>{(op.partial_reasons&&op.partial_reasons.length?op.partial_reasons:op.partial_reason?[op.partial_reason]:[]).forEach(r=>{if(!byPartial[r])byPartial[r]={pts:0,n:0,w:0};byPartial[r].pts+=op.pts;byPartial[r].n++;if(op.pts>0)byPartial[r].w++;});});
+  const partialStr=Object.entries(byPartial).map(([r,v])=>`  ${r}: n=${v.n} WR=${pct(v.w,v.n)} avg=${fmtN(v.pts/v.n,0)}pts`).join('\n')||'sem dados';
+  // Segurança
+  const bySeg={};allOps.forEach(op=>(op.segs||[]).forEach(s=>{if(!bySeg[s])bySeg[s]={pts:0,n:0,w:0};bySeg[s].pts+=op.pts;bySeg[s].n++;if(op.pts>0)bySeg[s].w++;}));
+  const segStr=Object.entries(bySeg).sort((a,b)=>b[1].n-a[1].n).map(([s,v])=>`  ${s}: n=${v.n} WR=${pct(v.w,v.n)} avg=${fmtN(v.pts/v.n,0)}pts`).join('\n')||'sem dados';
+  // Setup técnico
+  const bySetup={};allOps.forEach(op=>(op.setups||[]).forEach(s=>{if(!bySetup[s])bySetup[s]={pts:0,n:0,w:0};bySetup[s].pts+=op.pts;bySetup[s].n++;if(op.pts>0)bySetup[s].w++;}));
+  const setupStr=Object.entries(bySetup).sort((a,b)=>b[1].n-a[1].n).map(([s,v])=>`  ${s}: n=${v.n} WR=${pct(v.w,v.n)} avg=${fmtN(v.pts/v.n,0)}pts total=${fmtN(v.pts,0)}pts`).join('\n')||'sem dados';
+  // MEDO
+  const opsWithEmo=allOps.filter(o=>o.emo_intensity!=null);
+  const emoLow=opsWithEmo.filter(o=>o.emo_intensity<=3),emoMid=opsWithEmo.filter(o=>o.emo_intensity>=4&&o.emo_intensity<=7),emoHigh=opsWithEmo.filter(o=>o.emo_intensity>=8);
+  const emoRow=(arr,lbl)=>arr.length?`  ${lbl}(n=${arr.length}): WR=${pct(arr.filter(o=>o.pts>0).length,arr.length)} avg=${fmtN(avgArr(arr.map(o=>o.pts)),0)}pts`:`  ${lbl}: sem dados`;
+  // Execução
+  const opsWithExec=allOps.filter(o=>o.exec_score!=null);
+  const execLow=opsWithExec.filter(o=>o.exec_score<=4),execMid=opsWithExec.filter(o=>o.exec_score>=5&&o.exec_score<=7),execHigh=opsWithExec.filter(o=>o.exec_score>=8);
+  const execRow=(arr,lbl)=>arr.length?`  ${lbl}(n=${arr.length}): WR=${pct(arr.filter(o=>o.pts>0).length,arr.length)} avg=${fmtN(avgArr(arr.map(o=>o.pts)),0)}pts`:`  ${lbl}: sem dados`;
+  // Adesão
+  const adhScores=allOps.map(op=>calcAdhScore(op)).filter(v=>v!==null);
+  const avgAdh=adhScores.length?fmtN(avgArr(adhScores)):'—';
+  const adhByItem={e1:{y:0,tot:0},no_e3:{y:0,tot:0},stop:{y:0,tot:0},entry:{y:0,tot:0},size:{y:0,tot:0}};
+  allOps.forEach(op=>{const items=op.adh_items||{};Object.keys(adhByItem).forEach(k=>{if(k in items){adhByItem[k].tot++;if(items[k])adhByItem[k].y++;}});});
+  const adhDetail=Object.entries(adhByItem).filter(([,v])=>v.tot>0).map(([k,v])=>`${k}:${pct(v.y,v.tot)}(${v.tot}ops)`).join(' | ');
+  const highAdh=allOps.filter(o=>calcAdhScore(o)!=null&&calcAdhScore(o)>=8);
+  const lowAdh=allOps.filter(o=>calcAdhScore(o)!=null&&calcAdhScore(o)<5);
+  // Direção
+  const compras=allOps.filter(o=>o.dir==='C'),vendas=allOps.filter(o=>o.dir==='V');
+  // Checklist
+  const chkKeys=['planejamento','visualizacao','chegada45','regioes','stopdia'];
+  const chkLabels={planejamento:'Planejamento',visualizacao:'Visualização',chegada45:'45min antes',regioes:'Regiões',stopdia:'Stop dia'};
+  const chkDays=sorted.filter(d=>d.pre_checklist);
+  const chkStr=chkKeys.map(k=>{const done=chkDays.filter(d=>d.pre_checklist[k]).length;return`${chkLabels[k]}:${pct(done,chkDays.length)}(${done}/${chkDays.length}d)`;}).join(' | ');
+  // Sono
+  const sleepAll=sorted.filter(d=>d.sleep_bed&&d.sleep_wake);
+  const avgSleepMins=sleepAll.length?avgArr(sleepAll.map(d=>calcSleepMins(d.sleep_bed,d.sleep_wake)||0)):null;
+  const sleepByQ={};sorted.forEach(d=>{if(d.sleep_quality)sleepByQ[d.sleep_quality]=(sleepByQ[d.sleep_quality]||0)+1;});
+  const sleepQStr=Object.entries(sleepByQ).filter(([,v])=>v>0).map(([k,v])=>`${k}:${v}d`).join(' ');
+  const sleepTrade=sorted.filter(d=>d.sleep_bed&&d.sleep_wake&&d.t_result_fpa!=null);
+  const sShort=sleepTrade.filter(d=>calcSleepMins(d.sleep_bed,d.sleep_wake)<360);
+  const sOk=sleepTrade.filter(d=>calcSleepMins(d.sleep_bed,d.sleep_wake)>=360);
+  // Mood
+  const deltaDays=sorted.filter(d=>d.mood_pre&&d.mood_pos&&d.mood_pre!==d.mood_pos);
+  const moodPairs={};sorted.filter(d=>d.mood_pre&&d.mood_pos).forEach(d=>{const k=`${d.mood_pre}→${d.mood_pos}`;moodPairs[k]=(moodPairs[k]||0)+1;});
+  const topMoodPairs=Object.entries(moodPairs).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([k,v])=>`${k}(${v}d)`).join(' | ');
+  // Pilares
+  const pilarC={};PILAR_KEYS.forEach(k=>{const pd=sorted.filter(d=>d.pilares&&d.pilares[k]&&d.pilares[k].length>0);const done=pd.filter(d=>d.pilares[k].every(i=>i.done)).length;pilarC[k]=`${done}/${pd.length}`;});
+  // Hesitações
+  const allHes=[];sorted.forEach(d=>(d.t_hesitations||[]).forEach(h=>allHes.push({...h,date:d.date_iso})));
+  const hesRM={};allHes.forEach(h=>(h.reasons||[]).forEach(r=>{hesRM[r]=(hesRM[r]||0)+1;}));
+  const hesSM={};allHes.forEach(h=>(h.segs||[]).forEach(s=>{hesSM[s]=(hesSM[s]||0)+1;}));
+  const hesMFEs=allHes.filter(h=>h.mfe!=null&&h.mfe>0);
+  const totalHesPts=allHes.reduce((a,h)=>a+h.pts,0);
+  const periodLabel=days>0?`últimos ${days} dias`:`todo o período`;
+  const dateRange=sorted.length>=2?`${sorted[0].date_iso} → ${sorted[sorted.length-1].date_iso}`:sorted[0]?.date_iso||'—';
+  return`════════════════════════════════════════
+SISTEMA JOEY v3 · RELATÓRIO COMPLETO
+Gerado: ${new Date().toLocaleDateString('pt-BR',{weekday:'short',day:'2-digit',month:'short',year:'numeric'})}
+Período: ${periodLabel} | ${dateRange}
+Entradas: ${sorted.length} dias | Total histórico: ${allData.length} dias
+════════════════════════════════════════
+
+PERFIL DO TRADER:
+Economista brasileiro, trader autônomo WDOL (mini dólar futuro).
+Contas: Felling + PA-Price (juntas) | PF (separada) | Gráfico 5min.
+Modelo: E1+E2 sem E3. Stop máx 15pts da média 2 pernas. Parcial 10pts de E1.
+Win rate histórico documentado: ~68%. Gargalo identificado: medo da execução.
+Mentor operacional: Cirilo. Metodologia: científica-comportamental (ABC).
+
+════════════════════════════════════════
+1. RESULTADO FINANCEIRO
+════════════════════════════════════════
+Felling+PA: R$${Math.round(totalFPA).toLocaleString('pt-BR')}
+PF (mesa): R$${Math.round(totalPF).toLocaleString('pt-BR')}
+Total combinado: R$${Math.round(totalFPA+totalPF).toLocaleString('pt-BR')}
+Dias com trade: ${td.length} | Positivos: ${posDays} | Negativos: ${negDays}
+Média/dia F+PA: R$${avgDayFPA!=null?Math.round(avgDayFPA).toLocaleString('pt-BR'):'—'}
+Drawdown máximo acumulado F+PA: R$${Math.round(maxDD).toLocaleString('pt-BR')}
+
+════════════════════════════════════════
+2. ESTATÍSTICAS DE TRADE (${allOps.length} operações)
+════════════════════════════════════════
+Win Rate: ${pct(wins2.length,allOps.length)} (${wins2.length}W / ${losses2.length}L)
+Pts total: ${fmtN(totalPts,0)} | Média/op: ${fmtN(allOps.length?totalPts/allOps.length:null,1)}pts
+Avg ganho (wins): ${fmtN(avgPtsW,1)}pts | Avg stop (losses): ${fmtN(avgPtsL,1)}pts
+Payoff ratio (|avg ganho / avg stop|): ${payoff!=null?fmtN(payoff,2):'—'}x
+Lotes médios/op: ${fmtN(avgLots,1)} (${opsWithLots.length} ops com lotes)
+
+── MFE / MAE / CAPTURA ──
+MFE médio (${opsWithMFE.length} ops registradas): ${fmtN(avgMFE,1)}pts
+  → Captura média em wins: ${avgCapture!=null?fmtN(avgCapture,0)+'%':'—'}
+  → Pts médios deixados na mesa (saiu antes do MFE): ${fmtN(avgLeftPts,1)}pts (${leftOnTable.length} ops)
+MAE médio (${opsWithMAE.length} ops registradas): ${fmtN(avgMAE,1)}pts
+  → MAE médio em wins (quanto suportou antes de ganhar): ${fmtN(avgMAEWin,1)}pts (${maeWins2.length} ops)
+  → MAE médio em stops (quanto foi contra antes de parar): ${fmtN(avgMAELoss,1)}pts (${maeLoss2.length} ops)
+
+── DIREÇÃO ──
+Compra(C): n=${compras.length} WR=${pct(compras.filter(o=>o.pts>0).length,compras.length)} avg=${fmtN(compras.length?avgArr(compras.map(o=>o.pts)):null,0)}pts
+Venda(V):  n=${vendas.length} WR=${pct(vendas.filter(o=>o.pts>0).length,vendas.length)} avg=${fmtN(vendas.length?avgArr(vendas.map(o=>o.pts)):null,0)}pts
+
+── POR HORÁRIO ──
+${hourStr}
+
+════════════════════════════════════════
+3. SETUPS TÉCNICOS
+════════════════════════════════════════
+${setupStr}
+
+════════════════════════════════════════
+4. GATILHOS DE ENTRADA × RESULTADO
+════════════════════════════════════════
+${stateStr}
+
+════════════════════════════════════════
+5. MOTIVO DE SAÍDA × RESULTADO
+════════════════════════════════════════
+${exitStr}
+
+════════════════════════════════════════
+6. PARCIAL / ADIÇÃO
+════════════════════════════════════════
+${partialStr}
+
+════════════════════════════════════════
+7. SEGURANÇA × RESULTADO
+════════════════════════════════════════
+${segStr}
+
+════════════════════════════════════════
+8. MEDO (intensidade emocional) × RESULTADO
+════════════════════════════════════════
+${emoRow(emoLow,'Baixo 1-3')}
+${emoRow(emoMid,'Médio 4-7')}
+${emoRow(emoHigh,'Alto 8-10')}
+Ops sem registro: ${allOps.length-opsWithEmo.length}
+
+════════════════════════════════════════
+9. NOTA DE EXECUÇÃO × RESULTADO
+════════════════════════════════════════
+${execRow(execLow,'Baixa ≤4')}
+${execRow(execMid,'Média 5-7')}
+${execRow(execHigh,'Alta ≥8')}
+Ops sem registro: ${allOps.length-opsWithExec.length}
+
+════════════════════════════════════════
+10. ADESÃO AO SISTEMA E1+E2
+════════════════════════════════════════
+Score médio: ${avgAdh}/10 (${adhScores.length} ops com adh_items)
+Por item: ${adhDetail||'sem dados'}
+Alta adesão (≥8, n=${highAdh.length}): WR=${pct(highAdh.filter(o=>o.pts>0).length,highAdh.length)} avg=${fmtN(highAdh.length?avgArr(highAdh.map(o=>o.pts)):null,0)}pts
+Baixa adesão (<5, n=${lowAdh.length}): WR=${pct(lowAdh.filter(o=>o.pts>0).length,lowAdh.length)} avg=${fmtN(lowAdh.length?avgArr(lowAdh.map(o=>o.pts)):null,0)}pts
+
+════════════════════════════════════════
+11. PRÉ-CHECKLIST × EXECUÇÃO
+════════════════════════════════════════
+${chkDays.length?chkStr:'sem dados de checklist ainda'}
+
+════════════════════════════════════════
+12. TRADES NÃO EXECUTADOS (HESITAÇÕES)
+════════════════════════════════════════
+Total: ${allHes.length} trades vistos e não executados
+Pts totais estimados perdidos: ${totalHesPts}pts
+R$ estimado perdido: R$${(totalHesPts*100).toLocaleString('pt-BR')}
+MFE médio observado pós-setup: ${hesMFEs.length?fmtN(avgArr(hesMFEs.map(h=>h.mfe)),1)+'pts ('+hesMFEs.length+' registros)':'sem dados'}
+Top motivos: ${Object.entries(hesRM).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k}(${v}x)`).join(', ')||'—'}
+Segurança presente: ${Object.entries(hesSM).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k}(${v}x)`).join(', ')||'—'}
+
+════════════════════════════════════════
+13. SONO × RESULTADO
+════════════════════════════════════════
+Duração média: ${avgSleepMins?`${Math.floor(avgSleepMins/60)}h${Math.round(avgSleepMins%60)}m`:'—'} (${sleepAll.length} registros)
+Qualidade: ${sleepQStr||'—'}
+Sono <6h → R$ F+PA médio/dia: ${sShort.length?'R$'+Math.round(sShort.reduce((a,d)=>a+(d.t_result_fpa||0),0)/sShort.length).toLocaleString('pt-BR')+' ('+sShort.length+'d)':'sem dados'}
+Sono ≥6h → R$ F+PA médio/dia: ${sOk.length?'R$'+Math.round(sOk.reduce((a,d)=>a+(d.t_result_fpa||0),0)/sOk.length).toLocaleString('pt-BR')+' ('+sOk.length+'d)':'sem dados'}
+
+════════════════════════════════════════
+14. ESTADO PESSOAL
+════════════════════════════════════════
+Energia:${avgField(sorted,'energia')} | Disciplina:${avgField(sorted,'disciplina')} | Clareza:${avgField(sorted,'clareza')} | Presença:${avgField(sorted,'presenca')}
+Delta pré→pós: ${deltaDays.length} dias com mudança de humor
+Top padrões: ${topMoodPairs||'—'}
+4 Pilares (completo/com registro):
+  Alma:${pilarC.alma} Corpo:${pilarC.corpo} Espírito:${pilarC.espirito} Pessoas:${pilarC.pessoas}
+
+════════════════════════════════════════
+15. DETALHE — ÚLTIMAS ${Math.min(10,sorted.length)} ENTRADAS
+════════════════════════════════════════
+${sorted.slice(-10).map(d=>{
+  const ops=(d.t_ops_detail||[]);
+  const opsStr=ops.length?ops.map(op=>`    [${op.time||'?'}] ${op.dir} ${op.pts>=0?'+':''}${op.pts}pts lots:${n(op.lots)} MFE:${n(op.mfe)} MAE:${n(op.mae)} captura:${op.mfe&&op.pts>0?Math.round(op.pts/op.mfe*100)+'%':'—'} MEDO:${n(op.emo_intensity)} exec:${n(op.exec_score)} adh:${fmtN(calcAdhScore(op),0)}/10\n      exit:[${getExitReasons(op).join(',')||'—'}] seg:[${(op.segs||[]).join(',')||'—'}] setup:[${(op.setups||[]).join(',')||'—'}] gatilho:[${(op.entry_states||[op.entry_state]).filter(Boolean).join(',')||'—'}]`).join('\n'):'    sem ops registradas';
+  return`[${d.date_label||d.date_iso}] pré:${d.mood_pre||d.mood||'—'}→pós:${d.mood_pos||'—'} E:${d.energia||'—'} sono:${d.sleep_quality||'—'} F+PA:R$${d.t_result_fpa!=null?Math.round(d.t_result_fpa).toLocaleString('pt-BR'):'—'} PF:R$${d.t_result_pf!=null?Math.round(d.t_result_pf).toLocaleString('pt-BR'):'—'} WR:${d.t_wr||'—'}% adh:${n(d.t_adh)}/10\n${opsStr}`;
+}).join('\n')}`;
+}
+function buildCtx(days){return buildCtxFull(days);}
+
 function exportParaClaude(){
   if(!allData.length){showToast('Nenhum dado para exportar',true);return;}
-  const txt=buildCtx()+'\n\n═══════════════════\nAnalise como mentor científico-comportamental.\nIdentifique padrões ABC, correlações sono-trade,\ngatilhos de entrada e 1 foco prioritário concreto.\n═══════════════════';
+  const txt=buildCtx(exportDays)+'\n\n═══════════════════\nAnalise como mentor científico-comportamental.\nIdentifique padrões ABC, correlações sono-trade,\ngatilhos de entrada e 1 foco prioritário concreto.\n═══════════════════';
   navigator.clipboard.writeText(txt).then(()=>showToast('Copiado — cole no Claude.ai')).catch(()=>{const ta=document.createElement('textarea');ta.value=txt;ta.style.cssText='position:fixed;top:10px;left:10px;right:10px;height:80vh;z-index:999;background:#0d0f18;color:#b0b8d8;font-family:monospace;font-size:11px;padding:12px;border:1px solid #4e7cf8;border-radius:8px;resize:none';document.body.appendChild(ta);ta.focus();ta.select();const b=document.createElement('button');b.textContent='Fechar';b.style.cssText='position:fixed;top:12px;right:14px;z-index:1000;background:#e84040;color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:11px';b.onclick=()=>{document.body.removeChild(ta);document.body.removeChild(b);};document.body.appendChild(b);showToast('Selecione tudo e copie');});
 }
 
@@ -3000,7 +3237,9 @@ ALTER TABLE sistema_joey
   ADD COLUMN IF NOT EXISTS t_pa numeric,
   ADD COLUMN IF NOT EXISTS t_result_fpa numeric,
   ADD COLUMN IF NOT EXISTS t_result_pf numeric,
-  ADD COLUMN IF NOT EXISTS visits jsonb DEFAULT '[]';
+  ADD COLUMN IF NOT EXISTS visits jsonb DEFAULT '[]',
+  ADD COLUMN IF NOT EXISTS pre_checklist jsonb DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS t_adh numeric;
 
 -- Isso resolve o erro 400 (Bad Request) ao salvar.
 -- Os campos t_ops_detail (jsonb) já inclui: entry_state, emo_intensity,
