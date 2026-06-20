@@ -629,6 +629,40 @@ tr:hover td{background:var(--s2)}
             <input class="add-inp" id="op-pts" type="number" placeholder="Pts" style="min-width:0" oninput="calcOpResult()">
           </div>
 
+          <!-- CONVICÇÃO pré-trade (Druckenmiller) -->
+          <div style="background:linear-gradient(135deg,#0d1428,#15102a);border:1px solid rgba(140,100,240,.25);border-radius:8px;padding:9px 11px;margin-bottom:8px">
+            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--purp);margin-bottom:7px">⚡ Convicção pré-entrada — antes de clicar</div>
+            <div class="op-state-grid" id="new-op-conv-btns">
+              <button class="os-btn" data-v="1" onclick="selNewOpConv(this)">1 · fraca</button>
+              <button class="os-btn" data-v="2" onclick="selNewOpConv(this)">2</button>
+              <button class="os-btn" data-v="3" onclick="selNewOpConv(this)">3 · média</button>
+              <button class="os-btn" data-v="4" onclick="selNewOpConv(this)">4</button>
+              <button class="os-btn" data-v="5" onclick="selNewOpConv(this)">5 · máxima</button>
+            </div>
+            <div style="font-size:8px;color:var(--dim);margin-top:6px;line-height:1.4">Convicção alta = tamanho maior. Druckenmiller: retorno vem de ser grande quando se está certo.</div>
+          </div>
+
+          <!-- RISCO PLANEJADO (R-múltiplo) -->
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+            <div>
+              <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:4px">Risco planejado (pts)</div>
+              <input class="add-inp" id="op-risk" type="number" placeholder="Stop pré-definido" style="width:100%" oninput="calcOpResult()">
+            </div>
+            <div>
+              <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:4px">R-múltiplo</div>
+              <div class="add-inp" id="op-rmult" style="width:100%;display:flex;align-items:center;color:var(--dim);font-size:11px;background:var(--s3)">—</div>
+            </div>
+          </div>
+
+          <!-- PLANO vs EXECUÇÃO -->
+          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Aderência ao plano da manhã</div>
+          <div class="op-state-grid" id="new-op-plan-btns" style="margin-bottom:10px">
+            <button class="os-btn" data-v="plan_entry" onclick="toggleOpPlan(this)">✓ Entrada planejada</button>
+            <button class="os-btn" data-v="plan_region" onclick="toggleOpPlan(this)">✓ Região mapeada</button>
+            <button class="os-btn" data-v="plan_stop" onclick="toggleOpPlan(this)">✓ Stop do plano</button>
+            <button class="os-btn" data-v="off_plan" onclick="toggleOpPlan(this)">✗ Fora do plano</button>
+          </div>
+
           <!-- MFE / MAE -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
             <div>
@@ -729,6 +763,20 @@ tr:hover td{background:var(--s2)}
             <span class="op-emo-lbl">Nota execução</span>
             <input type="range" min="1" max="10" value="5" id="new-op-exec" oninput="document.getElementById('new-op-exec-val').textContent=this.value">
             <span class="op-emo-val" id="new-op-exec-val">5</span>
+          </div>
+
+          <!-- ISSUE LOG — categoria de erro estruturada (Dalio) -->
+          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--red);margin-bottom:6px;margin-top:4px">📓 Erro de execução (se houve)</div>
+          <div class="op-state-grid" id="new-op-error-btns" style="margin-bottom:10px">
+            <button class="os-btn" data-v="entrou_cedo" onclick="toggleOpError(this)">Entrou cedo</button>
+            <button class="os-btn" data-v="entrou_tarde" onclick="toggleOpError(this)">Entrou tarde</button>
+            <button class="os-btn" data-v="saiu_cedo" onclick="toggleOpError(this)">Saiu cedo</button>
+            <button class="os-btn" data-v="saiu_tarde" onclick="toggleOpError(this)">Saiu tarde</button>
+            <button class="os-btn" data-v="nao_entrou" onclick="toggleOpError(this)">Não entrou</button>
+            <button class="os-btn" data-v="moveu_stop" onclick="toggleOpError(this)">Moveu stop</button>
+            <button class="os-btn" data-v="tamanho_errado" onclick="toggleOpError(this)">Tamanho errado</button>
+            <button class="os-btn" data-v="revanche" onclick="toggleOpError(this)">Revanche</button>
+            <button class="os-btn" data-v="sem_erro" onclick="toggleOpError(this)">✓ Sem erro</button>
           </div>
 
           <!-- Narrativa -->
@@ -1067,6 +1115,7 @@ const ANCHOR_PHRASES=[
 ];
 const ALL_SETUPS=['Op1','Op2','MetN','DupPr','DivOc','Cont','Emotivo','DnçVw','FlCtVw','MOLEQUE','RtMeSg','D-1','News','Aj','Aj 0,5','Aj 0,75','Aj 1,0','Aj 1,25','Aj 1,5','Fec','Fec 0,5','Fec 0,75','Fec 1,00','Fec 1,25','Fec 1,50','Ab','DvR 2','DvR 10','DvR 210','DvI 2','DvI 5','DvI 10','DvI 210','DvRI 2','DvRI 10','DvRI 210','Bseg 2','Bseg 10','Bseg 210','FOMO','Marc','SlAg','Fluxo','Vwap 0','Vwap 0,20','Vwap 0,25','Vwap 0,40','Vwap 0,50','Vwap 0,60','Vwap 0,75','Vwap 1,00','50%','1delta','2deltas','1MDelta','MRc2','MRc10','MIr2','MIf5','RtM5','Rt50I2','Rt50I5','Cirilo','BarraG','8-17','8 mm','PA','St10'];
 const ENTRY_STATES={planejado:{label:'📋 Planejado',cls:'sel-plan'},atrasado:{label:'⏰ Atrasado',cls:'sel-gold'},emotivo:{label:'🔥 Emotivo',cls:'sel-danger'},medo_falha:{label:'😨 Medo falha',cls:'sel-danger'},oportunidade:{label:'💡 Oportunidade',cls:'sel-gold'},cirilo:{label:'🎯 Cirilo',cls:'sel-cirilo'},desfocado:{label:'🌀 Desfocado',cls:'sel-danger'},revanche:{label:'⚡ Revanche',cls:'sel-danger'},ross:{label:'📐 Ross',cls:'sel-plan'}};
+const ERROR_LABELS={entrou_cedo:'entrou cedo',entrou_tarde:'entrou tarde',saiu_cedo:'saiu cedo',saiu_tarde:'saiu tarde',nao_entrou:'não entrou',moveu_stop:'moveu stop',tamanho_errado:'tamanho errado',revanche:'revanche',sem_erro:'sem erro'};
 
 // ── STATE ─────────────────────────────────────
 let SB=null,useOffline=false,allData=[],currentPeriod='all';
@@ -1079,6 +1128,26 @@ let visits=[];  // [{client, time, note, done, value_est}]
 let hesReasons=[];let hesSetups=[];let hesSegs=[];
 let selectedSetups=[],setupUsage={};
 let newOpStates=[],newOpPartials=[],newOpExits=[],newOpSetups=[],newOpSegs=[];
+let newOpConv=null,newOpPlan=[],newOpErrors=[];
+
+// ── MAPA DE FAMÍLIAS DE SETUP (consolidação estatística — Simons) ──
+const SETUP_FAMILY={
+  // Reversão na média
+  'MetN':'Reversão','MRc2':'Reversão','MRc10':'Reversão','MIr2':'Reversão','MIf5':'Reversão','RtM5':'Reversão','Rt50I2':'Reversão','Rt50I5':'Reversão','RtMeSg':'Reversão','50%':'Reversão',
+  // VWAP
+  'Vwap 0':'VWAP','Vwap 0,20':'VWAP','Vwap 0,25':'VWAP','Vwap 0,40':'VWAP','Vwap 0,50':'VWAP','Vwap 0,60':'VWAP','Vwap 0,75':'VWAP','Vwap 1,00':'VWAP','DnçVw':'VWAP','FlCtVw':'VWAP',
+  // Continuação / Fluxo
+  'Cont':'Continuação','Fluxo':'Continuação','1delta':'Continuação','2deltas':'Continuação','1MDelta':'Continuação','BarraG':'Continuação','Marc':'Continuação',
+  // Abertura / Ajuste / Fechamento (referências de preço)
+  'Ab':'Referência','Aj':'Referência','Aj 0,5':'Referência','Aj 0,75':'Referência','Aj 1,0':'Referência','Aj 1,25':'Referência','Aj 1,5':'Referência','Fec':'Referência','Fec 0,5':'Referência','Fec 0,75':'Referência','Fec 1,00':'Referência','Fec 1,25':'Referência','Fec 1,50':'Referência','D-1':'Referência','8-17':'Referência','8 mm':'Referência',
+  // Desvio / Segurança (Bollinger e bandas)
+  'DvR 2':'Desvio','DvR 10':'Desvio','DvR 210':'Desvio','DvI 2':'Desvio','DvI 5':'Desvio','DvI 10':'Desvio','DvI 210':'Desvio','DvRI 2':'Desvio','DvRI 10':'Desvio','DvRI 210':'Desvio','Bseg 2':'Desvio','Bseg 10':'Desvio','Bseg 210':'Desvio','St10':'Desvio',
+  // Emocional / impulsivo (anti-setup)
+  'Emotivo':'Impulsivo','FOMO':'Impulsivo','SlAg':'Impulsivo',
+  // Padrões próprios
+  'Op1':'Próprio','Op2':'Próprio','DupPr':'Próprio','DivOc':'Próprio','MOLEQUE':'Próprio','News':'Notícia','Cirilo':'Cirilo','PA':'Próprio',
+};
+function setupFamily(s){return SETUP_FAMILY[s]||'Outro';}
 let newOpAdh={e1:false,no_e3:false,stop:false,entry:false,size:false};
 let preChecklist={planejamento:false,visualizacao:false,chegada45:false,regioes:false,stopdia:false};
 let tradeEditDate=null; // null = today, 'YYYY-MM-DD' = other day
@@ -1089,6 +1158,7 @@ function calcOpResult(){
   const pts=parseFloat(document.getElementById('op-pts')?.value)||0;
   const lots=parseFloat(document.getElementById('op-lots')?.value)||0;
   const mfe=parseFloat(document.getElementById('op-mfe')?.value)||0;
+  const risk=parseFloat(document.getElementById('op-risk')?.value)||0;
   const el=document.getElementById('op-calc-result');
   const val=document.getElementById('op-calc-val');
   const mfeInsight=document.getElementById('op-mfe-insight');
@@ -1098,6 +1168,15 @@ function calcOpResult(){
     if(val){val.textContent=`R$ ${r.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})}`;val.style.color=r>0?'var(--green)':r<0?'var(--red)':'var(--hi)';}
   } else {
     if(el) el.style.display='none';
+  }
+  // R-múltiplo: resultado em pts / risco planejado
+  const rmEl=document.getElementById('op-rmult');
+  if(rmEl){
+    if(risk>0&&pts!==0){
+      const rm=pts/risk;
+      rmEl.textContent=(rm>=0?'+':'')+rm.toFixed(2)+'R';
+      rmEl.style.color=rm>0?'var(--green)':'var(--red)';
+    } else {rmEl.textContent='—';rmEl.style.color='var(--dim)';}
   }
   // MFE insight: taxa de captura
   if(mfe>0&&pts>0&&mfeInsight){
@@ -1109,6 +1188,34 @@ function calcOpResult(){
     mfeInsight.style.display='none';
   }
 }
+
+// ── HANDLERS INSTITUCIONAIS ───────────────────
+function selNewOpConv(btn){
+  newOpConv=+btn.dataset.v;
+  document.querySelectorAll('#new-op-conv-btns .os-btn').forEach(b=>b.classList.remove('sel-plan','sel-gold','sel-danger'));
+  btn.classList.add(newOpConv>=4?'sel-plan':newOpConv<=2?'sel-danger':'sel-gold');
+}
+function toggleOpPlan(btn){
+  const v=btn.dataset.v;
+  const idx=newOpPlan.indexOf(v);
+  if(idx>=0){newOpPlan.splice(idx,1);btn.classList.remove('sel-plan','sel-danger');}
+  else{
+    if(v==='off_plan'){newOpPlan=newOpPlan.filter(x=>x.startsWith('plan_'));document.querySelectorAll('#new-op-plan-btns .os-btn').forEach(b=>{if(b.dataset.v.startsWith('plan_')) b.classList.remove('sel-plan');});}
+    else{const oi=newOpPlan.indexOf('off_plan');if(oi>=0){newOpPlan.splice(oi,1);document.querySelector('#new-op-plan-btns .os-btn[data-v="off_plan"]')?.classList.remove('sel-danger');}}
+    newOpPlan.push(v);btn.classList.add(v==='off_plan'?'sel-danger':'sel-plan');
+  }
+}
+function toggleOpError(btn){
+  const v=btn.dataset.v;
+  const idx=newOpErrors.indexOf(v);
+  if(idx>=0){newOpErrors.splice(idx,1);btn.classList.remove('sel-plan','sel-danger');}
+  else{
+    if(v==='sem_erro'){newOpErrors=['sem_erro'];document.querySelectorAll('#new-op-error-btns .os-btn').forEach(b=>{if(b.dataset.v!=='sem_erro') b.classList.remove('sel-danger');});}
+    else{const si=newOpErrors.indexOf('sem_erro');if(si>=0){newOpErrors.splice(si,1);document.querySelector('#new-op-error-btns .os-btn[data-v="sem_erro"]')?.classList.remove('sel-plan');}}
+    newOpErrors.push(v);btn.classList.add(v==='sem_erro'?'sel-plan':'sel-danger');
+  }
+}
+
 
 // ── ADESÃO POR OPERAÇÃO ───────────────────────
 function toggleOpAdh(el,key){
@@ -1567,10 +1674,12 @@ function addOp(){
   const execScore=execEl?parseInt(execEl.value):5;
   const mfe=parseFloat(document.getElementById('op-mfe')?.value)||null;
   const mae=parseFloat(document.getElementById('op-mae')?.value)||null;
+  const risk=parseFloat(document.getElementById('op-risk')?.value)||null;
   if(isNaN(pts)){showToast('Informe os pontos',true);return;}
   const result_brl=lots>0?pts*lots*10:null;
   const capture_pct=mfe&&pts>0?Math.round(pts/mfe*100):null;
-  const opData={dir,pts,lots:lots||null,result_brl,mfe,mae,capture_pct,note,time,entry_states:[...newOpStates],emo_intensity:emo,exec_score:execScore,adh_items:{...newOpAdh},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups],segs:[...newOpSegs]};
+  const r_multiple=risk>0?Math.round(pts/risk*100)/100:null;
+  const opData={dir,pts,lots:lots||null,result_brl,mfe,mae,capture_pct,risk_planned:risk,r_multiple,conviction:newOpConv,plan_adherence:[...newOpPlan],error_tags:[...newOpErrors],note,time,entry_states:[...newOpStates],emo_intensity:emo,exec_score:execScore,adh_items:{...newOpAdh},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups],segs:[...newOpSegs]};
   if(editingOpIdx!==null){
     // Edit mode: preserve corr from existing
     opData.corr=tradeOps[editingOpIdx]?.corr||'';
@@ -1590,8 +1699,17 @@ function editOp(idx){
   editingOpIdx=idx;
   // Populate form with existing op data
   const safe=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null) el.value=val;};
-  safe('op-time',op.time);safe('op-pts',op.pts);safe('op-lots',op.lots||'');safe('op-mfe',op.mfe||'');safe('op-mae',op.mae||'');
+  safe('op-time',op.time);safe('op-pts',op.pts);safe('op-lots',op.lots||'');safe('op-mfe',op.mfe||'');safe('op-mae',op.mae||'');safe('op-risk',op.risk_planned||'');
   const dirEl=document.getElementById('op-dir');if(dirEl) dirEl.value=op.dir;
+  // Convicção
+  newOpConv=op.conviction||null;
+  document.querySelectorAll('#new-op-conv-btns .os-btn').forEach(b=>{b.classList.remove('sel-plan','sel-gold','sel-danger');if(newOpConv&&+b.dataset.v===newOpConv) b.classList.add(newOpConv>=4?'sel-plan':newOpConv<=2?'sel-danger':'sel-gold');});
+  // Plano
+  newOpPlan=[...(op.plan_adherence||[])];
+  document.querySelectorAll('#new-op-plan-btns .os-btn').forEach(b=>{b.classList.remove('sel-plan','sel-danger');if(newOpPlan.includes(b.dataset.v)) b.classList.add(b.dataset.v==='off_plan'?'sel-danger':'sel-plan');});
+  // Erros
+  newOpErrors=[...(op.error_tags||[])];
+  document.querySelectorAll('#new-op-error-btns .os-btn').forEach(b=>{b.classList.remove('sel-plan','sel-danger');if(newOpErrors.includes(b.dataset.v)) b.classList.add(b.dataset.v==='sem_erro'?'sel-plan':'sel-danger');});
   const emoEl=document.getElementById('new-op-emo');if(emoEl){emoEl.value=op.emo_intensity||5;document.getElementById('new-op-emo-val').textContent=op.emo_intensity||5;}
   const execEl=document.getElementById('new-op-exec');if(execEl){execEl.value=op.exec_score||5;document.getElementById('new-op-exec-val').textContent=op.exec_score||5;}
   const noteEl=document.getElementById('new-op-note');if(noteEl) noteEl.value=op.note||'';
@@ -1637,9 +1755,12 @@ function clearNewOpForm(){
   const mfeEl2=document.getElementById('op-mfe');if(mfeEl2) mfeEl2.value='';
   const maeEl2=document.getElementById('op-mae');if(maeEl2) maeEl2.value='';
   const mfeIns=document.getElementById('op-mfe-insight');if(mfeIns) mfeIns.style.display='none';
-  ['#new-op-state-btns','#new-op-partial-btns','#new-op-exit-btns','#new-op-seg-btns'].forEach(sel=>document.querySelectorAll(sel+' .os-btn').forEach(b=>{b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold');}));
+  const riskEl=document.getElementById('op-risk');if(riskEl) riskEl.value='';
+  const rmEl=document.getElementById('op-rmult');if(rmEl){rmEl.textContent='—';rmEl.style.color='var(--dim)';}
+  ['#new-op-state-btns','#new-op-partial-btns','#new-op-exit-btns','#new-op-seg-btns','#new-op-conv-btns','#new-op-plan-btns','#new-op-error-btns'].forEach(sel=>document.querySelectorAll(sel+' .os-btn').forEach(b=>{b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold');}));
   document.querySelectorAll('#new-op-adh-grid .adh-item').forEach(el=>{el.classList.remove('yes');const d=el.querySelector('.adh-dot');if(d) d.style.background='var(--b2)';const t=el.querySelector('.adh-text');if(t) t.style.color='var(--dim)';});
   newOpStates=[];newOpPartials=[];newOpExits=[];newOpSetups=[];newOpSegs=[];
+  newOpConv=null;newOpPlan=[];newOpErrors=[];
   newOpAdh={e1:false,no_e3:false,stop:false,entry:false,size:false};
   const searchEl=document.getElementById('op-setup-search');if(searchEl) searchEl.value='';
   renderOpSetupTags('');
@@ -1688,8 +1809,12 @@ function renderOps(){
       </div>
       <!-- resumo sempre visível -->
       <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;padding-top:5px;border-top:1px solid var(--b1)">
+        ${op.conviction?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:rgba(140,100,240,.15);color:var(--purp)">⚡conv ${op.conviction}/5</span>`:''}
+        ${op.r_multiple!=null?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--s3);color:${op.r_multiple>=0?'var(--green)':'var(--red)'}">${op.r_multiple>=0?'+':''}${op.r_multiple}R</span>`:''}
         ${(op.setups||[]).length?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--td);color:var(--teal)">📋 ${(op.setups||[]).join(' · ')}</span>`:''}
         ${(op.segs||[]).map(s=>`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--od);color:var(--gold)">🛡️${s}</span>`).join('')}
+        ${(op.error_tags||[]).filter(e=>e!=='sem_erro').map(e=>`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--rd);color:var(--red)">📓${ERROR_LABELS[e]||e}</span>`).join('')}
+        ${(op.plan_adherence||[]).includes('off_plan')?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--rd);color:var(--red)">✗ fora do plano</span>`:''}
         ${partialReasons.map(r=>`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:${r.includes('Medo')?'var(--rd)':'var(--td)'};color:${r.includes('Medo')?'var(--red)':'var(--teal)'}">${r}</span>`).join('')}
         ${exitReasons.map(r=>`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:${dangerExits.includes(r)?'var(--rd)':'var(--gd)'};color:${dangerExits.includes(r)?'var(--red)':'var(--green)'}">${r}</span>`).join('')}
         ${stateLabels.length?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--s3);color:var(--dim)">${stateLabels.join(' + ')}</span>`:''}
@@ -1727,6 +1852,34 @@ function renderOps(){
   }
   const adhEl=document.getElementById('ops-adh');
   if(adhEl) adhEl.textContent=avgAdh!=null?avgAdh.toFixed(1)+'/10':'—';
+  renderRiskAlarm();
+}
+
+// ── ALARME DE RISCO DINÂMICO (Griffin/Citadel) ──
+function renderRiskAlarm(){
+  let box=document.getElementById('risk-alarm-box');
+  const opsList=document.getElementById('op-list');
+  if(!opsList) return;
+  if(!box){
+    box=document.createElement('div');box.id='risk-alarm-box';
+    opsList.parentElement.insertBefore(box,opsList);
+  }
+  // Contagem de stops/perdas consecutivas hoje
+  const stops=tradeOps.filter(o=>o.pts<0);
+  const dangerExitToday=tradeOps.filter(o=>getExitReasons(o).some(r=>['MEDO','STOPMESA'].includes(r))).length;
+  // Sequência de perdas no final
+  let consecLoss=0;for(let i=tradeOps.length-1;i>=0;i--){if(tradeOps[i].pts<0)consecLoss++;else break;}
+  // Resultado acumulado do dia
+  const dayBRL=tradeOps.filter(o=>o.result_brl!=null).reduce((a,o)=>a+o.result_brl,0);
+  const stopDia=4000; // R$ stop do dia de referência
+  const alerts=[];
+  if(consecLoss>=2) alerts.push({lvl:'high',txt:`${consecLoss} stops seguidos. Citadel reduz risco automaticamente em drawdown — reduza tamanho ou pare. Risco de revanche elevado.`});
+  if(dangerExitToday>=2) alerts.push({lvl:'high',txt:`${dangerExitToday} saídas por MEDO/Stop Mesa hoje. Padrão emocional ativado.`});
+  if(dayBRL<=-stopDia*0.5&&dayBRL>-stopDia) alerts.push({lvl:'mid',txt:`Você atingiu ${Math.round(Math.abs(dayBRL)/stopDia*100)}% do stop do dia (R$${Math.abs(dayBRL).toLocaleString('pt-BR')} de R$${stopDia.toLocaleString('pt-BR')}). Opere com tamanho reduzido.`});
+  if(dayBRL<=-stopDia) alerts.push({lvl:'high',txt:`🛑 STOP DO DIA ATINGIDO (R$${Math.abs(dayBRL).toLocaleString('pt-BR')}). Pare agora. Não há trade que justifique passar disso.`});
+  if(!alerts.length){box.style.display='none';return;}
+  box.style.display='block';
+  box.innerHTML=alerts.map(a=>`<div style="background:${a.lvl==='high'?'rgba(232,64,64,.12)':'rgba(212,160,40,.1)'};border:1px solid ${a.lvl==='high'?'rgba(232,64,64,.4)':'rgba(212,160,40,.35)'};border-radius:8px;padding:9px 11px;margin-bottom:8px;font-size:10px;line-height:1.5;color:${a.lvl==='high'?'var(--red)':'var(--gold)'}"><strong>${a.lvl==='high'?'⚠️ RISCO':'⚡ ATENÇÃO'}:</strong> ${a.txt}</div>`).join('');
 }
 
 // ── HESITAÇÕES ────────────────────────────────
@@ -3042,6 +3195,47 @@ function buildCtxFull(days){
   const lowAdh=allOps.filter(o=>calcAdhScore(o)!=null&&calcAdhScore(o)<5);
   // Direção
   const compras=allOps.filter(o=>o.dir==='C'),vendas=allOps.filter(o=>o.dir==='V');
+
+  // ── CONVICÇÃO × SIZING × RESULTADO (Druckenmiller) ──
+  const opsConv=allOps.filter(o=>o.conviction!=null);
+  const convBands={};
+  opsConv.forEach(o=>{const c=o.conviction;if(!convBands[c])convBands[c]={n:0,w:0,pts:0,lots:0,lotsN:0};convBands[c].n++;convBands[c].pts+=o.pts;if(o.pts>0)convBands[c].w++;if(o.lots){convBands[c].lots+=o.lots;convBands[c].lotsN++;}});
+  const convStr=[1,2,3,4,5].filter(c=>convBands[c]).map(c=>{const v=convBands[c];return `  Conv ${c}: n=${v.n} WR=${pct(v.w,v.n)} avg=${fmtN(v.pts/v.n,1)}pts lotes_médios=${v.lotsN?fmtN(v.lots/v.lotsN,1):'—'}`;}).join('\n')||'sem dados de convicção ainda';
+  // Diagnóstico de sizing: correlação convicção vs lote
+  const convHi=opsConv.filter(o=>o.conviction>=4&&o.lots),convLo=opsConv.filter(o=>o.conviction<=2&&o.lots);
+  const avgLotsHi=convHi.length?avgArr(convHi.map(o=>o.lots)):null;
+  const avgLotsLo=convLo.length?avgArr(convLo.map(o=>o.lots)):null;
+  const sizingDiag=(avgLotsHi!=null&&avgLotsLo!=null)
+    ?(Math.abs(avgLotsHi-avgLotsLo)<1?`⚠️ ALERTA: você opera tamanho quase igual em convicção alta (${fmtN(avgLotsHi,1)}L) e baixa (${fmtN(avgLotsLo,1)}L). Está desperdiçando sua leitura.`:`Sizing diferenciado: conv alta ${fmtN(avgLotsHi,1)}L vs conv baixa ${fmtN(avgLotsLo,1)}L.`)
+    :'dados insuficientes para diagnóstico de sizing';
+
+  // ── R-MÚLTIPLO (linguagem institucional de risco) ──
+  const opsR=allOps.filter(o=>o.r_multiple!=null);
+  const totalR=opsR.reduce((a,o)=>a+o.r_multiple,0);
+  const avgR=opsR.length?totalR/opsR.length:null;
+  const expectancyR=opsR.length?totalR/opsR.length:null; // expectância em R
+
+  // ── PLANO vs EXECUÇÃO ──
+  const opsPlan=allOps.filter(o=>o.plan_adherence&&o.plan_adherence.length);
+  const inPlan=opsPlan.filter(o=>!o.plan_adherence.includes('off_plan'));
+  const offPlan=opsPlan.filter(o=>o.plan_adherence.includes('off_plan'));
+  const planStr=opsPlan.length
+    ?`Aderência: ${pct(inPlan.length,opsPlan.length)} (${inPlan.length}/${opsPlan.length} ops dentro do plano)
+  No plano: WR=${pct(inPlan.filter(o=>o.pts>0).length,inPlan.length)} avg=${fmtN(inPlan.length?avgArr(inPlan.map(o=>o.pts)):null,1)}pts
+  Fora do plano: n=${offPlan.length} WR=${pct(offPlan.filter(o=>o.pts>0).length,offPlan.length)} avg=${fmtN(offPlan.length?avgArr(offPlan.map(o=>o.pts)):null,1)}pts`
+    :'sem dados de aderência ao plano ainda';
+
+  // ── ISSUE LOG — RECORRÊNCIA DE ERROS (Dalio) ──
+  const errorMap={};
+  allOps.forEach(o=>(o.error_tags||[]).filter(e=>e!=='sem_erro').forEach(e=>{if(!errorMap[e])errorMap[e]={n:0,pts:0};errorMap[e].n++;errorMap[e].pts+=o.pts;}));
+  const errStr=Object.entries(errorMap).sort((a,b)=>b[1].n-a[1].n).map(([e,v])=>`  ${ERROR_LABELS[e]||e}: ${v.n}x · impacto ${fmtN(v.pts,0)}pts (R$${Math.round(v.pts*200).toLocaleString('pt-BR')} nas 2 contas)`).join('\n')||'nenhum erro registrado';
+  const cleanOps=allOps.filter(o=>(o.error_tags||[]).includes('sem_erro')).length;
+
+  // ── FAMÍLIAS DE SETUP (Simons — significância) ──
+  const byFam={};
+  allOps.forEach(op=>{const fams=[...new Set((op.setups||[]).map(setupFamily))];fams.forEach(f=>{if(!byFam[f])byFam[f]={n:0,w:0,pts:0};byFam[f].n++;byFam[f].pts+=op.pts;if(op.pts>0)byFam[f].w++;});});
+  const famStr=Object.entries(byFam).sort((a,b)=>b[1].n-a[1].n).map(([f,v])=>{const sig=v.n>=20?'✓ significativo':v.n>=10?'~ parcial':'⚠️ amostra baixa';return `  ${f}: n=${v.n} WR=${pct(v.w,v.n)} avg=${fmtN(v.pts/v.n,1)}pts total=${fmtN(v.pts,0)}pts [${sig}]`;}).join('\n')||'sem dados';
+
   // Checklist
   const chkKeys=['planejamento','visualizacao','chegada45','regioes','stopdia'];
   const chkLabels={planejamento:'Planejamento',visualizacao:'Visualização',chegada45:'45min antes',regioes:'Regiões',stopdia:'Stop dia'};
@@ -3101,6 +3295,8 @@ Pts total: ${fmtN(totalPts,0)} | Média/op: ${fmtN(allOps.length?totalPts/allOps
 Avg ganho (wins): ${fmtN(avgPtsW,1)}pts | Avg stop (losses): ${fmtN(avgPtsL,1)}pts
 Payoff ratio (|avg ganho / avg stop|): ${payoff!=null?fmtN(payoff,2):'—'}x
 Lotes médios/op: ${fmtN(avgLots,1)} (${opsWithLots.length} ops com lotes)
+Expectância em R (resultado/risco planejado): ${avgR!=null?(avgR>=0?'+':'')+fmtN(avgR,2)+'R/op':'—'} (${opsR.length} ops com risco definido)
+  → Leitura: expectância +0,3R significa que cada trade rende, em média, 30% do risco assumido.
 
 ── MFE / MAE / CAPTURA ──
 MFE médio (${opsWithMFE.length} ops registradas): ${fmtN(avgMFE,1)}pts
@@ -3199,11 +3395,36 @@ Top padrões: ${topMoodPairs||'—'}
   Alma:${pilarC.alma} Corpo:${pilarC.corpo} Espírito:${pilarC.espirito} Pessoas:${pilarC.pessoas}
 
 ════════════════════════════════════════
-15. DETALHE — ÚLTIMAS ${Math.min(10,sorted.length)} ENTRADAS
+15. CONVICÇÃO × SIZING × RESULTADO (Druckenmiller)
+════════════════════════════════════════
+${convStr}
+DIAGNÓSTICO DE SIZING: ${sizingDiag}
+
+════════════════════════════════════════
+16. PLANO DA MANHÃ vs EXECUÇÃO
+════════════════════════════════════════
+${planStr}
+  → Leitura: a distância entre "no plano" e "fora do plano" é o medo da execução quantificado.
+
+════════════════════════════════════════
+17. ISSUE LOG — RECORRÊNCIA DE ERROS (Dalio)
+════════════════════════════════════════
+Ops sem erro: ${cleanOps}/${allOps.length} (${pct(cleanOps,allOps.length)})
+${errStr}
+  → Erro que se repete e não some = regra que falhou. Aja sobre o mais recorrente.
+
+════════════════════════════════════════
+18. FAMÍLIAS DE SETUP (significância — Simons)
+════════════════════════════════════════
+${famStr}
+  → n<20 = amostra baixa, não tome decisão com base nisso ainda. Consolidação evita decidir com ruído.
+
+════════════════════════════════════════
+19. DETALHE — ÚLTIMAS ${Math.min(10,sorted.length)} ENTRADAS
 ════════════════════════════════════════
 ${sorted.slice(-10).map(d=>{
   const ops=(d.t_ops_detail||[]);
-  const opsStr=ops.length?ops.map(op=>`    [${op.time||'?'}] ${op.dir} ${op.pts>=0?'+':''}${op.pts}pts lots:${n(op.lots)} MFE:${n(op.mfe)} MAE:${n(op.mae)} captura:${op.mfe&&op.pts>0?Math.round(op.pts/op.mfe*100)+'%':'—'} MEDO:${n(op.emo_intensity)} exec:${n(op.exec_score)} adh:${fmtN(calcAdhScore(op),0)}/10\n      exit:[${getExitReasons(op).join(',')||'—'}] seg:[${(op.segs||[]).join(',')||'—'}] setup:[${(op.setups||[]).join(',')||'—'}] gatilho:[${(op.entry_states||[op.entry_state]).filter(Boolean).join(',')||'—'}]`).join('\n'):'    sem ops registradas';
+  const opsStr=ops.length?ops.map(op=>`    [${op.time||'?'}] ${op.dir} ${op.pts>=0?'+':''}${op.pts}pts ${op.r_multiple!=null?(op.r_multiple>=0?'+':'')+op.r_multiple+'R ':''}conv:${n(op.conviction)} lots:${n(op.lots)} MFE:${n(op.mfe)} MAE:${n(op.mae)} captura:${op.mfe&&op.pts>0?Math.round(op.pts/op.mfe*100)+'%':'—'} MEDO:${n(op.emo_intensity)} exec:${n(op.exec_score)} adh:${fmtN(calcAdhScore(op),0)}/10\n      exit:[${getExitReasons(op).join(',')||'—'}] erro:[${(op.error_tags||[]).filter(e=>e!=='sem_erro').join(',')||'—'}] plano:[${(op.plan_adherence||[]).join(',')||'—'}] seg:[${(op.segs||[]).join(',')||'—'}] setup:[${(op.setups||[]).join(',')||'—'}] gatilho:[${(op.entry_states||[op.entry_state]).filter(Boolean).join(',')||'—'}]`).join('\n'):'    sem ops registradas';
   return`[${d.date_label||d.date_iso}] pré:${d.mood_pre||d.mood||'—'}→pós:${d.mood_pos||'—'} E:${d.energia||'—'} sono:${d.sleep_quality||'—'} F+PA:R$${d.t_result_fpa!=null?Math.round(d.t_result_fpa).toLocaleString('pt-BR'):'—'} PF:R$${d.t_result_pf!=null?Math.round(d.t_result_pf).toLocaleString('pt-BR'):'—'} WR:${d.t_wr||'—'}% adh:${n(d.t_adh)}/10\n${opsStr}`;
 }).join('\n')}`;
 }
