@@ -802,7 +802,7 @@ tr:hover td{background:var(--s2)}
           <div style="display:flex;gap:10px;flex-wrap:wrap">
             <div style="flex:1;text-align:center;min-width:55px"><div style="font-family:'Fraunces',serif;font-size:1.3rem;color:var(--red)" id="hes-count-val">0</div><div style="font-size:8px;color:var(--dim);text-transform:uppercase;margin-top:2px">Hesitações</div></div>
             <div style="flex:1;text-align:center;min-width:55px"><div style="font-family:'Fraunces',serif;font-size:1.3rem;color:var(--red)" id="hes-pts-val">0</div><div style="font-size:8px;color:var(--dim);text-transform:uppercase;margin-top:2px">Pts perdidos</div></div>
-            <div style="flex:1;text-align:center;min-width:55px"><div style="font-family:'Fraunces',serif;font-size:1.3rem;color:var(--red)" id="hes-brl-val">R$0</div><div style="font-size:8px;color:var(--dim);text-transform:uppercase;margin-top:2px">Custo real</div></div>
+            <div style="flex:1;text-align:center;min-width:55px"><div style="font-family:'Fraunces',serif;font-size:1.3rem;color:var(--red)" id="hes-brl-val">R$0</div><div style="font-size:8px;color:var(--dim);text-transform:uppercase;margin-top:2px">Custo real (2 contas)</div></div>
             <div style="flex:1;text-align:center;min-width:55px"><div style="font-family:'Fraunces',serif;font-size:1.3rem;color:var(--dim)" id="hes-peak-val">—</div><div style="font-size:8px;color:var(--dim);text-transform:uppercase;margin-top:2px">Horário pico</div></div>
           </div>
         </div>
@@ -1839,7 +1839,7 @@ function renderHes(){
   const cv=document.getElementById('hes-count-val'),pv=document.getElementById('hes-pts-val'),bv=document.getElementById('hes-brl-val'),phv=document.getElementById('hes-peak-val');
   if(cv) cv.textContent=hesitations.length;
   if(pv) pv.textContent=totalPts+'pts';
-  if(bv) bv.textContent='R$'+(totalPts*100).toLocaleString('pt-BR');
+  if(bv) bv.textContent='R$'+(totalPts*200).toLocaleString('pt-BR');
   if(phv) phv.textContent=peakHour?peakHour[0]+'h':'—';
 }
 
@@ -2395,10 +2395,10 @@ function renderHesPanel(){
     return;
   }
   const totalPts=allHes.reduce((a,h)=>a+h.pts,0);
-  const totalBRL=totalPts*100;
+  const totalBRL=totalPts*200;
   // Por motivo
   const byReason={};
-  allHes.forEach(h=>{if(!byReason[h.reason]) byReason[h.reason]={pts:0,n:0};byReason[h.reason].pts+=h.pts;byReason[h.reason].n++;});
+  allHes.forEach(h=>{(h.reasons&&h.reasons.length?h.reasons:h.reason?[h.reason]:['—']).forEach(r=>{if(!byReason[r]) byReason[r]={pts:0,n:0};byReason[r].pts+=h.pts;byReason[r].n++;});});
   const topReasons=Object.entries(byReason).sort((a,b)=>b[1].pts-a[1].pts).slice(0,5);
   // Por horário
   const byHour={};
@@ -3176,7 +3176,7 @@ ${chkDays.length?chkStr:'sem dados de checklist ainda'}
 ════════════════════════════════════════
 Total: ${allHes.length} trades vistos e não executados
 Pts totais estimados perdidos: ${totalHesPts}pts
-R$ estimado perdido: R$${(totalHesPts*100).toLocaleString('pt-BR')}
+R$ estimado perdido (2 contas): R$${(totalHesPts*200).toLocaleString('pt-BR')}
 MFE médio observado pós-setup: ${hesMFEs.length?fmtN(avgArr(hesMFEs.map(h=>h.mfe)),1)+'pts ('+hesMFEs.length+' registros)':'sem dados'}
 Top motivos: ${Object.entries(hesRM).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k}(${v}x)`).join(', ')||'—'}
 Segurança presente: ${Object.entries(hesSM).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`${k}(${v}x)`).join(', ')||'—'}
