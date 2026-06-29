@@ -674,6 +674,16 @@ tr:hover td{background:var(--s2)}
               <input class="add-inp" id="op-mae" type="number" placeholder="Pts (ex: 5)" style="width:100%">
             </div>
           </div>
+
+          <!-- SAÍDA SEGUNDA CONTA (mesma entrada) -->
+          <div style="background:var(--s3);border:1px solid var(--b1);border-radius:8px;padding:9px 11px;margin-bottom:8px">
+            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:5px">Saída PF (mesma entrada) — opcional</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+              <input class="add-inp" id="op-pts-pf" type="number" step="0.5" placeholder="Pts saída PF" style="width:100%" oninput="calcOpResult()">
+              <input class="add-inp" id="op-lots-pf" type="number" placeholder="Lotes PF" min="1" step="1" style="width:100%" oninput="calcOpResult()">
+            </div>
+            <div style="font-size:8px;color:var(--dim);margin-top:5px;line-height:1.4">Se entrou nas 2 contas na MESMA leitura: registre 1 operação. O acerto/setup conta 1x; o R$ soma as duas saídas. Deixe vazio se foi só 1 conta.</div>
+          </div>
           <div id="op-mfe-insight" style="font-size:9px;color:var(--dim);margin-bottom:8px;padding:5px 9px;background:var(--s3);border-radius:6px;display:none"></div>
 
           <!-- Resultado R$ calculado automaticamente -->
@@ -1159,13 +1169,21 @@ function calcOpResult(){
   const lots=parseFloat(document.getElementById('op-lots')?.value)||0;
   const mfe=parseFloat(document.getElementById('op-mfe')?.value)||0;
   const risk=parseFloat(document.getElementById('op-risk')?.value)||0;
+  const ptsPf=parseFloat(document.getElementById('op-pts-pf')?.value);
+  const lotsPf=parseFloat(document.getElementById('op-lots-pf')?.value)||lots;
   const el=document.getElementById('op-calc-result');
   const val=document.getElementById('op-calc-val');
   const mfeInsight=document.getElementById('op-mfe-insight');
   if(pts!==0&&lots>0){
     const r=pts*lots*10;
+    const hasPf=!isNaN(ptsPf)&&lotsPf>0;
+    const rPf=hasPf?ptsPf*lotsPf*10:0;
+    const total=r+rPf;
     if(el) el.style.display='block';
-    if(val){val.textContent=`R$ ${r.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})}`;val.style.color=r>0?'var(--green)':r<0?'var(--red)':'var(--hi)';}
+    if(val){
+      if(hasPf){val.innerHTML=`F+PA <strong>R$${r.toLocaleString('pt-BR')}</strong> + PF <strong>R$${rPf.toLocaleString('pt-BR')}</strong> = <strong style="color:${total>0?'var(--green)':total<0?'var(--red)':'var(--hi)'}">R$${total.toLocaleString('pt-BR')}</strong>`;}
+      else{val.textContent=`R$ ${r.toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0})}`;val.style.color=r>0?'var(--green)':r<0?'var(--red)':'var(--hi)';}
+    }
   } else {
     if(el) el.style.display='none';
   }
@@ -1675,11 +1693,15 @@ function addOp(){
   const mfe=parseFloat(document.getElementById('op-mfe')?.value)||null;
   const mae=parseFloat(document.getElementById('op-mae')?.value)||null;
   const risk=parseFloat(document.getElementById('op-risk')?.value)||null;
+  const ptsPf=parseFloat(document.getElementById('op-pts-pf')?.value);
+  const lotsPf=parseFloat(document.getElementById('op-lots-pf')?.value)||null;
+  const hasPf=!isNaN(ptsPf);
   if(isNaN(pts)){showToast('Informe os pontos',true);return;}
   const result_brl=lots>0?pts*lots*10:null;
+  const result_brl_pf=hasPf&&(lotsPf||lots)?ptsPf*(lotsPf||lots)*10:null;
   const capture_pct=mfe&&pts>0?Math.round(pts/mfe*100):null;
   const r_multiple=risk>0?Math.round(pts/risk*100)/100:null;
-  const opData={dir,pts,lots:lots||null,result_brl,mfe,mae,capture_pct,risk_planned:risk,r_multiple,conviction:newOpConv,plan_adherence:[...newOpPlan],error_tags:[...newOpErrors],note,time,entry_states:[...newOpStates],emo_intensity:emo,exec_score:execScore,adh_items:{...newOpAdh},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups],segs:[...newOpSegs]};
+  const opData={dir,pts,pts_pf:hasPf?ptsPf:null,lots:lots||null,lots_pf:lotsPf,result_brl,result_brl_pf,mfe,mae,capture_pct,risk_planned:risk,r_multiple,conviction:newOpConv,plan_adherence:[...newOpPlan],error_tags:[...newOpErrors],note,time,entry_states:[...newOpStates],emo_intensity:emo,exec_score:execScore,adh_items:{...newOpAdh},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups],segs:[...newOpSegs]};
   if(editingOpIdx!==null){
     // Edit mode: preserve corr from existing
     opData.corr=tradeOps[editingOpIdx]?.corr||'';
@@ -1700,6 +1722,7 @@ function editOp(idx){
   // Populate form with existing op data
   const safe=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null) el.value=val;};
   safe('op-time',op.time);safe('op-pts',op.pts);safe('op-lots',op.lots||'');safe('op-mfe',op.mfe||'');safe('op-mae',op.mae||'');safe('op-risk',op.risk_planned||'');
+  safe('op-pts-pf',op.pts_pf!=null?op.pts_pf:'');safe('op-lots-pf',op.lots_pf||'');
   const dirEl=document.getElementById('op-dir');if(dirEl) dirEl.value=op.dir;
   // Convicção
   newOpConv=op.conviction||null;
@@ -1756,6 +1779,8 @@ function clearNewOpForm(){
   const maeEl2=document.getElementById('op-mae');if(maeEl2) maeEl2.value='';
   const mfeIns=document.getElementById('op-mfe-insight');if(mfeIns) mfeIns.style.display='none';
   const riskEl=document.getElementById('op-risk');if(riskEl) riskEl.value='';
+  const ptsPfEl=document.getElementById('op-pts-pf');if(ptsPfEl) ptsPfEl.value='';
+  const lotsPfEl=document.getElementById('op-lots-pf');if(lotsPfEl) lotsPfEl.value='';
   const rmEl=document.getElementById('op-rmult');if(rmEl){rmEl.textContent='—';rmEl.style.color='var(--dim)';}
   ['#new-op-state-btns','#new-op-partial-btns','#new-op-exit-btns','#new-op-seg-btns','#new-op-conv-btns','#new-op-plan-btns','#new-op-error-btns'].forEach(sel=>document.querySelectorAll(sel+' .os-btn').forEach(b=>{b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold');}));
   document.querySelectorAll('#new-op-adh-grid .adh-item').forEach(el=>{el.classList.remove('yes');const d=el.querySelector('.adh-dot');if(d) d.style.background='var(--b2)';const t=el.querySelector('.adh-text');if(t) t.style.color='var(--dim)';});
@@ -1801,8 +1826,8 @@ function renderOps(){
       <div class="op-card-top">
         <span class="op-dir-badge ${op.dir==='C'?'op-c':'op-v'}">${op.dir==='C'?'▲ C':'▼ V'}</span>
         <span class="op-meta">${op.time}${op.lots?' · '+op.lots+'L':''}</span>
-        <span class="op-res" style="color:${op.pts>=0?'var(--green)':'var(--red)'}">${op.pts>=0?'+':''}${op.pts}pts</span>
-        ${op.result_brl!=null?`<span class="op-res" style="font-size:9px;color:${op.result_brl>=0?'var(--green)':'var(--red)'}">R$${op.result_brl>=0?'+':''}${op.result_brl.toLocaleString('pt-BR')}</span>`:''}
+        <span class="op-res" style="color:${op.pts>=0?'var(--green)':'var(--red)'}">${op.pts>=0?'+':''}${op.pts}pts${op.pts_pf!=null?` <span style="color:var(--blue);font-size:9px">+ PF ${op.pts_pf>=0?'+':''}${op.pts_pf}pts</span>`:''}</span>
+        ${(op.result_brl!=null||op.result_brl_pf!=null)?`<span class="op-res" style="font-size:9px;color:${((op.result_brl||0)+(op.result_brl_pf||0))>=0?'var(--green)':'var(--red)'}">R$${((op.result_brl||0)+(op.result_brl_pf||0))>=0?'+':''}${((op.result_brl||0)+(op.result_brl_pf||0)).toLocaleString('pt-BR')}</span>`:''}
         <button class="op-expand" onclick="toggleOpExpand(${i})">▾</button>
         <button onclick="editOp(${i})" style="background:none;border:1px solid rgba(78,124,248,.4);border-radius:5px;color:var(--blue);font-size:9px;padding:2px 7px;cursor:pointer;font-family:'Geist Mono',monospace" title="Editar operação">✏️</button>
         <button class="op-del" onclick="removeOp(${i})">×</button>
@@ -1902,7 +1927,7 @@ function renderHesSetupTags(filter){
   const f=(filter||'').toLowerCase();
   const sorted=[...ALL_SETUPS].sort((a,b)=>{const ca=setupUsage[a]||0,cb=setupUsage[b]||0;if(cb!==ca)return cb-ca;return a.localeCompare(b);});
   const filtered=f?sorted.filter(s=>s.toLowerCase().includes(f)):sorted;
-  grid.innerHTML=filtered.map(s=>{const sel=hesSetups.includes(s);return`<button class="setup-tag${sel?' sel':''}" onclick="toggleHesSetup('${s}')">${esc(s)}</button>`;}).join('');
+  grid.innerHTML=filtered.map(s=>{const c=setupUsage[s]||0,sel=hesSetups.includes(s);return`<button class="setup-tag${sel?' sel':''}" onclick="toggleHesSetup('${s}')">${esc(s)}${c>0?`<span class="stag-count">${c}</span>`:''}</button>`;}).join('');
 }
 function filterHesSetups(v){renderHesSetupTags(v);}
 function toggleHesSetup(name){const idx=hesSetups.indexOf(name);if(idx>=0)hesSetups.splice(idx,1);else hesSetups.push(name);renderHesSetupTags(document.getElementById('hes-setup-search')?.value||'');}
@@ -2623,7 +2648,7 @@ function renderHesPanel(){
     </div>`;
 }
 
-// ── EFICIÊNCIA POR SETUP ──────────────────────
+// ── EFICIÊNCIA POR SETUP (ponderada por amostra — Simons) ──
 function renderSetupEfficiency(){
   const el=document.getElementById('kpi-setups');if(!el) return;
   const allOps=[];allData.forEach(d=>(d.t_ops_detail||[]).forEach(op=>{if(op.setups&&op.setups.length) allOps.push(op);}));
@@ -2634,25 +2659,39 @@ function renderSetupEfficiency(){
     if(op.pts>0) bySetup[s].w++;
     if(op.result_brl!=null){bySetup[s].brl+=op.result_brl;bySetup[s].nBrl++;}
   }));
-  const entries=Object.entries(bySetup).filter(([,v])=>v.n>=2).map(([s,v])=>({setup:s,avgPts:v.pts/v.n,wr:Math.round(v.w/v.n*100),n:v.n,avgBrl:v.nBrl>0?v.brl/v.nBrl:null})).sort((a,b)=>b.avgPts-a.avgPts);
-  if(!entries.length){el.innerHTML='<div style="font-size:10px;color:var(--dim);text-align:center;padding:8px">Registre o setup em cada operação para ver a eficiência aqui (mín. 2 ops)</div>';return;}
-  const top=entries.slice(0,8);
-  el.innerHTML=`<div style="display:flex;flex-direction:column;gap:5px">${top.map(e=>{
-    const color=e.avgPts>0?'var(--green)':e.avgPts>-5?'var(--gold)':'var(--red)';
-    const barW=Math.min(Math.abs(e.avgPts)/20*100,100);
+  const setups=Object.entries(bySetup);
+  if(!setups.length){el.innerHTML='<div style="font-size:10px;color:var(--dim);text-align:center;padding:8px">Registre o setup em cada operação para ver a eficiência aqui</div>';return;}
+  // Média global de pts (prior para shrinkage)
+  const globalAvg=allOps.reduce((a,o)=>a+o.pts,0)/allOps.length;
+  const K=5; // força do prior: equivale a 5 trades "médios" puxando para a média global
+  const entries=setups.map(([s,v])=>{
+    const rawAvg=v.pts/v.n;
+    // Score ajustado: puxa setups de baixa amostra para a média global
+    const adjAvg=(v.pts+K*globalAvg)/(v.n+K);
+    return{setup:s,rawAvg,adjAvg,wr:Math.round(v.w/v.n*100),n:v.n,avgBrl:v.nBrl>0?v.brl/v.nBrl:null};
+  }).sort((a,b)=>b.adjAvg-a.adjAvg);
+  const top=entries.slice(0,10);
+  el.innerHTML=`<div style="font-size:8px;color:var(--dim);margin-bottom:6px;line-height:1.4">Ordenado por desempenho ajustado à amostra. Setups raros são puxados à média global para evitar ilusão de n baixo.</div>
+  <div style="display:flex;flex-direction:column;gap:5px">${top.map(e=>{
+    const color=e.adjAvg>0?'var(--green)':e.adjAvg>-5?'var(--gold)':'var(--red)';
+    const barW=Math.min(Math.abs(e.adjAvg)/15*100,100);
+    const conf=e.n>=20?{t:'✓',c:'var(--green)',lbl:'confiável'}:e.n>=10?{t:'~',c:'var(--gold)',lbl:'parcial'}:{t:'⚠',c:'var(--red)',lbl:'amostra baixa'};
     return`<div style="background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:9px 11px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-        <span style="font-size:10px;color:var(--hi)">${esc(e.setup)}</span>
+        <span style="font-size:10px;color:var(--hi)">${esc(e.setup)} <span style="color:${conf.c};font-size:9px" title="${conf.lbl}">${conf.t}</span></span>
         <div style="display:flex;gap:6px;align-items:center">
           <span style="font-size:9px;color:var(--dim)">n=${e.n}</span>
           <span style="font-size:9px;padding:2px 7px;border-radius:6px;background:${e.wr>=65?'var(--gd)':'var(--rd)'};color:${e.wr>=65?'var(--green)':'var(--red)'}">${e.wr}% WR</span>
-          <span style="font-size:10px;font-weight:500;color:${color}">${e.avgPts>=0?'+':''}${e.avgPts.toFixed(1)}pts</span>
+          <span style="font-size:10px;font-weight:500;color:${color}" title="ajustado: ${e.adjAvg.toFixed(1)} · bruto: ${e.rawAvg.toFixed(1)}">${e.adjAvg>=0?'+':''}${e.adjAvg.toFixed(1)}pts</span>
         </div>
       </div>
       <div style="height:3px;background:var(--b2);border-radius:2px">
         <div style="height:3px;width:${barW}%;background:${color};border-radius:2px;transition:width .3s"></div>
       </div>
-      ${e.avgBrl!=null?`<div style="font-size:8px;color:var(--dim);margin-top:3px">R$ ${e.avgBrl>=0?'+':''}${Math.round(e.avgBrl).toLocaleString('pt-BR')}/op</div>`:''}
+      <div style="display:flex;justify-content:space-between;margin-top:3px">
+        <span style="font-size:8px;color:var(--dim)">bruto ${e.rawAvg>=0?'+':''}${e.rawAvg.toFixed(1)}pts</span>
+        ${e.avgBrl!=null?`<span style="font-size:8px;color:var(--dim)">R$ ${e.avgBrl>=0?'+':''}${Math.round(e.avgBrl).toLocaleString('pt-BR')}/op</span>`:''}
+      </div>
     </div>`;
   }).join('')}</div>`;
 }
