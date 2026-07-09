@@ -628,36 +628,7 @@ tr:hover td{background:var(--s2)}
             <input class="add-inp" id="op-pts" type="number" placeholder="Pts saída" style="min-width:0" oninput="calcOpResult()">
           </div>
 
-          <!-- ESTRUTURA DA ENTRADA E1/E2 -->
-          <div style="background:var(--s3);border:1px solid var(--b1);border-radius:8px;padding:10px 11px;margin-bottom:10px">
-            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--teal);margin-bottom:7px">🏗️ Estrutura da entrada</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:7px">
-              <div>
-                <div style="font-size:8px;color:var(--dim);margin-bottom:3px">E1 lotes *</div>
-                <input class="add-inp" id="op-e1-lots" type="number" placeholder="ex: 10" min="1" step="1" style="width:100%" oninput="onE1E2Change()">
-              </div>
-              <div>
-                <div style="font-size:8px;color:var(--dim);margin-bottom:3px">E2 lotes</div>
-                <input class="add-inp" id="op-e2-lots" type="number" placeholder="0" min="0" step="1" value="0" style="width:100%" oninput="onE1E2Change()">
-              </div>
-            </div>
-            <div id="op-e2-tipo-wrap" style="display:none;margin-bottom:7px">
-              <div style="font-size:8px;color:var(--dim);margin-bottom:3px">Tipo do E2</div>
-              <select class="type-sel" id="op-e2-tipo" style="width:100%;font-size:10px">
-                <option value="regra_10contra">📉 Regra 10 contra (fraqueza)</option>
-                <option value="forca_confirmacao">📈 Força / confirmação (pirâmide)</option>
-              </select>
-            </div>
-            <div id="op-estrutura-badge" style="font-size:9px;color:var(--dim);display:flex;align-items:center;gap:6px">
-              Estrutura: <span id="op-estrutura-val" style="color:var(--teal);font-weight:500">—</span>
-              <span style="color:var(--dim)">·</span> Total: <span id="op-total-lots" style="color:var(--hi)">—</span> lotes
-            </div>
-          </div>
-
-          <!-- lote total derivado (mantido para compatibilidade) -->
-          <input type="hidden" id="op-lots">
-
-          <!-- CONVICÇÃO pré-trade (Druckenmiller) -->
+          <!-- 1. CONVICÇÃO pré-trade (Druckenmiller) -->
           <div style="background:linear-gradient(135deg,#0d1428,#15102a);border:1px solid rgba(140,100,240,.25);border-radius:8px;padding:9px 11px;margin-bottom:8px">
             <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--purp);margin-bottom:7px">⚡ Convicção pré-entrada — antes de clicar</div>
             <div class="op-state-grid" id="new-op-conv-btns">
@@ -670,7 +641,30 @@ tr:hover td{background:var(--s2)}
             <div style="font-size:8px;color:var(--dim);margin-top:6px;line-height:1.4">Convicção alta = tamanho maior. Druckenmiller: retorno vem de ser grande quando se está certo.</div>
           </div>
 
-          <!-- RISCO PLANEJADO (R-múltiplo) -->
+          <!-- 2. ADERÊNCIA AO PLANO -->
+          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Aderência ao plano da manhã</div>
+          <div class="op-state-grid" id="new-op-plan-btns" style="margin-bottom:10px">
+            <button class="os-btn" data-v="plan_entry" onclick="toggleOpPlan(this)">✓ Entrada planejada</button>
+            <button class="os-btn" data-v="plan_region" onclick="toggleOpPlan(this)">✓ Região mapeada</button>
+            <button class="os-btn" data-v="plan_stop" onclick="toggleOpPlan(this)">✓ Stop do plano</button>
+            <button class="os-btn" data-v="off_plan" onclick="toggleOpPlan(this)">✗ Fora do plano</button>
+          </div>
+
+          <!-- 3. GATILHO PSICOLÓGICO -->
+          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Gatilho psicológico da entrada</div>
+          <div class="op-state-grid" id="new-op-state-btns" style="margin-bottom:10px">
+            <button class="os-btn" data-v="planejado" onclick="selNewOpState(this)">📋 Planejado</button>
+            <button class="os-btn" data-v="atrasado" onclick="selNewOpState(this)">⏰ Atrasado</button>
+            <button class="os-btn" data-v="emotivo" onclick="selNewOpState(this)">🔥 Emotivo</button>
+            <button class="os-btn" data-v="medo_falha" onclick="selNewOpState(this)">😨 Medo falha</button>
+            <button class="os-btn" data-v="oportunidade" onclick="selNewOpState(this)">💡 Oportunidade</button>
+            <button class="os-btn" data-v="cirilo" onclick="selNewOpState(this)">🎯 Cirilo</button>
+            <button class="os-btn" data-v="desfocado" onclick="selNewOpState(this)">🌀 Desfocado</button>
+            <button class="os-btn" data-v="revanche" onclick="selNewOpState(this)">⚡ Revanche</button>
+            <button class="os-btn" data-v="ross" onclick="selNewOpState(this)">📐 Ross</button>
+          </div>
+
+          <!-- 4. RISCO PLANEJADO (R-múltiplo) -->
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
             <div>
               <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:4px">Risco planejado (pts)</div>
@@ -682,13 +676,38 @@ tr:hover td{background:var(--s2)}
             </div>
           </div>
 
-          <!-- PLANO vs EXECUÇÃO -->
-          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Aderência ao plano da manhã</div>
-          <div class="op-state-grid" id="new-op-plan-btns" style="margin-bottom:10px">
-            <button class="os-btn" data-v="plan_entry" onclick="toggleOpPlan(this)">✓ Entrada planejada</button>
-            <button class="os-btn" data-v="plan_region" onclick="toggleOpPlan(this)">✓ Região mapeada</button>
-            <button class="os-btn" data-v="plan_stop" onclick="toggleOpPlan(this)">✓ Stop do plano</button>
-            <button class="os-btn" data-v="off_plan" onclick="toggleOpPlan(this)">✗ Fora do plano</button>
+          <!-- 5. ESTRUTURA DA ENTRADA E1/E2/E3 — compacto -->
+          <div style="background:var(--s3);border:1px solid var(--b1);border-radius:8px;padding:7px 9px;margin-bottom:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+              <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--teal)">🏗️ Estrutura da entrada</div>
+              <div style="font-size:8px;color:var(--dim)">Total: <span id="op-total-lots" style="color:var(--hi)">—</span></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
+              <input class="add-inp" id="op-e1-lots" type="number" placeholder="E1 *" min="1" step="1" style="width:100%;padding:6px 7px;font-size:10px" oninput="onE1E2Change()">
+              <input class="add-inp" id="op-e2-lots" type="number" placeholder="E2" min="0" step="1" value="0" style="width:100%;padding:6px 7px;font-size:10px" oninput="onE1E2Change()">
+              <input class="add-inp" id="op-e3-lots" type="number" placeholder="E3" min="0" step="1" value="0" style="width:100%;padding:6px 7px;font-size:10px" oninput="onE1E2Change()">
+            </div>
+            <div id="op-e2-tipo-wrap" style="display:none;margin-top:5px">
+              <select class="type-sel" id="op-e2-tipo" style="width:100%;font-size:9px;padding:4px 6px">
+                <option value="regra_10contra">E2: Regra 10 contra (fraqueza)</option>
+                <option value="forca_confirmacao">E2: Força / confirmação (pirâmide)</option>
+              </select>
+            </div>
+            <div style="font-size:8px;color:var(--dim);margin-top:5px">Estrutura: <span id="op-estrutura-val" style="color:var(--teal);font-weight:500">—</span></div>
+          </div>
+
+          <!-- lote total derivado (mantido para compatibilidade) -->
+          <input type="hidden" id="op-lots">
+
+          <!-- 6. PARCIAL / ADIÇÃO -->
+          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Parcial / Adição — por quê?</div>
+          <div class="op-state-grid" id="new-op-partial-btns" style="margin-bottom:10px">
+            <button class="os-btn" data-v="E2Cal" onclick="selNewOpPartial(this)">E2 Calc</button>
+            <button class="os-btn" data-v="E2Medo" onclick="selNewOpPartial(this)">E2 Medo</button>
+            <button class="os-btn" data-v="E3Cal" onclick="selNewOpPartial(this)">E3 Calc</button>
+            <button class="os-btn" data-v="E3Medo" onclick="selNewOpPartial(this)">E3 Medo</button>
+            <button class="os-btn" data-v="ParCal" onclick="selNewOpPartial(this)">Par Calc</button>
+            <button class="os-btn" data-v="ParMedo" onclick="selNewOpPartial(this)">Par Medo</button>
           </div>
 
           <!-- MFE / MAE -->
@@ -725,20 +744,6 @@ tr:hover td{background:var(--s2)}
           <div style="max-height:100px;overflow-y:auto;margin-bottom:6px"><div class="setup-tags" id="op-setup-tags"></div></div>
           <div class="setup-sel-info" id="op-setup-sel-info" style="margin-bottom:10px;display:none">Setup: <span id="op-setup-sel-names" style="color:var(--teal)">—</span></div>
 
-          <!-- Gatilho psicológico -->
-          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Gatilho psicológico da entrada</div>
-          <div class="op-state-grid" id="new-op-state-btns" style="margin-bottom:10px">
-            <button class="os-btn" data-v="planejado" onclick="selNewOpState(this)">📋 Planejado</button>
-            <button class="os-btn" data-v="atrasado" onclick="selNewOpState(this)">⏰ Atrasado</button>
-            <button class="os-btn" data-v="emotivo" onclick="selNewOpState(this)">🔥 Emotivo</button>
-            <button class="os-btn" data-v="medo_falha" onclick="selNewOpState(this)">😨 Medo falha</button>
-            <button class="os-btn" data-v="oportunidade" onclick="selNewOpState(this)">💡 Oportunidade</button>
-            <button class="os-btn" data-v="cirilo" onclick="selNewOpState(this)">🎯 Cirilo</button>
-            <button class="os-btn" data-v="desfocado" onclick="selNewOpState(this)">🌀 Desfocado</button>
-            <button class="os-btn" data-v="revanche" onclick="selNewOpState(this)">⚡ Revanche</button>
-            <button class="os-btn" data-v="ross" onclick="selNewOpState(this)">📐 Ross</button>
-          </div>
-
           <!-- Segurança -->
           <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:6px">🛡️ Segurança</div>
           <div class="op-state-grid" id="new-op-seg-btns" style="margin-bottom:10px">
@@ -754,15 +759,18 @@ tr:hover td{background:var(--s2)}
             <button class="os-btn" data-v="D10" onclick="selNewOpSeg(this)">D10</button>
           </div>
 
-          <!-- Parcial ou adição -->
-          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Parcial / Adição — por quê?</div>
-          <div class="op-state-grid" id="new-op-partial-btns" style="margin-bottom:10px">
-            <button class="os-btn" data-v="E2Cal" onclick="selNewOpPartial(this)">E2 Calc</button>
-            <button class="os-btn" data-v="E2Medo" onclick="selNewOpPartial(this)">E2 Medo</button>
-            <button class="os-btn" data-v="E3Cal" onclick="selNewOpPartial(this)">E3 Calc</button>
-            <button class="os-btn" data-v="E3Medo" onclick="selNewOpPartial(this)">E3 Medo</button>
-            <button class="os-btn" data-v="ParCal" onclick="selNewOpPartial(this)">Par Calc</button>
-            <button class="os-btn" data-v="ParMedo" onclick="selNewOpPartial(this)">Par Medo</button>
+          <!-- IFR — divergência / referência de força relativa -->
+          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:6px">📊 IFR</div>
+          <div class="op-state-grid" id="new-op-ifr-btns" style="margin-bottom:10px">
+            <button class="os-btn" data-v="5" onclick="selNewOpIfr(this)">5</button>
+            <button class="os-btn" data-v="2" onclick="selNewOpIfr(this)">2</button>
+            <button class="os-btn" data-v="10" onclick="selNewOpIfr(this)">10</button>
+            <button class="os-btn" data-v="5,2,10" onclick="selNewOpIfr(this)">5,2,10</button>
+            <button class="os-btn" data-v="5,2" onclick="selNewOpIfr(this)">5,2</button>
+            <button class="os-btn" data-v="5,10" onclick="selNewOpIfr(this)">5,10</button>
+            <button class="os-btn" data-v="2,10" onclick="selNewOpIfr(this)">2,10</button>
+            <button class="os-btn" data-v="BdR2" onclick="selNewOpIfr(this)">BdR2</button>
+            <button class="os-btn" data-v="BdR10" onclick="selNewOpIfr(this)">BdR10</button>
           </div>
 
           <!-- Motivo da saída -->
@@ -1165,7 +1173,7 @@ let pilares={alma:[],corpo:[],espirito:[],pessoas:[]};
 let visits=[];  // [{client, time, note, done, value_est}]
 let hesReasons=[];let hesSetups=[];let hesSegs=[];
 let selectedSetups=[],setupUsage={};
-let newOpStates=[],newOpPartials=[],newOpExits=[],newOpSetups=[],newOpSegs=[];
+let newOpStates=[],newOpPartials=[],newOpExits=[],newOpSetups=[],newOpSegs=[],newOpIfr=[];
 let newOpConv=null,newOpPlan=[],newOpErrors=[];
 
 // ── MAPA DE FAMÍLIAS DE SETUP (consolidação estatística — Simons) ──
@@ -1191,32 +1199,38 @@ let preChecklist={planejamento:false,visualizacao:false,chegada45:false,regioes:
 let tradeEditDate=null; // null = today, 'YYYY-MM-DD' = other day
 let editingOpIdx=null;  // null = new op, number = editing existing
 
-// ── ESTRUTURA E1/E2 ───────────────────────────
+// ── ESTRUTURA E1/E2/E3 ────────────────────────
 // CONSTANTE FIXA: MFE e MAE são SEMPRE medidos a partir do preço do E1.
 // Referência única, imutável. Não alterar — toda análise histórica depende disso.
 const MFE_MAE_REFERENCE='E1'; // preço de entrada do E1 é o ponto zero de MFE/MAE
 
-function deriveEstrutura(e1,e2){
+function deriveEstrutura(e1,e2,e3){
+  e2=e2||0;e3=e3||0;
   if(!e1||e1<=0) return null;
+  if(e3>0) return 'E1_E2_E3';
   if(e2>0) return 'E1_E2';
   if(e1>=20) return 'E1_20_direto';
   return 'E1_puro';
 }
-const ESTRUTURA_LABEL={E1_puro:'E1 puro',E1_20_direto:'E1=20 direto',E1_E2:'E1+E2',desconhecida:'desconhecida'};
+const ESTRUTURA_LABEL={E1_puro:'E1 puro',E1_20_direto:'E1=20 direto',E1_E2:'E1+E2',E1_E2_E3:'E1+E2+E3',desconhecida:'desconhecida'};
 
 function onE1E2Change(){
   const e1=parseInt(document.getElementById('op-e1-lots')?.value)||0;
   const e2=parseInt(document.getElementById('op-e2-lots')?.value)||0;
-  const total=e1+e2;
+  const e3=parseInt(document.getElementById('op-e3-lots')?.value)||0;
+  const total=e1+e2+e3;
   // E2 tipo só aparece se e2>0
   const tipoWrap=document.getElementById('op-e2-tipo-wrap');
   if(tipoWrap) tipoWrap.style.display=e2>0?'block':'none';
   // Estrutura derivada
-  const est=deriveEstrutura(e1,e2);
+  const est=deriveEstrutura(e1,e2,e3);
   const estVal=document.getElementById('op-estrutura-val');
-  if(estVal){estVal.textContent=est?ESTRUTURA_LABEL[est]:'—';estVal.style.color=est==='E1_E2'?'var(--gold)':est==='E1_20_direto'?'var(--red)':'var(--teal)';}
+  if(estVal){
+    estVal.textContent=est?ESTRUTURA_LABEL[est]:'—';
+    estVal.style.color=est==='E1_E2_E3'?'var(--red)':est==='E1_E2'?'var(--gold)':est==='E1_20_direto'?'var(--red)':'var(--teal)';
+  }
   const totalEl=document.getElementById('op-total-lots');
-  if(totalEl) totalEl.textContent=total||'—';
+  if(totalEl) totalEl.textContent=total?total+'L':'—';
   // Alimenta o campo lots (total) que o resto do sistema usa
   const lotsEl=document.getElementById('op-lots');
   if(lotsEl) lotsEl.value=total||'';
@@ -1459,6 +1473,14 @@ function selNewOpSeg(btn){
   const idx=newOpSegs.indexOf(v);
   if(idx>=0){newOpSegs.splice(idx,1);btn.classList.remove('sel-gold','sel-plan');}
   else{newOpSegs.push(v);btn.classList.add('sel-gold');}
+}
+
+// ── IFR ───────────────────────────────────────
+function selNewOpIfr(btn){
+  const v=btn.dataset.v;
+  const idx=newOpIfr.indexOf(v);
+  if(idx>=0){newOpIfr.splice(idx,1);btn.classList.remove('sel-plan');}
+  else{newOpIfr.push(v);btn.classList.add('sel-plan');}
 }
 
 // ── FRASE ÂNCORA ─────────────────────────────
@@ -1743,9 +1765,10 @@ function addOp(){
   const pts=parseFloat(document.getElementById('op-pts').value);
   const e1Lots=parseInt(document.getElementById('op-e1-lots')?.value)||0;
   const e2Lots=parseInt(document.getElementById('op-e2-lots')?.value)||0;
+  const e3Lots=parseInt(document.getElementById('op-e3-lots')?.value)||0;
   const e2Tipo=e2Lots>0?(document.getElementById('op-e2-tipo')?.value||'regra_10contra'):null;
-  const lots=e1Lots+e2Lots;
-  const estrutura=deriveEstrutura(e1Lots,e2Lots);
+  const lots=e1Lots+e2Lots+e3Lots;
+  const estrutura=deriveEstrutura(e1Lots,e2Lots,e3Lots);
   const noteEl=document.getElementById('new-op-note');
   const note=noteEl?noteEl.value.trim():'';
   const timeEl=document.getElementById('op-time');
@@ -1766,7 +1789,7 @@ function addOp(){
   const result_brl_pf=hasPf&&(lotsPf||lots)?ptsPf*(lotsPf||lots)*10:null;
   const capture_pct=mfe&&pts>0?Math.round(pts/mfe*100):null;
   const r_multiple=risk>0?Math.round(pts/risk*100)/100:null;
-  const opData={dir,pts,pts_pf:hasPf?ptsPf:null,lots:lots||null,e1_lots:e1Lots,e2_lots:e2Lots,e2_tipo:e2Tipo,estrutura,lots_pf:lotsPf,result_brl,result_brl_pf,mfe,mae,mfe_ref:MFE_MAE_REFERENCE,capture_pct,risk_planned:risk,r_multiple,conviction:newOpConv,plan_adherence:[...newOpPlan],error_tags:[...newOpErrors],note,time,entry_states:[...newOpStates],emo_intensity:emo,exec_score:execScore,adh_items:{...newOpAdh},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups],segs:[...newOpSegs]};
+  const opData={dir,pts,pts_pf:hasPf?ptsPf:null,lots:lots||null,e1_lots:e1Lots,e2_lots:e2Lots,e3_lots:e3Lots,e2_tipo:e2Tipo,estrutura,lots_pf:lotsPf,result_brl,result_brl_pf,mfe,mae,mfe_ref:MFE_MAE_REFERENCE,capture_pct,risk_planned:risk,r_multiple,conviction:newOpConv,plan_adherence:[...newOpPlan],error_tags:[...newOpErrors],note,time,entry_states:[...newOpStates],emo_intensity:emo,exec_score:execScore,adh_items:{...newOpAdh},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups],segs:[...newOpSegs],ifr:[...newOpIfr]};
   if(editingOpIdx!==null){
     // Edit mode: preserve corr from existing
     opData.corr=tradeOps[editingOpIdx]?.corr||'';
@@ -1788,10 +1811,11 @@ function editOp(idx){
   const safe=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null) el.value=val;};
   safe('op-time',op.time);safe('op-pts',op.pts);safe('op-mfe',op.mfe||'');safe('op-mae',op.mae||'');safe('op-risk',op.risk_planned||'');
   safe('op-pts-pf',op.pts_pf!=null?op.pts_pf:'');safe('op-lots-pf',op.lots_pf||'');
-  // E1/E2 — retrocompat: se não tem e1_lots, usa lots como E1
+  // E1/E2/E3 — retrocompat: se não tem e1_lots, usa lots como E1
   const e1v=op.e1_lots!=null?op.e1_lots:(op.lots||'');
   const e2v=op.e2_lots!=null?op.e2_lots:0;
-  safe('op-e1-lots',e1v);safe('op-e2-lots',e2v);
+  const e3v=op.e3_lots!=null?op.e3_lots:0;
+  safe('op-e1-lots',e1v);safe('op-e2-lots',e2v);safe('op-e3-lots',e3v);
   if(op.e2_tipo){const te=document.getElementById('op-e2-tipo');if(te) te.value=op.e2_tipo;}
   onE1E2Change();
   const dirEl=document.getElementById('op-dir');if(dirEl) dirEl.value=op.dir;
@@ -1826,6 +1850,9 @@ function editOp(idx){
   // Segs
   newOpSegs=[...(op.segs||[])];
   document.querySelectorAll('#new-op-seg-btns .os-btn').forEach(b=>{b.classList.remove('sel-gold','sel-plan');if(newOpSegs.includes(b.dataset.v)) b.classList.add('sel-gold');});
+  // IFR
+  newOpIfr=[...(op.ifr||[])];
+  document.querySelectorAll('#new-op-ifr-btns .os-btn').forEach(b=>{b.classList.remove('sel-plan');if(newOpIfr.includes(b.dataset.v)) b.classList.add('sel-plan');});
   // Adh
   newOpAdh={...{e1:false,no_e3:false,stop:false,entry:false,size:false},...(op.adh_items||{})};
   document.querySelectorAll('#new-op-adh-grid .adh-item').forEach(el=>{const k=el.dataset.k;el.classList.toggle('yes',newOpAdh[k]===true);});
@@ -1844,6 +1871,7 @@ function clearNewOpForm(){
   const lotsEl=document.getElementById('op-lots');if(lotsEl) lotsEl.value='';
   const e1El=document.getElementById('op-e1-lots');if(e1El) e1El.value='';
   const e2El=document.getElementById('op-e2-lots');if(e2El) e2El.value='0';
+  const e3El=document.getElementById('op-e3-lots');if(e3El) e3El.value='0';
   const e2tw=document.getElementById('op-e2-tipo-wrap');if(e2tw) e2tw.style.display='none';
   const estV=document.getElementById('op-estrutura-val');if(estV){estV.textContent='—';estV.style.color='var(--teal)';}
   const totL=document.getElementById('op-total-lots');if(totL) totL.textContent='—';
@@ -1858,9 +1886,9 @@ function clearNewOpForm(){
   const ptsPfEl=document.getElementById('op-pts-pf');if(ptsPfEl) ptsPfEl.value='';
   const lotsPfEl=document.getElementById('op-lots-pf');if(lotsPfEl) lotsPfEl.value='';
   const rmEl=document.getElementById('op-rmult');if(rmEl){rmEl.textContent='—';rmEl.style.color='var(--dim)';}
-  ['#new-op-state-btns','#new-op-partial-btns','#new-op-exit-btns','#new-op-seg-btns','#new-op-conv-btns','#new-op-plan-btns','#new-op-error-btns'].forEach(sel=>document.querySelectorAll(sel+' .os-btn').forEach(b=>{b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold');}));
+  ['#new-op-state-btns','#new-op-partial-btns','#new-op-exit-btns','#new-op-seg-btns','#new-op-conv-btns','#new-op-plan-btns','#new-op-error-btns','#new-op-ifr-btns'].forEach(sel=>document.querySelectorAll(sel+' .os-btn').forEach(b=>{b.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold');}));
   document.querySelectorAll('#new-op-adh-grid .adh-item').forEach(el=>{el.classList.remove('yes');const d=el.querySelector('.adh-dot');if(d) d.style.background='var(--b2)';const t=el.querySelector('.adh-text');if(t) t.style.color='var(--dim)';});
-  newOpStates=[];newOpPartials=[];newOpExits=[];newOpSetups=[];newOpSegs=[];
+  newOpStates=[];newOpPartials=[];newOpExits=[];newOpSetups=[];newOpSegs=[];newOpIfr=[];
   newOpConv=null;newOpPlan=[];newOpErrors=[];
   newOpAdh={e1:false,no_e3:false,stop:false,entry:false,size:false};
   const searchEl=document.getElementById('op-setup-search');if(searchEl) searchEl.value='';
@@ -1910,11 +1938,12 @@ function renderOps(){
       </div>
       <!-- resumo sempre visível -->
       <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;padding-top:5px;border-top:1px solid var(--b1)">
-        ${op.estrutura?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:${op.estrutura==='E1_E2'?'var(--od)':op.estrutura==='E1_20_direto'?'var(--rd)':'var(--td)'};color:${op.estrutura==='E1_E2'?'var(--gold)':op.estrutura==='E1_20_direto'?'var(--red)':'var(--teal)'}">🏗️${ESTRUTURA_LABEL[op.estrutura]||op.estrutura}${op.e1_lots?` (${op.e1_lots}${op.e2_lots?'+'+op.e2_lots:''})`:''}</span>`:''}
+        ${op.estrutura?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:${op.estrutura==='E1_E2_E3'?'var(--rd)':op.estrutura==='E1_E2'?'var(--od)':op.estrutura==='E1_20_direto'?'var(--rd)':'var(--td)'};color:${op.estrutura==='E1_E2_E3'?'var(--red)':op.estrutura==='E1_E2'?'var(--gold)':op.estrutura==='E1_20_direto'?'var(--red)':'var(--teal)'}">🏗️${ESTRUTURA_LABEL[op.estrutura]||op.estrutura}${op.e1_lots?` (${op.e1_lots}${op.e2_lots?'+'+op.e2_lots:''}${op.e3_lots?'+'+op.e3_lots:''})`:''}</span>`:''}
         ${op.conviction?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:rgba(140,100,240,.15);color:var(--purp)">⚡conv ${op.conviction}/5</span>`:''}
         ${op.r_multiple!=null?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--s3);color:${op.r_multiple>=0?'var(--green)':'var(--red)'}">${op.r_multiple>=0?'+':''}${op.r_multiple}R</span>`:''}
         ${(op.setups||[]).length?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--td);color:var(--teal)">📋 ${(op.setups||[]).join(' · ')}</span>`:''}
         ${(op.segs||[]).map(s=>`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--od);color:var(--gold)">🛡️${s}</span>`).join('')}
+        ${(op.ifr||[]).map(s=>`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:rgba(78,124,248,.12);color:var(--blue)">📊IFR ${s}</span>`).join('')}
         ${(op.error_tags||[]).filter(e=>e!=='sem_erro').map(e=>`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--rd);color:var(--red)">📓${ERROR_LABELS[e]||e}</span>`).join('')}
         ${(op.plan_adherence||[]).includes('off_plan')?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--rd);color:var(--red)">✗ fora do plano</span>`:''}
         ${partialReasons.map(r=>`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:${r.includes('Medo')?'var(--rd)':'var(--td)'};color:${r.includes('Medo')?'var(--red)':'var(--teal)'}">${r}</span>`).join('')}
@@ -3290,6 +3319,9 @@ function buildCtxFull(days){
   // Segurança
   const bySeg={};allOps.forEach(op=>(op.segs||[]).forEach(s=>{if(!bySeg[s])bySeg[s]={pts:0,n:0,w:0};bySeg[s].pts+=op.pts;bySeg[s].n++;if(op.pts>0)bySeg[s].w++;}));
   const segStr=Object.entries(bySeg).sort((a,b)=>b[1].n-a[1].n).map(([s,v])=>`  ${s}: n=${v.n} WR=${pct(v.w,v.n)} avg=${fmtN(v.pts/v.n,0)}pts`).join('\n')||'sem dados';
+  // IFR × RESULTADO
+  const byIfr={};allOps.forEach(op=>(op.ifr||[]).forEach(s=>{if(!byIfr[s])byIfr[s]={pts:0,n:0,w:0};byIfr[s].pts+=op.pts;byIfr[s].n++;if(op.pts>0)byIfr[s].w++;}));
+  const ifrStr=Object.entries(byIfr).sort((a,b)=>b[1].n-a[1].n).map(([s,v])=>`  IFR ${s}: n=${v.n} WR=${pct(v.w,v.n)} avg=${fmtN(v.pts/v.n,0)}pts`).join('\n')||'sem dados';
   // Setup técnico
   const bySetup={};allOps.forEach(op=>(op.setups||[]).forEach(s=>{if(!bySetup[s])bySetup[s]={pts:0,n:0,w:0};bySetup[s].pts+=op.pts;bySetup[s].n++;if(op.pts>0)bySetup[s].w++;}));
   const setupStr=Object.entries(bySetup).sort((a,b)=>b[1].n-a[1].n).map(([s,v])=>`  ${s}: n=${v.n} WR=${pct(v.w,v.n)} avg=${fmtN(v.pts/v.n,0)}pts total=${fmtN(v.pts,0)}pts`).join('\n')||'sem dados';
@@ -3469,6 +3501,11 @@ ${partialStr}
 ${segStr}
 
 ════════════════════════════════════════
+7b. IFR × RESULTADO
+════════════════════════════════════════
+${ifrStr}
+
+════════════════════════════════════════
 8. MEDO (intensidade emocional) × RESULTADO
 ════════════════════════════════════════
 ${emoRow(emoLow,'Baixo 1-3')}
@@ -3554,7 +3591,7 @@ ${famStr}
 ════════════════════════════════════════
 ${sorted.slice(-10).map(d=>{
   const ops=(d.t_ops_detail||[]);
-  const opsStr=ops.length?ops.map(op=>`    [${op.time||'?'}] ${op.dir} ${op.pts>=0?'+':''}${op.pts}pts ${op.estrutura?'['+(ESTRUTURA_LABEL[op.estrutura]||op.estrutura)+(op.e1_lots?' '+op.e1_lots+(op.e2_lots?'+'+op.e2_lots:''):'')+'] ':''}${op.r_multiple!=null?(op.r_multiple>=0?'+':'')+op.r_multiple+'R ':''}conv:${n(op.conviction)} MFE:${n(op.mfe)} MAE:${n(op.mae)} captura:${op.mfe&&op.pts>0?Math.round(op.pts/op.mfe*100)+'%':'—'} MEDO:${n(op.emo_intensity)} exec:${n(op.exec_score)} adh:${fmtN(calcAdhScore(op),0)}/10\n      exit:[${getExitReasons(op).join(',')||'—'}] erro:[${(op.error_tags||[]).filter(e=>e!=='sem_erro').join(',')||'—'}] plano:[${(op.plan_adherence||[]).join(',')||'—'}] seg:[${(op.segs||[]).join(',')||'—'}] setup:[${(op.setups||[]).join(',')||'—'}] gatilho:[${(op.entry_states||[op.entry_state]).filter(Boolean).join(',')||'—'}]`).join('\n'):'    sem ops registradas';
+  const opsStr=ops.length?ops.map(op=>`    [${op.time||'?'}] ${op.dir} ${op.pts>=0?'+':''}${op.pts}pts ${op.estrutura?'['+(ESTRUTURA_LABEL[op.estrutura]||op.estrutura)+(op.e1_lots?' '+op.e1_lots+(op.e2_lots?'+'+op.e2_lots:'')+(op.e3_lots?'+'+op.e3_lots:''):'')+'] ':''}${op.r_multiple!=null?(op.r_multiple>=0?'+':'')+op.r_multiple+'R ':''}conv:${n(op.conviction)} MFE:${n(op.mfe)} MAE:${n(op.mae)} captura:${op.mfe&&op.pts>0?Math.round(op.pts/op.mfe*100)+'%':'—'} MEDO:${n(op.emo_intensity)} exec:${n(op.exec_score)} adh:${fmtN(calcAdhScore(op),0)}/10\n      exit:[${getExitReasons(op).join(',')||'—'}] erro:[${(op.error_tags||[]).filter(e=>e!=='sem_erro').join(',')||'—'}] plano:[${(op.plan_adherence||[]).join(',')||'—'}] seg:[${(op.segs||[]).join(',')||'—'}] ifr:[${(op.ifr||[]).join(',')||'—'}] setup:[${(op.setups||[]).join(',')||'—'}] gatilho:[${(op.entry_states||[op.entry_state]).filter(Boolean).join(',')||'—'}]`).join('\n'):'    sem ops registradas';
   return`[${d.date_label||d.date_iso}] pré:${d.mood_pre||d.mood||'—'}→pós:${d.mood_pos||'—'} E:${d.energia||'—'} sono:${d.sleep_quality||'—'} F+PA:R$${d.t_result_fpa!=null?Math.round(d.t_result_fpa).toLocaleString('pt-BR'):'—'} PF:R$${d.t_result_pf!=null?Math.round(d.t_result_pf).toLocaleString('pt-BR'):'—'} WR:${d.t_wr||'—'}% adh:${n(d.t_adh)}/10\n${opsStr}`;
 }).join('\n')}`;
 }
