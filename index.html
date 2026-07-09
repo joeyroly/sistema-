@@ -618,16 +618,44 @@ tr:hover td{background:var(--s2)}
         <div style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:11px">
           <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:9px">Nova operação</div>
 
-          <!-- Linha 1: horário, direção, lotes, pontos -->
-          <div style="display:grid;grid-template-columns:90px 56px 60px 70px;gap:6px;margin-bottom:10px">
+          <!-- Linha 1: horário, direção, pontos -->
+          <div style="display:grid;grid-template-columns:90px 56px 1fr;gap:6px;margin-bottom:10px">
             <input class="time-inp" id="op-time" type="time" list="pregao-times" style="font-size:11px;padding:7px 6px">
             <select class="type-sel" id="op-dir">
               <option value="C">▲ C</option>
               <option value="V">▼ V</option>
             </select>
-            <input class="add-inp" id="op-lots" type="number" placeholder="Lotes" min="1" step="1" style="min-width:0" oninput="calcOpResult()">
-            <input class="add-inp" id="op-pts" type="number" placeholder="Pts" style="min-width:0" oninput="calcOpResult()">
+            <input class="add-inp" id="op-pts" type="number" placeholder="Pts saída" style="min-width:0" oninput="calcOpResult()">
           </div>
+
+          <!-- ESTRUTURA DA ENTRADA E1/E2 -->
+          <div style="background:var(--s3);border:1px solid var(--b1);border-radius:8px;padding:10px 11px;margin-bottom:10px">
+            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--teal);margin-bottom:7px">🏗️ Estrutura da entrada</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:7px">
+              <div>
+                <div style="font-size:8px;color:var(--dim);margin-bottom:3px">E1 lotes *</div>
+                <input class="add-inp" id="op-e1-lots" type="number" placeholder="ex: 10" min="1" step="1" style="width:100%" oninput="onE1E2Change()">
+              </div>
+              <div>
+                <div style="font-size:8px;color:var(--dim);margin-bottom:3px">E2 lotes</div>
+                <input class="add-inp" id="op-e2-lots" type="number" placeholder="0" min="0" step="1" value="0" style="width:100%" oninput="onE1E2Change()">
+              </div>
+            </div>
+            <div id="op-e2-tipo-wrap" style="display:none;margin-bottom:7px">
+              <div style="font-size:8px;color:var(--dim);margin-bottom:3px">Tipo do E2</div>
+              <select class="type-sel" id="op-e2-tipo" style="width:100%;font-size:10px">
+                <option value="regra_10contra">📉 Regra 10 contra (fraqueza)</option>
+                <option value="forca_confirmacao">📈 Força / confirmação (pirâmide)</option>
+              </select>
+            </div>
+            <div id="op-estrutura-badge" style="font-size:9px;color:var(--dim);display:flex;align-items:center;gap:6px">
+              Estrutura: <span id="op-estrutura-val" style="color:var(--teal);font-weight:500">—</span>
+              <span style="color:var(--dim)">·</span> Total: <span id="op-total-lots" style="color:var(--hi)">—</span> lotes
+            </div>
+          </div>
+
+          <!-- lote total derivado (mantido para compatibilidade) -->
+          <input type="hidden" id="op-lots">
 
           <!-- CONVICÇÃO pré-trade (Druckenmiller) -->
           <div style="background:linear-gradient(135deg,#0d1428,#15102a);border:1px solid rgba(140,100,240,.25);border-radius:8px;padding:9px 11px;margin-bottom:8px">
@@ -1163,6 +1191,38 @@ let preChecklist={planejamento:false,visualizacao:false,chegada45:false,regioes:
 let tradeEditDate=null; // null = today, 'YYYY-MM-DD' = other day
 let editingOpIdx=null;  // null = new op, number = editing existing
 
+// ── ESTRUTURA E1/E2 ───────────────────────────
+// CONSTANTE FIXA: MFE e MAE são SEMPRE medidos a partir do preço do E1.
+// Referência única, imutável. Não alterar — toda análise histórica depende disso.
+const MFE_MAE_REFERENCE='E1'; // preço de entrada do E1 é o ponto zero de MFE/MAE
+
+function deriveEstrutura(e1,e2){
+  if(!e1||e1<=0) return null;
+  if(e2>0) return 'E1_E2';
+  if(e1>=20) return 'E1_20_direto';
+  return 'E1_puro';
+}
+const ESTRUTURA_LABEL={E1_puro:'E1 puro',E1_20_direto:'E1=20 direto',E1_E2:'E1+E2',desconhecida:'desconhecida'};
+
+function onE1E2Change(){
+  const e1=parseInt(document.getElementById('op-e1-lots')?.value)||0;
+  const e2=parseInt(document.getElementById('op-e2-lots')?.value)||0;
+  const total=e1+e2;
+  // E2 tipo só aparece se e2>0
+  const tipoWrap=document.getElementById('op-e2-tipo-wrap');
+  if(tipoWrap) tipoWrap.style.display=e2>0?'block':'none';
+  // Estrutura derivada
+  const est=deriveEstrutura(e1,e2);
+  const estVal=document.getElementById('op-estrutura-val');
+  if(estVal){estVal.textContent=est?ESTRUTURA_LABEL[est]:'—';estVal.style.color=est==='E1_E2'?'var(--gold)':est==='E1_20_direto'?'var(--red)':'var(--teal)';}
+  const totalEl=document.getElementById('op-total-lots');
+  if(totalEl) totalEl.textContent=total||'—';
+  // Alimenta o campo lots (total) que o resto do sistema usa
+  const lotsEl=document.getElementById('op-lots');
+  if(lotsEl) lotsEl.value=total||'';
+  calcOpResult();
+}
+
 // ── CÁLCULO RESULTADO POR OP ──────────────────
 function calcOpResult(){
   const pts=parseFloat(document.getElementById('op-pts')?.value)||0;
@@ -1681,7 +1741,11 @@ function selNewOpState(btn){
 function addOp(){
   const dir=document.getElementById('op-dir').value;
   const pts=parseFloat(document.getElementById('op-pts').value);
-  const lots=parseFloat(document.getElementById('op-lots')?.value)||0;
+  const e1Lots=parseInt(document.getElementById('op-e1-lots')?.value)||0;
+  const e2Lots=parseInt(document.getElementById('op-e2-lots')?.value)||0;
+  const e2Tipo=e2Lots>0?(document.getElementById('op-e2-tipo')?.value||'regra_10contra'):null;
+  const lots=e1Lots+e2Lots;
+  const estrutura=deriveEstrutura(e1Lots,e2Lots);
   const noteEl=document.getElementById('new-op-note');
   const note=noteEl?noteEl.value.trim():'';
   const timeEl=document.getElementById('op-time');
@@ -1697,11 +1761,12 @@ function addOp(){
   const lotsPf=parseFloat(document.getElementById('op-lots-pf')?.value)||null;
   const hasPf=!isNaN(ptsPf);
   if(isNaN(pts)){showToast('Informe os pontos',true);return;}
+  if(!e1Lots||e1Lots<=0){showToast('Informe os lotes do E1',true);return;}
   const result_brl=lots>0?pts*lots*10:null;
   const result_brl_pf=hasPf&&(lotsPf||lots)?ptsPf*(lotsPf||lots)*10:null;
   const capture_pct=mfe&&pts>0?Math.round(pts/mfe*100):null;
   const r_multiple=risk>0?Math.round(pts/risk*100)/100:null;
-  const opData={dir,pts,pts_pf:hasPf?ptsPf:null,lots:lots||null,lots_pf:lotsPf,result_brl,result_brl_pf,mfe,mae,capture_pct,risk_planned:risk,r_multiple,conviction:newOpConv,plan_adherence:[...newOpPlan],error_tags:[...newOpErrors],note,time,entry_states:[...newOpStates],emo_intensity:emo,exec_score:execScore,adh_items:{...newOpAdh},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups],segs:[...newOpSegs]};
+  const opData={dir,pts,pts_pf:hasPf?ptsPf:null,lots:lots||null,e1_lots:e1Lots,e2_lots:e2Lots,e2_tipo:e2Tipo,estrutura,lots_pf:lotsPf,result_brl,result_brl_pf,mfe,mae,mfe_ref:MFE_MAE_REFERENCE,capture_pct,risk_planned:risk,r_multiple,conviction:newOpConv,plan_adherence:[...newOpPlan],error_tags:[...newOpErrors],note,time,entry_states:[...newOpStates],emo_intensity:emo,exec_score:execScore,adh_items:{...newOpAdh},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups],segs:[...newOpSegs]};
   if(editingOpIdx!==null){
     // Edit mode: preserve corr from existing
     opData.corr=tradeOps[editingOpIdx]?.corr||'';
@@ -1721,8 +1786,14 @@ function editOp(idx){
   editingOpIdx=idx;
   // Populate form with existing op data
   const safe=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null) el.value=val;};
-  safe('op-time',op.time);safe('op-pts',op.pts);safe('op-lots',op.lots||'');safe('op-mfe',op.mfe||'');safe('op-mae',op.mae||'');safe('op-risk',op.risk_planned||'');
+  safe('op-time',op.time);safe('op-pts',op.pts);safe('op-mfe',op.mfe||'');safe('op-mae',op.mae||'');safe('op-risk',op.risk_planned||'');
   safe('op-pts-pf',op.pts_pf!=null?op.pts_pf:'');safe('op-lots-pf',op.lots_pf||'');
+  // E1/E2 — retrocompat: se não tem e1_lots, usa lots como E1
+  const e1v=op.e1_lots!=null?op.e1_lots:(op.lots||'');
+  const e2v=op.e2_lots!=null?op.e2_lots:0;
+  safe('op-e1-lots',e1v);safe('op-e2-lots',e2v);
+  if(op.e2_tipo){const te=document.getElementById('op-e2-tipo');if(te) te.value=op.e2_tipo;}
+  onE1E2Change();
   const dirEl=document.getElementById('op-dir');if(dirEl) dirEl.value=op.dir;
   // Convicção
   newOpConv=op.conviction||null;
@@ -1771,6 +1842,11 @@ function clearNewOpForm(){
   editingOpIdx=null;
   document.getElementById('op-pts').value='';
   const lotsEl=document.getElementById('op-lots');if(lotsEl) lotsEl.value='';
+  const e1El=document.getElementById('op-e1-lots');if(e1El) e1El.value='';
+  const e2El=document.getElementById('op-e2-lots');if(e2El) e2El.value='0';
+  const e2tw=document.getElementById('op-e2-tipo-wrap');if(e2tw) e2tw.style.display='none';
+  const estV=document.getElementById('op-estrutura-val');if(estV){estV.textContent='—';estV.style.color='var(--teal)';}
+  const totL=document.getElementById('op-total-lots');if(totL) totL.textContent='—';
   const noteEl=document.getElementById('new-op-note');if(noteEl){noteEl.value='';noteEl.style.height='40px';}
   const emoEl=document.getElementById('new-op-emo');if(emoEl){emoEl.value=5;document.getElementById('new-op-emo-val').textContent='5';}
   const execEl=document.getElementById('new-op-exec');if(execEl){execEl.value=5;document.getElementById('new-op-exec-val').textContent='5';}
@@ -1834,6 +1910,7 @@ function renderOps(){
       </div>
       <!-- resumo sempre visível -->
       <div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:5px;padding-top:5px;border-top:1px solid var(--b1)">
+        ${op.estrutura?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:${op.estrutura==='E1_E2'?'var(--od)':op.estrutura==='E1_20_direto'?'var(--rd)':'var(--td)'};color:${op.estrutura==='E1_E2'?'var(--gold)':op.estrutura==='E1_20_direto'?'var(--red)':'var(--teal)'}">🏗️${ESTRUTURA_LABEL[op.estrutura]||op.estrutura}${op.e1_lots?` (${op.e1_lots}${op.e2_lots?'+'+op.e2_lots:''})`:''}</span>`:''}
         ${op.conviction?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:rgba(140,100,240,.15);color:var(--purp)">⚡conv ${op.conviction}/5</span>`:''}
         ${op.r_multiple!=null?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--s3);color:${op.r_multiple>=0?'var(--green)':'var(--red)'}">${op.r_multiple>=0?'+':''}${op.r_multiple}R</span>`:''}
         ${(op.setups||[]).length?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--td);color:var(--teal)">📋 ${(op.setups||[]).join(' · ')}</span>`:''}
@@ -3235,7 +3312,16 @@ function buildCtxFull(days){
   // Direção
   const compras=allOps.filter(o=>o.dir==='C'),vendas=allOps.filter(o=>o.dir==='V');
 
-  // ── CONVICÇÃO × SIZING × RESULTADO (Druckenmiller) ──
+  // ── ESTRUTURA E1/E2 × RESULTADO ──
+  const byEstrutura={};
+  allOps.forEach(o=>{const e=o.estrutura||'desconhecida';if(!byEstrutura[e])byEstrutura[e]={n:0,w:0,pts:0};byEstrutura[e].n++;byEstrutura[e].pts+=o.pts;if(o.pts>0)byEstrutura[e].w++;});
+  const estruturaStr=Object.entries(byEstrutura).sort((a,b)=>b[1].n-a[1].n).map(([e,v])=>`  ${ESTRUTURA_LABEL[e]||e}: n=${v.n} WR=${pct(v.w,v.n)} avg=${fmtN(v.pts/v.n,1)}pts total=${fmtN(v.pts,0)}pts`).join('\n')||'sem dados';
+  // E2 por tipo
+  const byE2Tipo={};
+  allOps.filter(o=>o.e2_lots>0&&o.e2_tipo).forEach(o=>{if(!byE2Tipo[o.e2_tipo])byE2Tipo[o.e2_tipo]={n:0,w:0,pts:0};byE2Tipo[o.e2_tipo].n++;byE2Tipo[o.e2_tipo].pts+=o.pts;if(o.pts>0)byE2Tipo[o.e2_tipo].w++;});
+  const e2TipoLabels={regra_10contra:'Regra 10 contra (fraqueza)',forca_confirmacao:'Força/confirmação (pirâmide)'};
+  const e2TipoStr=Object.entries(byE2Tipo).map(([t,v])=>`  ${e2TipoLabels[t]||t}: n=${v.n} WR=${pct(v.w,v.n)} avg=${fmtN(v.pts/v.n,1)}pts`).join('\n')||'sem E2 registrado ainda';
+
   const opsConv=allOps.filter(o=>o.conviction!=null);
   const convBands={};
   opsConv.forEach(o=>{const c=o.conviction;if(!convBands[c])convBands[c]={n:0,w:0,pts:0,lots:0,lotsN:0};convBands[c].n++;convBands[c].pts+=o.pts;if(o.pts>0)convBands[c].w++;if(o.lots){convBands[c].lots+=o.lots;convBands[c].lotsN++;}});
@@ -3348,6 +3434,11 @@ MAE médio (${opsWithMAE.length} ops registradas): ${fmtN(avgMAE,1)}pts
 ── DIREÇÃO ──
 Compra(C): n=${compras.length} WR=${pct(compras.filter(o=>o.pts>0).length,compras.length)} avg=${fmtN(compras.length?avgArr(compras.map(o=>o.pts)):null,0)}pts
 Venda(V):  n=${vendas.length} WR=${pct(vendas.filter(o=>o.pts>0).length,vendas.length)} avg=${fmtN(vendas.length?avgArr(vendas.map(o=>o.pts)):null,0)}pts
+
+── ESTRUTURA DA ENTRADA E1/E2 (ref MFE/MAE = ${MFE_MAE_REFERENCE}) ──
+${estruturaStr}
+E2 por tipo:
+${e2TipoStr}
 
 ── POR HORÁRIO ──
 ${hourStr}
@@ -3463,7 +3554,7 @@ ${famStr}
 ════════════════════════════════════════
 ${sorted.slice(-10).map(d=>{
   const ops=(d.t_ops_detail||[]);
-  const opsStr=ops.length?ops.map(op=>`    [${op.time||'?'}] ${op.dir} ${op.pts>=0?'+':''}${op.pts}pts ${op.r_multiple!=null?(op.r_multiple>=0?'+':'')+op.r_multiple+'R ':''}conv:${n(op.conviction)} lots:${n(op.lots)} MFE:${n(op.mfe)} MAE:${n(op.mae)} captura:${op.mfe&&op.pts>0?Math.round(op.pts/op.mfe*100)+'%':'—'} MEDO:${n(op.emo_intensity)} exec:${n(op.exec_score)} adh:${fmtN(calcAdhScore(op),0)}/10\n      exit:[${getExitReasons(op).join(',')||'—'}] erro:[${(op.error_tags||[]).filter(e=>e!=='sem_erro').join(',')||'—'}] plano:[${(op.plan_adherence||[]).join(',')||'—'}] seg:[${(op.segs||[]).join(',')||'—'}] setup:[${(op.setups||[]).join(',')||'—'}] gatilho:[${(op.entry_states||[op.entry_state]).filter(Boolean).join(',')||'—'}]`).join('\n'):'    sem ops registradas';
+  const opsStr=ops.length?ops.map(op=>`    [${op.time||'?'}] ${op.dir} ${op.pts>=0?'+':''}${op.pts}pts ${op.estrutura?'['+(ESTRUTURA_LABEL[op.estrutura]||op.estrutura)+(op.e1_lots?' '+op.e1_lots+(op.e2_lots?'+'+op.e2_lots:''):'')+'] ':''}${op.r_multiple!=null?(op.r_multiple>=0?'+':'')+op.r_multiple+'R ':''}conv:${n(op.conviction)} MFE:${n(op.mfe)} MAE:${n(op.mae)} captura:${op.mfe&&op.pts>0?Math.round(op.pts/op.mfe*100)+'%':'—'} MEDO:${n(op.emo_intensity)} exec:${n(op.exec_score)} adh:${fmtN(calcAdhScore(op),0)}/10\n      exit:[${getExitReasons(op).join(',')||'—'}] erro:[${(op.error_tags||[]).filter(e=>e!=='sem_erro').join(',')||'—'}] plano:[${(op.plan_adherence||[]).join(',')||'—'}] seg:[${(op.segs||[]).join(',')||'—'}] setup:[${(op.setups||[]).join(',')||'—'}] gatilho:[${(op.entry_states||[op.entry_state]).filter(Boolean).join(',')||'—'}]`).join('\n'):'    sem ops registradas';
   return`[${d.date_label||d.date_iso}] pré:${d.mood_pre||d.mood||'—'}→pós:${d.mood_pos||'—'} E:${d.energia||'—'} sono:${d.sleep_quality||'—'} F+PA:R$${d.t_result_fpa!=null?Math.round(d.t_result_fpa).toLocaleString('pt-BR'):'—'} PF:R$${d.t_result_pf!=null?Math.round(d.t_result_pf).toLocaleString('pt-BR'):'—'} WR:${d.t_wr||'—'}% adh:${n(d.t_adh)}/10\n${opsStr}`;
 }).join('\n')}`;
 }
