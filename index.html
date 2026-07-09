@@ -684,8 +684,8 @@ tr:hover td{background:var(--s2)}
             </div>
             <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
               <input class="add-inp" id="op-e1-lots" type="number" placeholder="E1 *" min="1" step="1" style="width:100%;padding:6px 7px;font-size:10px" oninput="onE1E2Change()">
-              <input class="add-inp" id="op-e2-lots" type="number" placeholder="E2" min="0" step="1" value="0" style="width:100%;padding:6px 7px;font-size:10px" oninput="onE1E2Change()">
-              <input class="add-inp" id="op-e3-lots" type="number" placeholder="E3" min="0" step="1" value="0" style="width:100%;padding:6px 7px;font-size:10px" oninput="onE1E2Change()">
+              <input class="add-inp" id="op-e2-lots" type="number" placeholder="E2" min="0" step="1" style="width:100%;padding:6px 7px;font-size:10px" oninput="onE1E2Change()">
+              <input class="add-inp" id="op-e3-lots" type="number" placeholder="E3" min="0" step="1" style="width:100%;padding:6px 7px;font-size:10px" oninput="onE1E2Change()">
             </div>
             <div id="op-e2-tipo-wrap" style="display:none;margin-top:5px">
               <select class="type-sel" id="op-e2-tipo" style="width:100%;font-size:9px;padding:4px 6px">
@@ -898,10 +898,15 @@ tr:hover td{background:var(--s2)}
         <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px">Setup que você viu</div>
         <input class="setup-search" id="hes-setup-search" type="text" placeholder="Buscar setup…" oninput="filterHesSetups(this.value)" style="margin-bottom:5px">
         <div style="max-height:80px;overflow-y:auto;margin-bottom:6px"><div class="setup-tags" id="hes-setup-tags"></div></div>
-        <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:4px;margin-top:4px">MFE estimado / MAE observado</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
-          <input class="add-inp" id="hes-mfe" type="number" placeholder="MFE estimado (pts)">
-          <input class="add-inp" id="hes-mae" type="number" placeholder="MAE observado (pts)">
+          <div>
+            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--teal);margin-bottom:4px">MFE — máx a favor</div>
+            <input class="add-inp" id="hes-mfe" type="number" placeholder="Pts (ex: 18)" style="width:100%">
+          </div>
+          <div>
+            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--red);margin-bottom:4px">MAE — máx contra</div>
+            <input class="add-inp" id="hes-mae" type="number" placeholder="Pts (ex: 5)" style="width:100%">
+          </div>
         </div>
         <textarea class="finp" id="hes-detail" placeholder="Detalhe: o pensamento exato, o contexto, o que travou internamente…" style="margin-bottom:8px;min-height:48px"></textarea>
         <button id="hes-add-btn" class="add-btn" onclick="addHes()" style="width:100%;padding:10px;margin-bottom:0">+ Registrar hesitação</button>
@@ -1883,8 +1888,8 @@ function clearNewOpForm(){
   document.getElementById('op-pts').value='';
   const lotsEl=document.getElementById('op-lots');if(lotsEl) lotsEl.value='';
   const e1El=document.getElementById('op-e1-lots');if(e1El) e1El.value='';
-  const e2El=document.getElementById('op-e2-lots');if(e2El) e2El.value='0';
-  const e3El=document.getElementById('op-e3-lots');if(e3El) e3El.value='0';
+  const e2El=document.getElementById('op-e2-lots');if(e2El) e2El.value='';
+  const e3El=document.getElementById('op-e3-lots');if(e3El) e3El.value='';
   const e2tw=document.getElementById('op-e2-tipo-wrap');if(e2tw) e2tw.style.display='none';
   const estV=document.getElementById('op-estrutura-val');if(estV){estV.textContent='—';estV.style.color='var(--teal)';}
   const totL=document.getElementById('op-total-lots');if(totL) totL.textContent='—';
