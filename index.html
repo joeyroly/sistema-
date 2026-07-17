@@ -668,7 +668,7 @@ tr:hover td{background:var(--s2)}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
             <div>
               <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:4px">Risco planejado (pts)</div>
-              <input class="add-inp" id="op-risk" type="number" placeholder="Stop pré-definido" style="width:100%" oninput="calcOpResult()">
+              <input class="add-inp" id="op-risk" type="number" min="0" placeholder="Stop absoluto (ex: 15)" style="width:100%" oninput="calcOpResult()">
             </div>
             <div>
               <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:4px">R-múltiplo</div>
@@ -714,11 +714,11 @@ tr:hover td{background:var(--s2)}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
             <div>
               <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--teal);margin-bottom:4px">MFE — máx a favor</div>
-              <input class="add-inp" id="op-mfe" type="number" placeholder="Pts (ex: 18)" style="width:100%" oninput="calcOpResult()">
+              <input class="add-inp" id="op-mfe" type="number" min="0" placeholder="Pts (ex: 18)" style="width:100%" oninput="calcOpResult()">
             </div>
             <div>
               <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--red);margin-bottom:4px">MAE — máx contra</div>
-              <input class="add-inp" id="op-mae" type="number" placeholder="Pts (ex: 5)" style="width:100%">
+              <input class="add-inp" id="op-mae" type="number" min="0" placeholder="Pts (ex: 5)" style="width:100%">
             </div>
           </div>
 
@@ -901,11 +901,11 @@ tr:hover td{background:var(--s2)}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
           <div>
             <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--teal);margin-bottom:4px">MFE — máx a favor</div>
-            <input class="add-inp" id="hes-mfe" type="number" placeholder="Pts (ex: 18)" style="width:100%">
+            <input class="add-inp" id="hes-mfe" type="number" min="0" placeholder="Pts (ex: 18)" style="width:100%">
           </div>
           <div>
             <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--red);margin-bottom:4px">MAE — máx contra</div>
-            <input class="add-inp" id="hes-mae" type="number" placeholder="Pts (ex: 5)" style="width:100%">
+            <input class="add-inp" id="hes-mae" type="number" min="0" placeholder="Pts (ex: 5)" style="width:100%">
           </div>
         </div>
         <textarea class="finp" id="hes-detail" placeholder="Detalhe: o pensamento exato, o contexto, o que travou internamente…" style="margin-bottom:8px;min-height:48px"></textarea>
@@ -989,6 +989,10 @@ tr:hover td{background:var(--s2)}
       </div>
       <!-- PAINEL DO DIA — tendências recentes, alertas de risco -->
       <div id="daily-panel" style="margin-bottom:11px"></div>
+
+      <!-- ═══════════════ PAINEL INSTITUCIONAL (Griffin/Druckenmiller/Dalio/Simons) ═══════════════ -->
+      <div class="card-lbl" style="padding:0 2px;margin-bottom:8px;margin-top:4px;color:var(--purp);font-weight:500;letter-spacing:2px">📊 PAINEL DO GESTOR</div>
+      <div id="panel-institutional" style="margin-bottom:14px"></div>
 
       <div class="card-lbl" style="padding:0 2px;margin-bottom:8px">PESSOAL</div>
       <div class="kpi-grid" id="kpi-pessoal"></div>
@@ -1795,19 +1799,40 @@ function addOp(){
   const emo=emoEl?parseInt(emoEl.value):5;
   const execEl=document.getElementById('new-op-exec');
   const execScore=execEl?parseInt(execEl.value):5;
-  const mfe=parseFloat(document.getElementById('op-mfe')?.value)||null;
-  const mae=parseFloat(document.getElementById('op-mae')?.value)||null;
-  const risk=parseFloat(document.getElementById('op-risk')?.value)||null;
+  const mfe=parseFloat(document.getElementById('op-mfe')?.value);
+  const mae=parseFloat(document.getElementById('op-mae')?.value);
+  const risk=parseFloat(document.getElementById('op-risk')?.value);
+  // Convenção institucional: MFE, MAE e risco são SEMPRE grandezas absolutas positivas
+  const mfeAbs=!isNaN(mfe)?Math.abs(mfe):null;
+  const maeAbs=!isNaN(mae)?Math.abs(mae):null;
+  const riskAbs=!isNaN(risk)&&risk>0?Math.abs(risk):null;
   const ptsPf=parseFloat(document.getElementById('op-pts-pf')?.value);
   const lotsPf=parseFloat(document.getElementById('op-lots-pf')?.value)||null;
   const hasPf=!isNaN(ptsPf);
   if(isNaN(pts)){showToast('Informe os pontos',true);return;}
   if(!e1Lots||e1Lots<=0){showToast('Informe os lotes do E1',true);return;}
+  // ── TRAVA DE SIZING POR CONVICÇÃO (Druckenmiller)
+  // Se conv ≤3 e lots >10: exige confirmação. Fricção deliberada no ponto do erro.
+  if(newOpConv!=null&&newOpConv<=3&&lots>10&&editingOpIdx===null){
+    // calcula WR real do usuário em convicção ≤3 se houver histórico
+    const histLowConv=[];
+    allData.forEach(d=>(d.t_ops_detail||[]).forEach(o=>{if(o.conviction!=null&&o.conviction<=3) histLowConv.push(o);}));
+    const wrLow=histLowConv.length?Math.round(histLowConv.filter(o=>o.pts>0).length/histLowConv.length*100):null;
+    const wrTxt=wrLow!=null?`Seu WR histórico em convicção ≤3 é ${wrLow}% (n=${histLowConv.length}).`:'Você ainda não tem histórico em convicção ≤3 — mas o padrão institucional é: baixa convicção = tamanho reduzido.';
+    const ok=confirm(`⚠️ TAMANHO NÃO AUTORIZADO PELO SEU DADO\n\nConvicção: ${newOpConv}/5 (baixa)\nLotes: ${lots}\n\n${wrTxt}\n\nDruckenmiller: "grande quando estou certo, pequeno quando não sei". Tem certeza que quer operar ${lots} lotes com essa convicção?`);
+    if(!ok){showToast('Operação abortada — reveja convicção ou reduza tamanho',true);return;}
+  }
   const result_brl=lots>0?pts*lots*10:null;
   const result_brl_pf=hasPf&&(lotsPf||lots)?ptsPf*(lotsPf||lots)*10:null;
-  const capture_pct=mfe&&pts>0?Math.round(pts/mfe*100):null;
-  const r_multiple=risk>0?Math.round(pts/risk*100)/100:null;
-  const opData={dir,pts,pts_pf:hasPf?ptsPf:null,lots:lots||null,e1_lots:e1Lots,e2_lots:e2Lots,e3_lots:e3Lots,e2_tipo:e2Tipo,estrutura,lots_pf:lotsPf,result_brl,result_brl_pf,mfe,mae,mfe_ref:MFE_MAE_REFERENCE,capture_pct,risk_planned:risk,r_multiple,conviction:newOpConv,plan_adherence:[...newOpPlan],error_tags:[...newOpErrors],note,time,entry_states:[...newOpStates],emo_intensity:emo,exec_score:execScore,adh_items:{...newOpAdh},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups],segs:[...newOpSegs],ifr:[...newOpIfr]};
+  const capture_pct=mfeAbs&&pts>0?Math.round(pts/mfeAbs*100):null;
+  const r_multiple=riskAbs?Math.round(pts/riskAbs*100)/100:null;
+  // Adesão automática por regra (não só autoavaliada):
+  // - stop: auto-reprova se pts <= -16 (regra 15pts + tolerância de slippage de 1pt)
+  // - no_e3: auto-reprova se e3_lots > 0
+  const autoAdh={...newOpAdh};
+  if(pts<=-16) autoAdh.stop=false;
+  if(e3Lots>0) autoAdh.no_e3=false;
+  const opData={dir,pts,pts_pf:hasPf?ptsPf:null,lots:lots||null,e1_lots:e1Lots,e2_lots:e2Lots,e3_lots:e3Lots,e2_tipo:e2Tipo,estrutura,lots_pf:lotsPf,result_brl,result_brl_pf,mfe:mfeAbs,mae:maeAbs,mfe_ref:MFE_MAE_REFERENCE,capture_pct,risk_planned:riskAbs,r_multiple,conviction:newOpConv,plan_adherence:[...newOpPlan],error_tags:[...newOpErrors],note,time,entry_states:[...newOpStates],emo_intensity:emo,exec_score:execScore,adh_items:autoAdh,adh_auto_overrides:{stop:pts<=-16,no_e3:e3Lots>0},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups],segs:[...newOpSegs],ifr:[...newOpIfr]};
   if(editingOpIdx!==null){
     // Edit mode: preserve corr from existing
     opData.corr=tradeOps[editingOpIdx]?.corr||'';
@@ -2013,22 +2038,73 @@ function renderRiskAlarm(){
     box=document.createElement('div');box.id='risk-alarm-box';
     opsList.parentElement.insertBefore(box,opsList);
   }
-  // Contagem de stops/perdas consecutivas hoje
+  // ── Sinais brutos
   const stops=tradeOps.filter(o=>o.pts<0);
   const dangerExitToday=tradeOps.filter(o=>getExitReasons(o).some(r=>['MEDO','STOPMESA'].includes(r))).length;
-  // Sequência de perdas no final
   let consecLoss=0;for(let i=tradeOps.length-1;i>=0;i--){if(tradeOps[i].pts<0)consecLoss++;else break;}
-  // Resultado acumulado do dia
-  const dayBRL=tradeOps.filter(o=>o.result_brl!=null).reduce((a,o)=>a+o.result_brl,0);
-  const stopDia=4000; // R$ stop do dia de referência
+  // P&L do dia — SOMA F+PA e PF (as duas contas)
+  const dayFPA=tradeOps.filter(o=>o.result_brl!=null).reduce((a,o)=>a+o.result_brl,0);
+  const dayPF=tradeOps.filter(o=>o.result_brl_pf!=null).reduce((a,o)=>a+o.result_brl_pf,0);
+  const dayBRL=dayFPA+dayPF;
+  // Circuit-breaker por conta (spec 22/06: -R$3.000/conta)
+  const stopPerAccount=3000;
+  const mesaFechada=(dayFPA<=-stopPerAccount)||(dayPF<=-stopPerAccount);
+  const stopDiaTotal=stopPerAccount*2; // R$6.000 combinado
+  // Cooldown timer: hora do último trade negativo consecutivo
+  let cooldownRemMin=null;
+  if(consecLoss>=2&&tradeOps.length>0){
+    const lastOp=tradeOps[tradeOps.length-1];
+    if(lastOp.time){
+      const [hh,mm]=lastOp.time.split(':').map(Number);
+      const lastTradeMin=hh*60+mm;
+      const now=new Date();const nowMin=now.getHours()*60+now.getMinutes();
+      const elapsed=nowMin-lastTradeMin;
+      if(elapsed>=0&&elapsed<30) cooldownRemMin=30-elapsed;
+    }
+  }
+  // ── HEADER: badge de P&L (sempre visível quando há trades)
+  let headerHtml='';
+  if(tradeOps.length>0){
+    const brlColor=dayBRL>=0?'var(--green)':dayBRL>-stopDiaTotal*0.5?'var(--gold)':'var(--red)';
+    const pctStop=stopPerAccount>0?Math.round(Math.min(Math.abs(dayFPA),Math.abs(dayPF))/stopPerAccount*100):0;
+    headerHtml=`<div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:8px 11px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div><div style="font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase">P&L do dia</div><div style="font-family:'Fraunces',serif;font-size:1.15rem;color:${brlColor}">R$ ${dayBRL>=0?'+':''}${Math.round(dayBRL).toLocaleString('pt-BR')}</div></div>
+        <div><div style="font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase">F+PA</div><div style="font-size:10px;color:${dayFPA>=0?'var(--green)':'var(--red)'}">${dayFPA>=0?'+':''}${Math.round(dayFPA).toLocaleString('pt-BR')}</div></div>
+        <div><div style="font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase">PF</div><div style="font-size:10px;color:${dayPF>=0?'var(--green)':'var(--red)'}">${dayPF>=0?'+':''}${Math.round(dayPF).toLocaleString('pt-BR')}</div></div>
+      </div>
+      <div style="font-size:8px;color:var(--dim);text-align:right;line-height:1.4">Stop/conta R$${stopPerAccount.toLocaleString('pt-BR')}<br>${pctStop}% consumido</div>
+    </div>`;
+  }
+  // ── ALERTAS
   const alerts=[];
-  if(consecLoss>=2) alerts.push({lvl:'high',txt:`${consecLoss} stops seguidos. Citadel reduz risco automaticamente em drawdown — reduza tamanho ou pare. Risco de revanche elevado.`});
-  if(dangerExitToday>=2) alerts.push({lvl:'high',txt:`${dangerExitToday} saídas por MEDO/Stop Mesa hoje. Padrão emocional ativado.`});
-  if(dayBRL<=-stopDia*0.5&&dayBRL>-stopDia) alerts.push({lvl:'mid',txt:`Você atingiu ${Math.round(Math.abs(dayBRL)/stopDia*100)}% do stop do dia (R$${Math.abs(dayBRL).toLocaleString('pt-BR')} de R$${stopDia.toLocaleString('pt-BR')}). Opere com tamanho reduzido.`});
-  if(dayBRL<=-stopDia) alerts.push({lvl:'high',txt:`🛑 STOP DO DIA ATINGIDO (R$${Math.abs(dayBRL).toLocaleString('pt-BR')}). Pare agora. Não há trade que justifique passar disso.`});
-  if(!alerts.length){box.style.display='none';return;}
+  // Circuit-breaker HARD (bloqueante)
+  if(mesaFechada){
+    const worse=dayFPA<=dayPF?'F+PA':'PF';
+    const worseVal=Math.abs(Math.min(dayFPA,dayPF));
+    alerts.push({lvl:'critical',txt:`🛑 MESA FECHADA — Circuit-breaker acionado<br>Conta ${worse} atingiu R$${Math.round(worseVal).toLocaleString('pt-BR')} de perda (limite R$${stopPerAccount.toLocaleString('pt-BR')}/conta).<br><strong>PARE AGORA. Nenhum trade justifica passar disso.</strong> Griffin corta risco em drawdown automaticamente. Você faz o mesmo.`});
+  } else if(Math.min(dayFPA,dayPF)<=-stopPerAccount*0.7) {
+    const pct=Math.round(Math.abs(Math.min(dayFPA,dayPF))/stopPerAccount*100);
+    alerts.push({lvl:'high',txt:`Você atingiu ${pct}% do stop de uma das contas. Reduza tamanho ou pare.`});
+  }
+  // Cooldown ativo
+  if(cooldownRemMin!==null&&cooldownRemMin>0){
+    alerts.push({lvl:'high',txt:`⏸️ COOLDOWN ATIVO — ${consecLoss} stops seguidos. Aguarde ${cooldownRemMin}min antes de operar de novo. O padrão de espiral (09:10→13:35→16:00 do 08/07) começa aqui.`});
+  } else if(consecLoss>=2) {
+    alerts.push({lvl:'high',txt:`${consecLoss} stops seguidos. Padrão de revanche ativado — cooldown de 30min já expirou, mas reveja convicção antes do próximo trade.`});
+  }
+  if(dangerExitToday>=2) alerts.push({lvl:'high',txt:`${dangerExitToday} saídas por MEDO/Stop Mesa hoje. Padrão emocional confirmado.`});
+  // Render
+  if(!alerts.length&&!headerHtml){box.style.display='none';return;}
   box.style.display='block';
-  box.innerHTML=alerts.map(a=>`<div style="background:${a.lvl==='high'?'rgba(232,64,64,.12)':'rgba(212,160,40,.1)'};border:1px solid ${a.lvl==='high'?'rgba(232,64,64,.4)':'rgba(212,160,40,.35)'};border-radius:8px;padding:9px 11px;margin-bottom:8px;font-size:10px;line-height:1.5;color:${a.lvl==='high'?'var(--red)':'var(--gold)'}"><strong>${a.lvl==='high'?'⚠️ RISCO':'⚡ ATENÇÃO'}:</strong> ${a.txt}</div>`).join('');
+  const alertsHtml=alerts.map(a=>{
+    const bg=a.lvl==='critical'?'rgba(232,64,64,.22)':a.lvl==='high'?'rgba(232,64,64,.12)':'rgba(212,160,40,.1)';
+    const bd=a.lvl==='critical'?'rgba(232,64,64,.7)':a.lvl==='high'?'rgba(232,64,64,.4)':'rgba(212,160,40,.35)';
+    const col=a.lvl==='critical'?'var(--red)':a.lvl==='high'?'var(--red)':'var(--gold)';
+    const bw=a.lvl==='critical'?'2px':'1px';
+    return`<div style="background:${bg};border:${bw} solid ${bd};border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:10px;line-height:1.55;color:${col}">${a.txt}</div>`;
+  }).join('');
+  box.innerHTML=headerHtml+alertsHtml;
 }
 
 // ── HESITAÇÕES ────────────────────────────────
@@ -2083,8 +2159,10 @@ function addHes(){
   const time=document.getElementById('hes-time').value||nowHM();
   const dir=document.getElementById('hes-dir').value;
   const pts=parseFloat(document.getElementById('hes-pts').value);
-  const mfe=parseFloat(document.getElementById('hes-mfe')?.value)||null;
-  const mae=parseFloat(document.getElementById('hes-mae')?.value)||null;
+  const mfeRaw=parseFloat(document.getElementById('hes-mfe')?.value);
+  const maeRaw=parseFloat(document.getElementById('hes-mae')?.value);
+  const mfe=!isNaN(mfeRaw)?Math.abs(mfeRaw):null;
+  const mae=!isNaN(maeRaw)?Math.abs(maeRaw):null;
   const detail=document.getElementById('hes-detail')?.value.trim()||'';
   if(isNaN(pts)||pts<=0){showToast('Informe os pontos estimados',true);return;}
   const hesData={time,dir,pts,reasons:[...hesReasons],setups:[...hesSetups],segs:[...hesSegs],ifr:[...hesIfr],mfe,mae,detail};
@@ -2427,6 +2505,16 @@ async function saveTrade(){
   const f=parseFloat(document.getElementById('t-felling').value)||0;
   const p=parseFloat(document.getElementById('t-pa').value)||0;
   const m=parseFloat(document.getElementById('t-mesa').value)||0;
+  // ── GUARDA DE INTEGRIDADE (Dalio issue log): R$ ≠ 0 sem operação registrada
+  const anyBRL=Math.abs(f)+Math.abs(p)+Math.abs(m);
+  if(anyBRL>0&&tradeOps.length===0){
+    btn.disabled=false;btn.textContent='Salvar diário de trade';
+    const ok=confirm(`⚠️ INCONSISTÊNCIA DETECTADA\n\nVocê registrou R$ ${Math.round(f+p+m).toLocaleString('pt-BR')} sem nenhuma operação.\n\nOu:\n• Você esqueceu de registrar as operações do dia\n• Ou o valor foi lançado por engano\n\nUm dia sem operações não pode ter resultado. Deseja MESMO salvar como "dia incompleto"?`);
+    if(!ok){showToast('Salvamento cancelado — registre as operações',true);return;}
+    btn.disabled=true;btn.textContent='Salvando…';
+    // Se prosseguir, marca o dia como incompleto para não poluir análise
+  }
+  const dayIncomplete=(anyBRL>0&&tradeOps.length===0);
   const ops_n=tradeOps.length,ops_w=tradeOps.filter(o=>o.pts>0).length;
   // Adesão: média correta de adh_items por operação (entrada E saída)
   const adhScoresSave=tradeOps.map(op=>calcAdhScore(op)).filter(v=>v!==null);
@@ -2445,6 +2533,7 @@ async function saveTrade(){
     t_ops:ops_n,t_wins_ops:ops_w,
     t_wr:ops_n>0?Math.round(ops_w/ops_n*100):null,
     t_adh:t_adh,
+    day_incomplete:dayIncomplete,
     mood_pre:moodPre,
     mood_pre_note:(document.getElementById('f-mood-pre-note')?.value||'').trim(),
     mood_pos:moodPos,
@@ -2632,7 +2721,7 @@ function dayScore(d){const p=(d.energia||0)+(d.disciplina||0)+(d.clareza||0);con
 function renderDash(){
   const data=getFiltered().sort((a,b)=>a.date_iso.localeCompare(b.date_iso));
   renderDailyPanel();
-  renderScoreRing(data);renderKPIBlock(data);renderBehavKPIs(data);renderHeatmapDash();renderInsightsBlock(data);renderSetupEfficiency();renderHesPanel();renderHorarioPanel(data);renderSequenciaPanel(data);renderStatsPanel();
+  renderScoreRing(data);renderKPIBlock(data);renderBehavKPIs(data);renderHeatmapDash();renderInsightsBlock(data);renderInstitutionalPanel();renderSetupEfficiency();renderHesPanel();renderHorarioPanel(data);renderSequenciaPanel(data);renderStatsPanel();
   setTimeout(()=>{renderCorrChart(data);renderLineChart(data);renderWRMoodChart(data);renderStateResChart(data);},60);
 }
 
@@ -2783,7 +2872,163 @@ function renderHesPanel(){
     </div>`;
 }
 
-// ── EFICIÊNCIA POR SETUP (ponderada por amostra — Simons) ──
+// ── PAINEL DO GESTOR (institucional) ─────────
+// Filosofia: n≥20 é conclusão; 10≤n<20 é observação; n<10 é ruído (não aparece).
+function renderInstitutionalPanel(){
+  const el=document.getElementById('panel-institutional');if(!el) return;
+  // Coleta ops respeitando o período selecionado
+  const days=({week:7,month:30,quarter:90,all:0})[currentPeriod]||0;
+  const cutoff=days>0?new Date(Date.now()-days*86400000):null;
+  const filtered=allData.filter(d=>!cutoff||new Date(d.date_iso+'T12:00:00')>=cutoff&&!d.day_incomplete);
+  const allOps=[];filtered.forEach(d=>(d.t_ops_detail||[]).forEach(op=>allOps.push(op)));
+  if(!allOps.length){el.innerHTML='<div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:14px;text-align:center;color:var(--dim);font-size:10px">Sem operações no período selecionado.</div>';return;}
+  const fmt=(v,d=1)=>v!=null&&!isNaN(v)?Number(v).toFixed(d):'—';
+  const pct=(v,t)=>t>0?Math.round(v/t*100)+'%':'—';
+  const avg=arr=>arr.length?arr.reduce((a,v)=>a+v,0)/arr.length:null;
+  const brl=v=>'R$'+Math.round(v).toLocaleString('pt-BR');
+
+  // ── 1. EXPECTÂNCIA E DISTRIBUIÇÃO ──
+  const wins=allOps.filter(o=>o.pts>0),losses=allOps.filter(o=>o.pts<0);
+  const wr=Math.round(wins.length/allOps.length*100);
+  const avgW=avg(wins.map(o=>o.pts))||0;
+  const avgL=avg(losses.map(o=>o.pts))||0;
+  const payoff=Math.abs(avgL)>0?Math.abs(avgW/avgL):null;
+  // Expectância em pontos por trade: WR*avgW + (1-WR)*avgL
+  const wrDec=wins.length/allOps.length;
+  const expectPts=wrDec*avgW+(1-wrDec)*avgL;
+  // Expectância em R (usa apenas ops com risk_planned)
+  const opsR=allOps.filter(o=>o.r_multiple!=null);
+  const expectR=opsR.length?avg(opsR.map(o=>o.r_multiple)):null;
+  // Cauda de perda: pior 10% dos trades negativos
+  const sortedLosses=[...losses].sort((a,b)=>a.pts-b.pts); // mais negativo primeiro
+  const tailN=Math.max(1,Math.ceil(sortedLosses.length*0.1));
+  const tail=sortedLosses.slice(0,tailN);
+  const tailAvg=tail.length?avg(tail.map(o=>o.pts)):null;
+  const tailBRL=tail.reduce((a,o)=>a+(o.result_brl||0)+(o.result_brl_pf||0),0);
+  const allBRL=allOps.reduce((a,o)=>a+(o.result_brl||0)+(o.result_brl_pf||0),0);
+  const tailPctOfPnl=allBRL!==0?Math.round(Math.abs(tailBRL)/Math.abs(allBRL)*100):0;
+  // Desvio-padrão da perda (proxy de "volatilidade da cauda")
+  const lossPts=losses.map(o=>o.pts);
+  const meanL=avg(lossPts)||0;
+  const varL=lossPts.length>1?lossPts.reduce((a,v)=>a+(v-meanL)**2,0)/(lossPts.length-1):0;
+  const stdL=Math.sqrt(varL);
+  // Robustez de amostra
+  const nBadge=allOps.length>=100?{c:'var(--green)',t:'✓ ROBUSTO'}:allOps.length>=50?{c:'var(--gold)',t:'~ PARCIAL'}:{c:'var(--red)',t:'⚠ EM CONSTRUÇÃO'};
+
+  // ── 2. HESITAÇÃO + CAPTURA + SAÍDA ANTECIPADA = CUSTO TOTAL DE OPORTUNIDADE ──
+  const allHes=[];filtered.forEach(d=>(d.t_hesitations||[]).forEach(h=>allHes.push(h)));
+  const hesPts=allHes.reduce((a,h)=>a+h.pts,0);
+  const hesBRL=hesPts*200; // 2 contas × 10 lotes × R$10/pt
+  const opsWithMFE=allOps.filter(o=>o.mfe!=null&&o.mfe>0&&o.pts>0);
+  const leftOnTable=opsWithMFE.reduce((a,o)=>a+(o.mfe-o.pts),0);
+  const leftBRL=leftOnTable*200;
+  const custoTotal=hesBRL+leftBRL;
+
+  // ── 3. TRAVA DIÁRIA DE RISCO — quantas vezes bateu circuit-breaker ──
+  const daysWithData=filtered.filter(d=>(d.t_ops_detail||[]).length>0);
+  const cbDays=daysWithData.filter(d=>{const fpa=d.t_result_fpa||0,pf=d.t_result_pf||0;return fpa<=-3000||pf<=-3000;});
+  // Dias com STOPMESA ou MEDO em qualquer op
+  const emoDays=daysWithData.filter(d=>(d.t_ops_detail||[]).some(o=>(o.exit_reasons||[]).some(r=>['STOPMESA','MEDO'].includes(r))));
+
+  // ── 4. CONVICÇÃO × SIZING × RESULTADO (Druckenmiller) ──
+  const opsConv=allOps.filter(o=>o.conviction!=null);
+  const convHi=opsConv.filter(o=>o.conviction>=4);
+  const convLo=opsConv.filter(o=>o.conviction<=2);
+  const convHiWr=convHi.length>=5?Math.round(convHi.filter(o=>o.pts>0).length/convHi.length*100):null;
+  const convLoWr=convLo.length>=5?Math.round(convLo.filter(o=>o.pts>0).length/convLo.length*100):null;
+  const convHiLots=convHi.filter(o=>o.lots).length?avg(convHi.filter(o=>o.lots).map(o=>o.lots)):null;
+  const convLoLots=convLo.filter(o=>o.lots).length?avg(convLo.filter(o=>o.lots).map(o=>o.lots)):null;
+
+  // ── 5. PLANO vs EXECUÇÃO ──
+  const opsPlan=allOps.filter(o=>o.plan_adherence&&o.plan_adherence.length);
+  const inPlan=opsPlan.filter(o=>!o.plan_adherence.includes('off_plan'));
+  const offPlan=opsPlan.filter(o=>o.plan_adherence.includes('off_plan'));
+  const inPlanWr=inPlan.length>=5?Math.round(inPlan.filter(o=>o.pts>0).length/inPlan.length*100):null;
+  const offPlanWr=offPlan.length>=5?Math.round(offPlan.filter(o=>o.pts>0).length/offPlan.length*100):null;
+
+  // ── 6. TOP RECORRÊNCIA DE ERROS ──
+  const errorMap={};
+  allOps.forEach(o=>(o.error_tags||[]).filter(e=>e!=='sem_erro').forEach(e=>{if(!errorMap[e])errorMap[e]={n:0,pts:0};errorMap[e].n++;errorMap[e].pts+=o.pts;}));
+  const topErrors=Object.entries(errorMap).sort((a,b)=>b[1].n-a[1].n).slice(0,3);
+
+  // ── RENDER ──
+  const card=(title,body,color)=>`<div style="background:var(--s2);border:1px solid var(--b1);border-left:3px solid ${color||'var(--purp)'};border-radius:8px;padding:11px 13px;margin-bottom:8px"><div style="font-size:8px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px">${title}</div>${body}</div>`;
+  const metric=(lbl,val,color,sub)=>`<div style="flex:1;min-width:80px"><div style="font-size:8px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">${lbl}</div><div style="font-family:'Fraunces',serif;font-size:1.05rem;color:${color||'var(--hi)'};line-height:1.1">${val}</div>${sub?`<div style="font-size:8px;color:var(--dim);margin-top:2px">${sub}</div>`:''}</div>`;
+
+  // Bloco 1 — Robustez e Expectância
+  const c1=card(`1. ROBUSTEZ E EXPECTÂNCIA <span style="color:${nBadge.c}">${nBadge.t}</span>`,`
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+      ${metric('Amostra',allOps.length+' ops',nBadge.c,daysWithData.length+' dias')}
+      ${metric('Win Rate',wr+'%',wr>=60?'var(--green)':'var(--red)')}
+      ${metric('Payoff',payoff!=null?fmt(payoff,2)+'x':'—','var(--hi)',payoff>=1.5?'saudável':payoff!=null?'baixo':'—')}
+      ${metric('Expect./op',fmt(expectPts,1)+'pts',expectPts>0?'var(--green)':'var(--red)')}
+      ${metric('Expect. em R',expectR!=null?(expectR>0?'+':'')+fmt(expectR,2)+'R':'—',expectR!=null?(expectR>0?'var(--green)':'var(--red)'):'var(--dim)',opsR.length+' ops')}
+    </div>
+    <div style="font-size:9px;color:var(--dim);line-height:1.5;border-top:1px solid var(--b1);padding-top:7px">
+      ${expectR!=null?(expectR>=0.3?'Expectância +'+fmt(expectR,2)+'R é decente — mantenha o processo, aumente amostra.':expectR>=0?'Expectância positiva mas baixa. Provável causa: sizing igual em convicções diferentes ou saídas antecipadas.':'⚠ Expectância NEGATIVA — o processo atual está caro. Não aumente tamanho até expectância virar positiva por 30+ trades.'):'Registre risco planejado em todo trade para ativar a métrica-mãe de gestor.'}
+    </div>`,expectR>0?'var(--green)':expectR!=null?'var(--red)':'var(--purp)');
+
+  // Bloco 2 — Cauda de perda (Griffin)
+  const c2=card('2. CAUDA DE PERDA — o que quebra o mês (Griffin)',`
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+      ${metric('Pior '+tailN+' trades',tail.length?fmt(tailAvg,0)+'pts médio':'—','var(--red)')}
+      ${metric('Impacto no PnL',tailPctOfPnl+'%','var(--red)','da cauda')}
+      ${metric('Circuit-breaker',cbDays.length+' dias','var(--red)','bateram ≤-R$3k/conta')}
+      ${metric('Saída emocional',emoDays.length+' dias',emoDays.length>0?'var(--red)':'var(--green)','MEDO/StopMesa')}
+      ${metric('Desvio-padrão perda',fmt(stdL,1)+'pts','var(--gold)','volatilidade cauda')}
+    </div>
+    <div style="font-size:9px;color:var(--dim);line-height:1.5;border-top:1px solid var(--b1);padding-top:7px">
+      ${cbDays.length>0?`⚠ Circuit-breaker acionado ${cbDays.length}× — cada evento apaga ~2 semanas de trabalho. Prioridade absoluta: nunca deixar acontecer.`:'Nenhum dia bateu circuit-breaker — proteção patrimonial está funcionando.'}
+    </div>`,cbDays.length>0?'var(--red)':'var(--green)');
+
+  // Bloco 3 — Custo de Oportunidade Consolidado
+  const c3=card('3. CUSTO DE OPORTUNIDADE (o dinheiro invisível)',`
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+      ${metric('Hesitação',brl(hesBRL),'var(--red)',allHes.length+' trades vistos')}
+      ${metric('Saída antecipada',brl(leftBRL),'var(--gold)',opsWithMFE.length+' ops com MFE')}
+      ${metric('CUSTO TOTAL',brl(custoTotal),'var(--red)','vs PnL '+brl(allBRL))}
+      ${metric('Múltiplo',allBRL>0?fmt(custoTotal/allBRL,1)+'×':'—','var(--red)','do lucro atual')}
+    </div>
+    <div style="font-size:9px;color:var(--dim);line-height:1.5;border-top:1px solid var(--b1);padding-top:7px">
+      ${custoTotal>allBRL*2?`⚠ Você deixa ${allBRL>0?fmt(custoTotal/allBRL,1):'muito'}× o que ganha na mesa. O trabalho a fazer não é achar novos setups — é executar os que você já lê.`:'Custo de oportunidade sob controle — foco em manter execução.'}
+    </div>`,'var(--gold)');
+
+  // Bloco 4 — Convicção × Sizing (Druckenmiller)
+  const c4=card('4. CONVICÇÃO × SIZING (Druckenmiller)',`
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+      ${metric('Conv alta (≥4)',convHi.length+' ops',convHiWr!=null?(convHiWr>=60?'var(--green)':'var(--red)'):'var(--dim)',convHiWr!=null?'WR '+convHiWr+'%':'n<5')}
+      ${metric('Lotes conv alta',convHiLots!=null?fmt(convHiLots,1)+'L':'—','var(--hi)')}
+      ${metric('Conv baixa (≤2)',convLo.length+' ops',convLoWr!=null?(convLoWr>=60?'var(--green)':'var(--red)'):'var(--dim)',convLoWr!=null?'WR '+convLoWr+'%':'n<5')}
+      ${metric('Lotes conv baixa',convLoLots!=null?fmt(convLoLots,1)+'L':'—','var(--hi)')}
+    </div>
+    <div style="font-size:9px;color:var(--dim);line-height:1.5;border-top:1px solid var(--b1);padding-top:7px">
+      ${(convHiLots!=null&&convLoLots!=null)?(Math.abs(convHiLots-convLoLots)<2?`⚠ Você opera tamanho quase igual em convicção alta (${fmt(convHiLots,1)}L) e baixa (${fmt(convLoLots,1)}L). Você desperdiça sua leitura. Regra: conv 5 = 20L, conv 3 = 10L, conv ≤2 = passar.`:`Sizing diferenciado: conv alta ${fmt(convHiLots,1)}L vs conv baixa ${fmt(convLoLots,1)}L — bom sinal.`):'Registre convicção em todo trade — é o campo que ataca seu payoff baixo.'}
+    </div>`,'var(--purp)');
+
+  // Bloco 5 — Plano vs Execução
+  const c5=card('5. PLANO DA MANHÃ vs EXECUÇÃO',`
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+      ${metric('Dentro do plano',inPlan.length+' ops',inPlanWr!=null?(inPlanWr>=60?'var(--green)':'var(--red)'):'var(--dim)',inPlanWr!=null?'WR '+inPlanWr+'%':'n<5')}
+      ${metric('Fora do plano',offPlan.length+' ops',offPlanWr!=null?'var(--red)':'var(--dim)',offPlanWr!=null?'WR '+offPlanWr+'%':'n<5')}
+      ${metric('Aderência',opsPlan.length?pct(inPlan.length,opsPlan.length):'—',opsPlan.length?'var(--hi)':'var(--dim)',opsPlan.length+' registros')}
+    </div>
+    <div style="font-size:9px;color:var(--dim);line-height:1.5;border-top:1px solid var(--b1);padding-top:7px">
+      ${(inPlanWr!=null&&offPlanWr!=null)?`Distância WR plano vs fora-do-plano: ${inPlanWr-offPlanWr}pp. Essa é a "conta" do medo da execução em pontos percentuais.`:'Registre "aderência ao plano" em todo trade — é o único campo que quantifica o medo da execução em número.'}
+    </div>`,'var(--blue)');
+
+  // Bloco 6 — Issue Log (Dalio)
+  const c6=card('6. RECORRÊNCIA DE ERROS (Dalio machine)',topErrors.length?`
+    <div style="display:flex;flex-direction:column;gap:5px;margin-bottom:8px">
+      ${topErrors.map(([e,v])=>{const lbl=ERROR_LABELS[e]||e;return`<div style="display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--s1);border-radius:6px;font-size:10px"><span style="color:var(--hi)">${lbl}</span><span style="color:var(--red)">${v.n}× · ${brl(v.pts*200)}</span></div>`;}).join('')}
+    </div>
+    <div style="font-size:9px;color:var(--dim);line-height:1.5;border-top:1px solid var(--b1);padding-top:7px">
+      Erro que repete = regra que falhou. Aja sobre o topo da lista, não sobre o próximo trade.
+    </div>`:`<div style="font-size:10px;color:var(--dim);padding:6px 0">Nenhum erro registrado no período. Se está registrando "sem erro" sempre, revise: honestidade radical (Dalio) exige olhar de novo cada trade.</div>`,'var(--red)');
+
+  el.innerHTML=c1+c2+c3+c4+c5+c6;
+}
+
+
 function renderSetupEfficiency(){
   const el=document.getElementById('kpi-setups');if(!el) return;
   const allOps=[];allData.forEach(d=>(d.t_ops_detail||[]).forEach(op=>{if(op.setups&&op.setups.length) allOps.push(op);}));
