@@ -267,6 +267,7 @@ tr:hover td{background:var(--s2)}
 .op-detail{border-top:1px solid var(--b1);padding-top:9px;display:none}
 .op-card.expanded .op-detail{display:block}
 .op-state-grid{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
 .os-btn{padding:4px 9px;border-radius:12px;background:var(--s3);border:1px solid var(--b1);font-size:8px;color:var(--dim);cursor:pointer;font-family:'Geist Mono',monospace;transition:all .15s;white-space:nowrap}
 .os-btn.sel-plan{border-color:var(--green);background:var(--gd);color:var(--green)}
 .os-btn.sel-danger{border-color:var(--red);background:var(--rd);color:var(--red)}
@@ -618,216 +619,212 @@ tr:hover td{background:var(--s2)}
         <div style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:11px">
           <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:9px">Nova operação</div>
 
-          <!-- Linha 1: horário, direção, pontos -->
-          <div style="display:grid;grid-template-columns:90px 56px 1fr;gap:6px;margin-bottom:10px">
-            <input class="time-inp" id="op-time" type="time" list="pregao-times" style="font-size:11px;padding:7px 6px">
-            <select class="type-sel" id="op-dir">
-              <option value="C">▲ C</option>
-              <option value="V">▼ V</option>
-            </select>
-            <input class="add-inp" id="op-pts" type="number" placeholder="Pts saída" style="min-width:0" oninput="calcOpResult()">
-          </div>
+          <!-- ═══════════════════════════════════════════════════════════
+               BLOCO 1 — ANTES DE ENTRAR (pré-clique, 10 segundos)
+               Só o que existe agora e morre se não registrar em tempo real
+          ═══════════════════════════════════════════════════════════ -->
+          <div style="background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid rgba(140,100,240,.25);border-radius:10px;padding:12px;margin-bottom:11px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+              <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--purp);font-weight:500">📍 Antes de entrar</div>
+              <div style="font-size:8px;color:var(--dim)">tempo real · ~10s</div>
+            </div>
 
-          <!-- 1. CONVICÇÃO pré-trade (Druckenmiller) -->
-          <div style="background:linear-gradient(135deg,#0d1428,#15102a);border:1px solid rgba(140,100,240,.25);border-radius:8px;padding:9px 11px;margin-bottom:8px">
-            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--purp);margin-bottom:7px">⚡ Convicção pré-entrada — antes de clicar</div>
-            <div class="op-state-grid" id="new-op-conv-btns">
+            <!-- Linha 1: horário, direção, E1 -->
+            <div style="display:grid;grid-template-columns:90px 56px 1fr;gap:6px;margin-bottom:8px">
+              <input class="time-inp" id="op-time" type="time" list="pregao-times" style="font-size:11px;padding:7px 6px">
+              <select class="type-sel" id="op-dir">
+                <option value="C">▲ C</option>
+                <option value="V">▼ V</option>
+              </select>
+              <input class="add-inp" id="op-e1-lots" type="number" placeholder="E1 lotes *" min="1" step="1" style="min-width:0" oninput="onE1E2Change();checkPreEntry()">
+            </div>
+
+            <!-- Convicção -->
+            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--purp);margin-bottom:5px">Convicção pré-clique *</div>
+            <div class="op-state-grid" id="new-op-conv-btns" style="margin-bottom:8px">
               <button class="os-btn" data-v="1" onclick="selNewOpConv(this)">1 · fraca</button>
               <button class="os-btn" data-v="2" onclick="selNewOpConv(this)">2</button>
               <button class="os-btn" data-v="3" onclick="selNewOpConv(this)">3 · média</button>
               <button class="os-btn" data-v="4" onclick="selNewOpConv(this)">4</button>
               <button class="os-btn" data-v="5" onclick="selNewOpConv(this)">5 · máxima</button>
             </div>
-            <div style="font-size:8px;color:var(--dim);margin-top:6px;line-height:1.4">Convicção alta = tamanho maior. Druckenmiller: retorno vem de ser grande quando se está certo.</div>
-          </div>
 
-          <!-- 2. ADERÊNCIA AO PLANO -->
-          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Aderência ao plano da manhã</div>
-          <div class="op-state-grid" id="new-op-plan-btns" style="margin-bottom:10px">
-            <button class="os-btn" data-v="plan_entry" onclick="toggleOpPlan(this)">✓ Entrada planejada</button>
-            <button class="os-btn" data-v="plan_region" onclick="toggleOpPlan(this)">✓ Região mapeada</button>
-            <button class="os-btn" data-v="plan_stop" onclick="toggleOpPlan(this)">✓ Stop do plano</button>
-            <button class="os-btn" data-v="off_plan" onclick="toggleOpPlan(this)">✗ Fora do plano</button>
-          </div>
-
-          <!-- 3. GATILHO PSICOLÓGICO -->
-          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Gatilho psicológico da entrada</div>
-          <div class="op-state-grid" id="new-op-state-btns" style="margin-bottom:10px">
-            <button class="os-btn" data-v="planejado" onclick="selNewOpState(this)">📋 Planejado</button>
-            <button class="os-btn" data-v="atrasado" onclick="selNewOpState(this)">⏰ Atrasado</button>
-            <button class="os-btn" data-v="emotivo" onclick="selNewOpState(this)">🔥 Emotivo</button>
-            <button class="os-btn" data-v="medo_falha" onclick="selNewOpState(this)">😨 Medo falha</button>
-            <button class="os-btn" data-v="oportunidade" onclick="selNewOpState(this)">💡 Oportunidade</button>
-            <button class="os-btn" data-v="cirilo" onclick="selNewOpState(this)">🎯 Cirilo</button>
-            <button class="os-btn" data-v="desfocado" onclick="selNewOpState(this)">🌀 Desfocado</button>
-            <button class="os-btn" data-v="revanche" onclick="selNewOpState(this)">⚡ Revanche</button>
-            <button class="os-btn" data-v="ross" onclick="selNewOpState(this)">📐 Ross</button>
-          </div>
-
-          <!-- 4. RISCO PLANEJADO (R-múltiplo) -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
-            <div>
-              <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:4px">Risco planejado (pts)</div>
-              <input class="add-inp" id="op-risk" type="number" min="0" placeholder="Stop absoluto (ex: 15)" style="width:100%" oninput="calcOpResult()">
+            <!-- Aderência ao plano (simplificada — 2 opções) -->
+            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px">Aderência ao plano *</div>
+            <div class="op-state-grid" id="new-op-plan-btns" style="margin-bottom:8px">
+              <button class="os-btn" data-v="plan_entry" onclick="toggleOpPlan(this)">✓ Dentro do plano</button>
+              <button class="os-btn" data-v="off_plan" onclick="toggleOpPlan(this)">✗ Fora do plano</button>
             </div>
-            <div>
-              <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:4px">R-múltiplo</div>
-              <div class="add-inp" id="op-rmult" style="width:100%;display:flex;align-items:center;color:var(--dim);font-size:11px;background:var(--s3)">—</div>
+
+            <!-- Gatilho psicológico (mantido pré-clique) -->
+            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px">Gatilho psicológico</div>
+            <div class="op-state-grid" id="new-op-state-btns" style="margin-bottom:8px">
+              <button class="os-btn" data-v="planejado" onclick="selNewOpState(this)">📋 Planejado</button>
+              <button class="os-btn" data-v="emotivo" onclick="selNewOpState(this)">🔥 Emotivo</button>
+              <button class="os-btn" data-v="medo_falha" onclick="selNewOpState(this)">😨 Medo falha</button>
+              <button class="os-btn" data-v="oportunidade" onclick="selNewOpState(this)">💡 Oportunidade</button>
+              <button class="os-btn" data-v="cirilo" onclick="selNewOpState(this)">🎯 Cirilo</button>
+              <button class="os-btn" data-v="desfocado" onclick="selNewOpState(this)">🌀 Desfocado</button>
+              <button class="os-btn" data-v="revanche" onclick="selNewOpState(this)">⚡ Revanche</button>
+              <button class="os-btn" data-v="ross" onclick="selNewOpState(this)">📐 Ross</button>
+            </div>
+
+            <!-- Risco planejado -->
+            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:4px">Risco planejado (pts) *</div>
+            <div style="display:grid;grid-template-columns:1fr 90px;gap:6px;margin-bottom:0">
+              <input class="add-inp" id="op-risk" type="number" min="0" placeholder="Stop absoluto (ex: 15)" style="width:100%" oninput="calcOpResult();checkPreEntry()">
+              <div class="add-inp" id="op-rmult" style="width:100%;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:11px;background:var(--s3)">R: —</div>
             </div>
           </div>
 
-          <!-- 5. ESTRUTURA DA ENTRADA E1/E2/E3 — compacto -->
-          <div style="background:var(--s3);border:1px solid var(--b1);border-radius:8px;padding:7px 9px;margin-bottom:8px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-              <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--teal)">🏗️ Estrutura da entrada</div>
-              <div style="font-size:8px;color:var(--dim)">Total: <span id="op-total-lots" style="color:var(--hi)">—</span></div>
+          <!-- BOTÃO DIVISOR — Fechei o trade -->
+          <button id="op-close-btn" onclick="togglePostBlock()" style="width:100%;padding:11px;background:linear-gradient(135deg,var(--blue),var(--teal));border:none;border-radius:9px;color:#fff;font-family:'Geist Mono',monospace;font-size:10px;font-weight:500;cursor:pointer;margin-bottom:11px;letter-spacing:1px">
+            ▼ FECHEI O TRADE — PREENCHER DIAGNÓSTICO
+          </button>
+
+          <!-- ═══════════════════════════════════════════════════════════
+               BLOCO 2 — DEPOIS DE SAIR (pós-trade, com calma)
+               Fatos de gráfico + diagnóstico. Preencher sem pressa.
+          ═══════════════════════════════════════════════════════════ -->
+          <div id="op-post-block" style="display:none">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
+              <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--teal);font-weight:500">📊 Depois de sair</div>
+              <div style="font-size:8px;color:var(--dim)">diagnóstico · calma</div>
             </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
-              <input class="add-inp" id="op-e1-lots" type="number" placeholder="E1 *" min="1" step="1" style="width:100%;padding:6px 7px;font-size:10px" oninput="onE1E2Change()">
-              <input class="add-inp" id="op-e2-lots" type="number" placeholder="E2" min="0" step="1" style="width:100%;padding:6px 7px;font-size:10px" oninput="onE1E2Change()">
-              <input class="add-inp" id="op-e3-lots" type="number" placeholder="E3" min="0" step="1" style="width:100%;padding:6px 7px;font-size:10px" oninput="onE1E2Change()">
+
+            <!-- Saída principal + PF -->
+            <div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:10px;margin-bottom:8px">
+              <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Saída (Felling/PA)</div>
+              <input class="add-inp" id="op-pts" type="number" placeholder="Pts (negativo se stop, ex: -10)" style="width:100%;margin-bottom:6px" oninput="calcOpResult()">
+              <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:4px">Saída PF (opcional — só se entrou nas 2 contas)</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+                <input class="add-inp" id="op-pts-pf" type="number" step="0.5" placeholder="Pts PF" style="width:100%" oninput="calcOpResult()">
+                <input class="add-inp" id="op-lots-pf" type="number" placeholder="Lotes PF" min="1" step="1" style="width:100%" oninput="calcOpResult()">
+              </div>
+              <div id="op-calc-result" style="font-size:10px;color:var(--dim);margin-top:8px;padding:6px 9px;background:var(--s3);border-radius:6px;display:none">
+                Resultado: <span id="op-calc-val" style="color:var(--hi);font-weight:500">—</span>
+              </div>
             </div>
-            <div id="op-e2-tipo-wrap" style="display:none;margin-top:5px">
-              <select class="type-sel" id="op-e2-tipo" style="width:100%;font-size:9px;padding:4px 6px">
-                <option value="regra_10contra">E2: Regra 10 contra (fraqueza)</option>
-                <option value="forca_confirmacao">E2: Força / confirmação (pirâmide)</option>
-              </select>
+
+            <!-- E2/E3 (só faz sentido pós — você só sabe depois se aconteceu) -->
+            <div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:10px;margin-bottom:8px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
+                <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--teal)">🏗️ Adições no trade (E2/E3)</div>
+                <div style="font-size:8px;color:var(--dim)">Total: <span id="op-total-lots" style="color:var(--hi)">—</span></div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+                <input class="add-inp" id="op-e2-lots" type="number" placeholder="E2 lotes" min="0" step="1" style="width:100%;padding:6px 7px;font-size:10px" oninput="onE1E2Change()">
+                <input class="add-inp" id="op-e3-lots" type="number" placeholder="E3 lotes" min="0" step="1" style="width:100%;padding:6px 7px;font-size:10px" oninput="onE1E2Change()">
+              </div>
+              <div id="op-e2-tipo-wrap" style="display:none;margin-top:5px">
+                <select class="type-sel" id="op-e2-tipo" style="width:100%;font-size:9px;padding:4px 6px">
+                  <option value="regra_10contra">E2: Regra 10 contra (fraqueza)</option>
+                  <option value="forca_confirmacao">E2: Força / confirmação (pirâmide)</option>
+                </select>
+              </div>
+              <div style="font-size:8px;color:var(--dim);margin-top:5px">Estrutura: <span id="op-estrutura-val" style="color:var(--teal);font-weight:500">—</span></div>
             </div>
-            <div style="font-size:8px;color:var(--dim);margin-top:5px">Estrutura: <span id="op-estrutura-val" style="color:var(--teal);font-weight:500">—</span></div>
-          </div>
 
-          <!-- lote total derivado (mantido para compatibilidade) -->
-          <input type="hidden" id="op-lots">
+            <!-- lote total derivado -->
+            <input type="hidden" id="op-lots">
 
-          <!-- 6. PARCIAL / ADIÇÃO -->
-          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Parcial / Adição — por quê?</div>
-          <div class="op-state-grid" id="new-op-partial-btns" style="margin-bottom:10px">
-            <button class="os-btn" data-v="E2Cal" onclick="selNewOpPartial(this)">E2 Calc</button>
-            <button class="os-btn" data-v="E2Medo" onclick="selNewOpPartial(this)">E2 Medo</button>
-            <button class="os-btn" data-v="E3Cal" onclick="selNewOpPartial(this)">E3 Calc</button>
-            <button class="os-btn" data-v="E3Medo" onclick="selNewOpPartial(this)">E3 Medo</button>
-            <button class="os-btn" data-v="ParCal" onclick="selNewOpPartial(this)">Par Calc</button>
-            <button class="os-btn" data-v="ParMedo" onclick="selNewOpPartial(this)">Par Medo</button>
-          </div>
-
-          <!-- MFE / MAE -->
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
-            <div>
-              <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--teal);margin-bottom:4px">MFE — máx a favor</div>
-              <input class="add-inp" id="op-mfe" type="number" min="0" placeholder="Pts (ex: 18)" style="width:100%" oninput="calcOpResult()">
+            <!-- MFE / MAE -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+              <div>
+                <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--teal);margin-bottom:4px">MFE — máx a favor</div>
+                <input class="add-inp" id="op-mfe" type="number" min="0" placeholder="Pts (ex: 18)" style="width:100%" oninput="calcOpResult()">
+              </div>
+              <div>
+                <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--red);margin-bottom:4px">MAE — máx contra</div>
+                <input class="add-inp" id="op-mae" type="number" min="0" placeholder="Pts (ex: 5)" style="width:100%">
+              </div>
             </div>
-            <div>
-              <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--red);margin-bottom:4px">MAE — máx contra</div>
-              <input class="add-inp" id="op-mae" type="number" min="0" placeholder="Pts (ex: 5)" style="width:100%">
+            <div id="op-mfe-insight" style="font-size:9px;color:var(--dim);margin-bottom:8px;padding:5px 9px;background:var(--s3);border-radius:6px;display:none"></div>
+
+            <!-- Motivo da saída -->
+            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Motivo da saída</div>
+            <div class="op-state-grid" id="new-op-exit-btns" style="margin-bottom:8px">
+              <button class="os-btn" data-v="AlvoPts" onclick="selNewOpExit(this)">Alvo Pts</button>
+              <button class="os-btn" data-v="AlvoTec" onclick="selNewOpExit(this)">Alvo Téc</button>
+              <button class="os-btn" data-v="AlvoAj" onclick="selNewOpExit(this)">Alvo Aj</button>
+              <button class="os-btn" data-v="AlvoVwap" onclick="selNewOpExit(this)">Alvo Vwap</button>
+              <button class="os-btn" data-v="AlvoAb" onclick="selNewOpExit(this)">Alvo Ab</button>
+              <button class="os-btn" data-v="AlvoFc" onclick="selNewOpExit(this)">Alvo Fc</button>
+              <button class="os-btn" data-v="StPlanJ" onclick="selNewOpExit(this)">Stop Plan</button>
+              <button class="os-btn" data-v="MEDO" onclick="selNewOpExit(this)">⚠️ Medo</button>
+              <button class="os-btn" data-v="STOPMESA" onclick="selNewOpExit(this)">🛑 Stop Mesa</button>
+              <button class="os-btn" data-v="AlvoFin" onclick="selNewOpExit(this)">💰 Alvo Fin</button>
+              <button class="os-btn" data-v="Ross" onclick="selNewOpExit(this)">📐 Ross</button>
             </div>
-          </div>
 
-          <!-- SAÍDA SEGUNDA CONTA (mesma entrada) -->
-          <div style="background:var(--s3);border:1px solid var(--b1);border-radius:8px;padding:9px 11px;margin-bottom:8px">
-            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:5px">Saída PF (mesma entrada) — opcional</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
-              <input class="add-inp" id="op-pts-pf" type="number" step="0.5" placeholder="Pts saída PF" style="width:100%" oninput="calcOpResult()">
-              <input class="add-inp" id="op-lots-pf" type="number" placeholder="Lotes PF" min="1" step="1" style="width:100%" oninput="calcOpResult()">
+            <!-- Setup técnico -->
+            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px">Setup técnico</div>
+            <input class="setup-search" id="op-setup-search" type="text" placeholder="Buscar setup…" oninput="filterOpSetups(this.value)" style="margin-bottom:6px">
+            <div style="max-height:100px;overflow-y:auto;margin-bottom:6px"><div class="setup-tags" id="op-setup-tags"></div></div>
+            <div class="setup-sel-info" id="op-setup-sel-info" style="margin-bottom:10px;display:none">Setup: <span id="op-setup-sel-names" style="color:var(--teal)">—</span></div>
+
+            <!-- Segurança -->
+            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:6px">🛡️ Segurança</div>
+            <div class="op-state-grid" id="new-op-seg-btns" style="margin-bottom:8px">
+              <button class="os-btn" data-v="1°2" onclick="selNewOpSeg(this)">1°2</button>
+              <button class="os-btn" data-v="2°2" onclick="selNewOpSeg(this)">2°2</button>
+              <button class="os-btn" data-v="M2" onclick="selNewOpSeg(this)">M2</button>
+              <button class="os-btn" data-v="M10" onclick="selNewOpSeg(this)">M10</button>
+              <button class="os-btn" data-v="1°10" onclick="selNewOpSeg(this)">1°10</button>
+              <button class="os-btn" data-v="2°10" onclick="selNewOpSeg(this)">2°10</button>
+              <button class="os-btn" data-v="F2" onclick="selNewOpSeg(this)">F2</button>
+              <button class="os-btn" data-v="F10" onclick="selNewOpSeg(this)">F10</button>
+              <button class="os-btn" data-v="D2" onclick="selNewOpSeg(this)">D2</button>
+              <button class="os-btn" data-v="D10" onclick="selNewOpSeg(this)">D10</button>
             </div>
-            <div style="font-size:8px;color:var(--dim);margin-top:5px;line-height:1.4">Se entrou nas 2 contas na MESMA leitura: registre 1 operação. O acerto/setup conta 1x; o R$ soma as duas saídas. Deixe vazio se foi só 1 conta.</div>
-          </div>
-          <div id="op-mfe-insight" style="font-size:9px;color:var(--dim);margin-bottom:8px;padding:5px 9px;background:var(--s3);border-radius:6px;display:none"></div>
 
-          <!-- Resultado R$ calculado automaticamente -->
-          <div id="op-calc-result" style="font-size:10px;color:var(--dim);margin-bottom:10px;padding:6px 9px;background:var(--s3);border-radius:6px;display:none">
-            Resultado: <span id="op-calc-val" style="color:var(--hi);font-weight:500">—</span>
-          </div>
+            <!-- IFR -->
+            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:6px">📊 IFR</div>
+            <div class="op-state-grid" id="new-op-ifr-btns" style="margin-bottom:8px">
+              <button class="os-btn" data-v="5" onclick="selNewOpIfr(this)">5</button>
+              <button class="os-btn" data-v="2" onclick="selNewOpIfr(this)">2</button>
+              <button class="os-btn" data-v="10" onclick="selNewOpIfr(this)">10</button>
+              <button class="os-btn" data-v="5,2,10" onclick="selNewOpIfr(this)">5,2,10</button>
+              <button class="os-btn" data-v="5,2" onclick="selNewOpIfr(this)">5,2</button>
+              <button class="os-btn" data-v="5,10" onclick="selNewOpIfr(this)">5,10</button>
+              <button class="os-btn" data-v="2,10" onclick="selNewOpIfr(this)">2,10</button>
+              <button class="os-btn" data-v="BdR2" onclick="selNewOpIfr(this)">BdR2</button>
+              <button class="os-btn" data-v="BdR10" onclick="selNewOpIfr(this)">BdR10</button>
+            </div>
 
-          <!-- Setup técnico por trade -->
-          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px">Setup técnico</div>
-          <input class="setup-search" id="op-setup-search" type="text" placeholder="Buscar setup…" oninput="filterOpSetups(this.value)" style="margin-bottom:6px">
-          <div style="max-height:100px;overflow-y:auto;margin-bottom:6px"><div class="setup-tags" id="op-setup-tags"></div></div>
-          <div class="setup-sel-info" id="op-setup-sel-info" style="margin-bottom:10px;display:none">Setup: <span id="op-setup-sel-names" style="color:var(--teal)">—</span></div>
+            <!-- Parcial / Adição — só faz sentido se houve E2/E3 -->
+            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Parcial / Adição — por quê? (só se houve)</div>
+            <div class="op-state-grid" id="new-op-partial-btns" style="margin-bottom:8px">
+              <button class="os-btn" data-v="E2Cal" onclick="selNewOpPartial(this)">E2 Calc</button>
+              <button class="os-btn" data-v="E2Medo" onclick="selNewOpPartial(this)">E2 Medo</button>
+              <button class="os-btn" data-v="E3Cal" onclick="selNewOpPartial(this)">E3 Calc</button>
+              <button class="os-btn" data-v="E3Medo" onclick="selNewOpPartial(this)">E3 Medo</button>
+              <button class="os-btn" data-v="ParCal" onclick="selNewOpPartial(this)">Par Calc</button>
+              <button class="os-btn" data-v="ParMedo" onclick="selNewOpPartial(this)">Par Medo</button>
+            </div>
 
-          <!-- Segurança -->
-          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:6px">🛡️ Segurança</div>
-          <div class="op-state-grid" id="new-op-seg-btns" style="margin-bottom:10px">
-            <button class="os-btn" data-v="1°2" onclick="selNewOpSeg(this)">1°2</button>
-            <button class="os-btn" data-v="2°2" onclick="selNewOpSeg(this)">2°2</button>
-            <button class="os-btn" data-v="M2" onclick="selNewOpSeg(this)">M2</button>
-            <button class="os-btn" data-v="M10" onclick="selNewOpSeg(this)">M10</button>
-            <button class="os-btn" data-v="1°10" onclick="selNewOpSeg(this)">1°10</button>
-            <button class="os-btn" data-v="2°10" onclick="selNewOpSeg(this)">2°10</button>
-            <button class="os-btn" data-v="F2" onclick="selNewOpSeg(this)">F2</button>
-            <button class="os-btn" data-v="F10" onclick="selNewOpSeg(this)">F10</button>
-            <button class="os-btn" data-v="D2" onclick="selNewOpSeg(this)">D2</button>
-            <button class="os-btn" data-v="D10" onclick="selNewOpSeg(this)">D10</button>
-          </div>
+            <!-- Tamanho correto (único checkbox de disciplina que sobrou) -->
+            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Autoavaliação</div>
+            <div style="display:grid;grid-template-columns:1fr;gap:5px;margin-bottom:8px" id="new-op-adh-grid">
+              <div class="adh-item" onclick="toggleOpAdh(this,'size')" data-k="size"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">Tamanho correto para a convicção</div></div>
+            </div>
 
-          <!-- IFR — divergência / referência de força relativa -->
-          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:6px">📊 IFR</div>
-          <div class="op-state-grid" id="new-op-ifr-btns" style="margin-bottom:10px">
-            <button class="os-btn" data-v="5" onclick="selNewOpIfr(this)">5</button>
-            <button class="os-btn" data-v="2" onclick="selNewOpIfr(this)">2</button>
-            <button class="os-btn" data-v="10" onclick="selNewOpIfr(this)">10</button>
-            <button class="os-btn" data-v="5,2,10" onclick="selNewOpIfr(this)">5,2,10</button>
-            <button class="os-btn" data-v="5,2" onclick="selNewOpIfr(this)">5,2</button>
-            <button class="os-btn" data-v="5,10" onclick="selNewOpIfr(this)">5,10</button>
-            <button class="os-btn" data-v="2,10" onclick="selNewOpIfr(this)">2,10</button>
-            <button class="os-btn" data-v="BdR2" onclick="selNewOpIfr(this)">BdR2</button>
-            <button class="os-btn" data-v="BdR10" onclick="selNewOpIfr(this)">BdR10</button>
-          </div>
+            <!-- ISSUE LOG — apenas erros que não são medidos por outro campo -->
+            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--red);margin-bottom:6px">📓 Erro de execução (se houve)</div>
+            <div class="op-state-grid" id="new-op-error-btns" style="margin-bottom:8px">
+              <button class="os-btn" data-v="saiu_cedo" onclick="toggleOpError(this)">Saiu cedo</button>
+              <button class="os-btn" data-v="saiu_tarde" onclick="toggleOpError(this)">Saiu tarde</button>
+              <button class="os-btn" data-v="moveu_stop" onclick="toggleOpError(this)">Moveu stop</button>
+              <button class="os-btn" data-v="tamanho_errado" onclick="toggleOpError(this)">Tamanho errado</button>
+              <button class="os-btn" data-v="sem_erro" onclick="toggleOpError(this)">✓ Sem erro</button>
+            </div>
 
-          <!-- Motivo da saída -->
-          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Motivo da saída</div>
-          <div class="op-state-grid" id="new-op-exit-btns" style="margin-bottom:10px">
-            <button class="os-btn" data-v="AlvoPts" onclick="selNewOpExit(this)">Alvo Pts</button>
-            <button class="os-btn" data-v="AlvoTec" onclick="selNewOpExit(this)">Alvo Téc</button>
-            <button class="os-btn" data-v="AlvoAj" onclick="selNewOpExit(this)">Alvo Aj</button>
-            <button class="os-btn" data-v="AlvoVwap" onclick="selNewOpExit(this)">Alvo Vwap</button>
-            <button class="os-btn" data-v="AlvoAb" onclick="selNewOpExit(this)">Alvo Ab</button>
-            <button class="os-btn" data-v="AlvoFc" onclick="selNewOpExit(this)">Alvo Fc</button>
-            <button class="os-btn" data-v="StPlanJ" onclick="selNewOpExit(this)">Stop Plan</button>
-            <button class="os-btn" data-v="MEDO" onclick="selNewOpExit(this)">⚠️ Medo</button>
-            <button class="os-btn" data-v="STOPMESA" onclick="selNewOpExit(this)">🛑 Stop Mesa</button>
-            <button class="os-btn" data-v="AlvoFin" onclick="selNewOpExit(this)">💰 Alvo Fin</button>
-            <button class="os-btn" data-v="Ross" onclick="selNewOpExit(this)">📐 Ross</button>
+            <!-- Narrativa -->
+            <textarea class="op-note-inp" id="new-op-note" placeholder="Narrativa: o que pensava, corpo, contexto, correção…" style="width:100%;min-height:40px;margin-top:6px" oninput="autoResizeTA(this)"></textarea>
           </div>
+          <!-- fim post-block -->
 
-          <!-- Disciplina na Execução — por operação -->
-          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:7px">Disciplina na Execução</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:10px" id="new-op-adh-grid">
-            <div class="adh-item" onclick="toggleOpAdh(this,'e1')" data-k="e1"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">Entrada com sinal técnico</div></div>
-            <div class="adh-item" onclick="toggleOpAdh(this,'no_e3')" data-k="no_e3"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">Sem E3</div></div>
-            <div class="adh-item" onclick="toggleOpAdh(this,'stop')" data-k="stop"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">Stop correto</div></div>
-            <div class="adh-item" onclick="toggleOpAdh(this,'entry')" data-k="entry"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">Stress ou Div Oculta</div></div>
-            <div class="adh-item" onclick="toggleOpAdh(this,'size')" data-k="size"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">Tamanho correto</div></div>
-          </div>
-
-          <!-- Estado emocional + execução — por operação -->
-          <div class="op-emo-row" style="margin-bottom:5px">
-            <span class="op-emo-lbl">MEDO</span>
-            <input type="range" min="1" max="10" value="5" id="new-op-emo" oninput="document.getElementById('new-op-emo-val').textContent=this.value;calcOpResult()">
-            <span class="op-emo-val" id="new-op-emo-val">5</span>
-          </div>
-          <div class="op-emo-row" style="margin-bottom:5px">
-            <span class="op-emo-lbl">Nota execução</span>
-            <input type="range" min="1" max="10" value="5" id="new-op-exec" oninput="document.getElementById('new-op-exec-val').textContent=this.value">
-            <span class="op-emo-val" id="new-op-exec-val">5</span>
-          </div>
-
-          <!-- ISSUE LOG — categoria de erro estruturada (Dalio) -->
-          <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--red);margin-bottom:6px;margin-top:4px">📓 Erro de execução (se houve)</div>
-          <div class="op-state-grid" id="new-op-error-btns" style="margin-bottom:10px">
-            <button class="os-btn" data-v="entrou_cedo" onclick="toggleOpError(this)">Entrou cedo</button>
-            <button class="os-btn" data-v="entrou_tarde" onclick="toggleOpError(this)">Entrou tarde</button>
-            <button class="os-btn" data-v="saiu_cedo" onclick="toggleOpError(this)">Saiu cedo</button>
-            <button class="os-btn" data-v="saiu_tarde" onclick="toggleOpError(this)">Saiu tarde</button>
-            <button class="os-btn" data-v="nao_entrou" onclick="toggleOpError(this)">Não entrou</button>
-            <button class="os-btn" data-v="moveu_stop" onclick="toggleOpError(this)">Moveu stop</button>
-            <button class="os-btn" data-v="tamanho_errado" onclick="toggleOpError(this)">Tamanho errado</button>
-            <button class="os-btn" data-v="revanche" onclick="toggleOpError(this)">Revanche</button>
-            <button class="os-btn" data-v="sem_erro" onclick="toggleOpError(this)">✓ Sem erro</button>
-          </div>
-
-          <!-- Narrativa -->
-          <textarea class="op-note-inp" id="new-op-note" placeholder="Narrativa: o que pensava ao entrar, como estava o corpo, o que decidiu…" style="width:100%;min-height:40px;margin-top:6px" oninput="autoResizeTA(this)"></textarea>
-          <button class="add-btn" onclick="addOp()" style="width:100%;margin-top:8px;padding:10px">+ Registrar operação</button>
+          <button class="add-btn" onclick="addOp()" style="width:100%;margin-top:8px;padding:12px;font-size:11px;font-weight:500" id="op-register-btn">+ Registrar operação</button>
         </div>
 
         <!-- Stats rápidos -->
@@ -1298,6 +1295,7 @@ function selNewOpConv(btn){
   newOpConv=+btn.dataset.v;
   document.querySelectorAll('#new-op-conv-btns .os-btn').forEach(b=>b.classList.remove('sel-plan','sel-gold','sel-danger'));
   btn.classList.add(newOpConv>=4?'sel-plan':newOpConv<=2?'sel-danger':'sel-gold');
+  checkPreEntry();
 }
 function toggleOpPlan(btn){
   const v=btn.dataset.v;
@@ -1318,6 +1316,95 @@ function toggleOpError(btn){
     else{const si=newOpErrors.indexOf('sem_erro');if(si>=0){newOpErrors.splice(si,1);document.querySelector('#new-op-error-btns .os-btn[data-v="sem_erro"]')?.classList.remove('sel-plan');}}
     newOpErrors.push(v);btn.classList.add(v==='sem_erro'?'sel-plan':'sel-danger');
   }
+}
+
+// ─── FLUXO PRÉ/PÓS ──────────────────────────────
+// Alterna bloco pós-trade. Botão vira "Cancelar" enquanto expandido para reverter.
+function togglePostBlock(){
+  const post=document.getElementById('op-post-block');
+  const btn=document.getElementById('op-close-btn');
+  if(!post||!btn) return;
+  const wasOpen=post.style.display==='block';
+  if(wasOpen){
+    post.style.display='none';
+    btn.textContent='▼ FECHEI O TRADE — PREENCHER DIAGNÓSTICO';
+  } else {
+    // Antes de abrir, checa pré-clique completo — bloqueia se faltar
+    const missing=preEntryMissing();
+    if(missing.length){
+      showFlagModal('checklist',{missing});
+      return;
+    }
+    post.style.display='block';
+    btn.textContent='▲ RECOLHER DIAGNÓSTICO';
+    // Scroll suave para o pós-bloco
+    setTimeout(()=>post.scrollIntoView({behavior:'smooth',block:'start'}),40);
+  }
+}
+
+// Retorna array com nomes dos campos pré-clique não preenchidos
+function preEntryMissing(){
+  const missing=[];
+  const e1=parseInt(document.getElementById('op-e1-lots')?.value)||0;
+  if(!e1) missing.push('E1 lotes');
+  if(newOpConv==null) missing.push('Convicção');
+  if(!newOpPlan.length) missing.push('Aderência ao plano');
+  const risk=parseFloat(document.getElementById('op-risk')?.value)||0;
+  if(!risk) missing.push('Risco planejado');
+  return missing;
+}
+
+// Chamado quando E1 ou risco mudam — dispara popup preventivo se dados históricos apontam risco
+function checkPreEntry(){
+  // Flag D: horário-armadilha (se hora de agora for de baixo edge histórico)
+  const now=new Date();
+  const hr=now.getHours();
+  showHorarioFlag(hr);
+}
+
+// FLAG D — Horário-armadilha (WR histórico do horário)
+let horarioFlagShownFor=null;
+function showHorarioFlag(hr){
+  if(horarioFlagShownFor===hr) return; // não spam
+  const allOps=[];
+  allData.forEach(d=>(d.t_ops_detail||[]).forEach(o=>{if(o.time) allOps.push(o);}));
+  const sameHour=allOps.filter(o=>+o.time.split(':')[0]===hr);
+  if(sameHour.length<10) return; // amostra baixa
+  const wr=Math.round(sameHour.filter(o=>o.pts>0).length/sameHour.length*100);
+  if(wr>=55) return; // horário decente
+  horarioFlagShownFor=hr;
+  showFlagModal('horario',{hr,wr,n:sameHour.length});
+}
+
+// FLAG universal: um modal simples com título/mensagem/botão
+function showFlagModal(kind,data){
+  const old=document.getElementById('flag-modal');if(old) old.remove();
+  let title,body,accent='var(--gold)';
+  if(kind==='checklist'){
+    accent='var(--red)';
+    title='📋 Checklist pré-clique incompleto';
+    body=`Para fechar o trade, complete antes de entrar:<br><br><ul style="padding-left:18px;line-height:1.7;color:var(--red)">${data.missing.map(m=>'<li>'+m+'</li>').join('')}</ul><br><span style="color:var(--dim);font-size:9px">Registro em tempo real = dado limpo. Registro depois = memória enviesada.</span>`;
+  } else if(kind==='horario'){
+    accent='var(--gold)';
+    title='⚠ Horário de baixo edge histórico';
+    body=`Você está prestes a operar às ${data.hr}h.<br><br>Seu WR histórico neste horário: <strong style="color:var(--red)">${data.wr}%</strong> (n=${data.n} operações).<br><br><span style="color:var(--dim);font-size:9px">Confirme convicção alta antes de prosseguir. Padrão institucional: convicção máxima em horário fraco.</span>`;
+  } else if(kind==='conv_size'){
+    accent='var(--red)';
+    title='⚠ Tamanho não autorizado pelo seu dado';
+    body=`Convicção: <strong>${data.conv}/5</strong> · Lotes: <strong>${data.lots}</strong><br><br>${data.wrTxt}<br><br><span style="color:var(--purp)">Druckenmiller: "grande quando estou certo, pequeno quando não sei"</span>`;
+  } else {
+    title=data.title||'⚠';body=data.body||'';
+  }
+  const modal=document.createElement('div');modal.id='flag-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .15s ease';
+  modal.innerHTML=`<div style="background:var(--s2);border:2px solid ${accent};border-radius:12px;padding:18px;max-width:340px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+    <div style="font-size:11px;font-weight:500;color:${accent};margin-bottom:10px;letter-spacing:1px">${title}</div>
+    <div style="font-size:10px;color:var(--text);line-height:1.6;margin-bottom:14px">${body}</div>
+    <button onclick="document.getElementById('flag-modal').remove()" style="width:100%;padding:10px;background:${accent};border:none;border-radius:8px;color:#fff;font-family:'Geist Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px;font-weight:500">Entendido</button>
+  </div>`;
+  document.body.appendChild(modal);
+  // Fecha ao clicar fora
+  modal.addEventListener('click',e=>{if(e.target===modal) modal.remove();});
 }
 
 
@@ -1785,10 +1872,6 @@ function addOp(){
   const note=noteEl?noteEl.value.trim():'';
   const timeEl=document.getElementById('op-time');
   const time=timeEl&&timeEl.value?timeEl.value:nowHM();
-  const emoEl=document.getElementById('new-op-emo');
-  const emo=emoEl?parseInt(emoEl.value):5;
-  const execEl=document.getElementById('new-op-exec');
-  const execScore=execEl?parseInt(execEl.value):5;
   const mfe=parseFloat(document.getElementById('op-mfe')?.value);
   const mae=parseFloat(document.getElementById('op-mae')?.value);
   const risk=parseFloat(document.getElementById('op-risk')?.value);
@@ -1822,7 +1905,7 @@ function addOp(){
   const autoAdh={...newOpAdh};
   if(pts<=-16) autoAdh.stop=false;
   if(e3Lots>0) autoAdh.no_e3=false;
-  const opData={dir,pts,pts_pf:hasPf?ptsPf:null,lots:lots||null,e1_lots:e1Lots,e2_lots:e2Lots,e3_lots:e3Lots,e2_tipo:e2Tipo,estrutura,lots_pf:lotsPf,result_brl,result_brl_pf,mfe:mfeAbs,mae:maeAbs,mfe_ref:MFE_MAE_REFERENCE,capture_pct,risk_planned:riskAbs,r_multiple,conviction:newOpConv,plan_adherence:[...newOpPlan],error_tags:[...newOpErrors],note,time,entry_states:[...newOpStates],emo_intensity:emo,exec_score:execScore,adh_items:autoAdh,adh_auto_overrides:{stop:pts<=-16,no_e3:e3Lots>0},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups],segs:[...newOpSegs],ifr:[...newOpIfr]};
+  const opData={dir,pts,pts_pf:hasPf?ptsPf:null,lots:lots||null,e1_lots:e1Lots,e2_lots:e2Lots,e3_lots:e3Lots,e2_tipo:e2Tipo,estrutura,lots_pf:lotsPf,result_brl,result_brl_pf,mfe:mfeAbs,mae:maeAbs,mfe_ref:MFE_MAE_REFERENCE,capture_pct,risk_planned:riskAbs,r_multiple,conviction:newOpConv,plan_adherence:[...newOpPlan],error_tags:[...newOpErrors],note,time,entry_states:[...newOpStates],adh_items:autoAdh,adh_auto_overrides:{stop:pts<=-16,no_e3:e3Lots>0},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups],segs:[...newOpSegs],ifr:[...newOpIfr]};
   if(editingOpIdx!==null){
     // Edit mode: preserve corr from existing
     opData.corr=tradeOps[editingOpIdx]?.corr||'';
@@ -1840,6 +1923,9 @@ function addOp(){
 function editOp(idx){
   const op=tradeOps[idx];if(!op) return;
   editingOpIdx=idx;
+  // Expande o bloco pós-trade ao editar
+  const post=document.getElementById('op-post-block');if(post) post.style.display='block';
+  const closeBtn=document.getElementById('op-close-btn');if(closeBtn) closeBtn.style.display='none';
   // Populate form with existing op data
   const safe=(id,val)=>{const el=document.getElementById(id);if(el&&val!=null) el.value=val;};
   safe('op-time',op.time);safe('op-pts',op.pts);safe('op-mfe',op.mfe||'');safe('op-mae',op.mae||'');safe('op-risk',op.risk_planned||'');
@@ -1861,8 +1947,6 @@ function editOp(idx){
   // Erros
   newOpErrors=[...(op.error_tags||[])];
   document.querySelectorAll('#new-op-error-btns .os-btn').forEach(b=>{b.classList.remove('sel-plan','sel-danger');if(newOpErrors.includes(b.dataset.v)) b.classList.add(b.dataset.v==='sem_erro'?'sel-plan':'sel-danger');});
-  const emoEl=document.getElementById('new-op-emo');if(emoEl){emoEl.value=op.emo_intensity||5;document.getElementById('new-op-emo-val').textContent=op.emo_intensity||5;}
-  const execEl=document.getElementById('new-op-exec');if(execEl){execEl.value=op.exec_score||5;document.getElementById('new-op-exec-val').textContent=op.exec_score||5;}
   const noteEl=document.getElementById('new-op-note');if(noteEl) noteEl.value=op.note||'';
   // Setups
   newOpSetups=[...(op.setups||[])];
@@ -1909,8 +1993,6 @@ function clearNewOpForm(){
   const estV=document.getElementById('op-estrutura-val');if(estV){estV.textContent='—';estV.style.color='var(--teal)';}
   const totL=document.getElementById('op-total-lots');if(totL) totL.textContent='—';
   const noteEl=document.getElementById('new-op-note');if(noteEl){noteEl.value='';noteEl.style.height='40px';}
-  const emoEl=document.getElementById('new-op-emo');if(emoEl){emoEl.value=5;document.getElementById('new-op-emo-val').textContent='5';}
-  const execEl=document.getElementById('new-op-exec');if(execEl){execEl.value=5;document.getElementById('new-op-exec-val').textContent='5';}
   const calcEl=document.getElementById('op-calc-result');if(calcEl) calcEl.style.display='none';
   const mfeEl2=document.getElementById('op-mfe');if(mfeEl2) mfeEl2.value='';
   const maeEl2=document.getElementById('op-mae');if(maeEl2) maeEl2.value='';
@@ -1931,6 +2013,9 @@ function clearNewOpForm(){
   const opT=document.getElementById('op-time');if(opT) opT.value='09:00';
   const addBtn=document.querySelector('button[onclick="addOp()"]');
   if(addBtn){addBtn.textContent='+ Registrar operação';addBtn.style.background='';}
+  // Colapsa bloco pós-trade
+  const post=document.getElementById('op-post-block');if(post) post.style.display='none';
+  const closeBtn=document.getElementById('op-close-btn');if(closeBtn){closeBtn.style.display='block';closeBtn.textContent='▼ FECHEI O TRADE — PREENCHER DIAGNÓSTICO';}
 }
 
 function nowHM(){const n=new Date();return String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');}
@@ -1959,6 +2044,8 @@ function renderOps(){
     const adhChips=Object.entries(adhItems).filter(([,v])=>v).map(([k])=>`<span style="font-size:8px;padding:1px 6px;border-radius:6px;background:var(--gd);border:1px solid rgba(48,196,120,.3);color:var(--green)">${k}</span>`).join('');
     const emoColor=op.emo_intensity>=8?'var(--red)':op.emo_intensity>=6?'var(--gold)':op.emo_intensity>=4?'var(--blue)':'var(--green)';
     const execColor=op.exec_score>=8?'var(--green)':op.exec_score>=5?'var(--blue)':'var(--red)';
+    const showLegacyEmo=op.emo_intensity!=null;
+    const showLegacyExec=op.exec_score!=null;
     return`<div class="op-card" id="opcard-${i}">
       <div class="op-card-top">
         <span class="op-dir-badge ${op.dir==='C'?'op-c':'op-v'}">${op.dir==='C'?'▲ C':'▼ V'}</span>
@@ -1986,8 +2073,8 @@ function renderOps(){
       <div class="op-detail">
         <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px">
           <span style="font-size:9px;background:var(--s3);border:1px solid var(--b1);padding:2px 8px;border-radius:8px;color:var(--dim)">${stateLabel}</span>
-          <span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${emoColor}">emo:${op.emo_intensity||5}/10</span>
-          <span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${execColor}">exec:${op.exec_score||5}/10</span>
+          ${showLegacyEmo?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${emoColor}">medo:${op.emo_intensity}/10</span>`:''}
+          ${showLegacyExec?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${execColor}">exec:${op.exec_score}/10</span>`:''}
           ${partialReasons.map(r=>`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${r.includes('Medo')?'var(--red)':'var(--teal)'}">${r}</span>`).join('')}
           ${exitReasons.map(r=>`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--s3);border:1px solid var(--b1);color:${dangerExits.includes(r)?'var(--red)':'var(--green)'}">↗${r}</span>`).join('')}
         </div>
