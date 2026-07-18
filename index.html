@@ -990,63 +990,53 @@ tr:hover td{background:var(--s2)}
       <!-- PAINEL DO DIA — tendências recentes, alertas de risco -->
       <div id="daily-panel" style="margin-bottom:11px"></div>
 
-      <!-- ═══════════════ PAINEL INSTITUCIONAL (Griffin/Druckenmiller/Dalio/Simons) ═══════════════ -->
+      <!-- ═══════════════ 1. PAINEL DO GESTOR ═══════════════ -->
       <div class="card-lbl" style="padding:0 2px;margin-bottom:8px;margin-top:4px;color:var(--purp);font-weight:500;letter-spacing:2px">📊 PAINEL DO GESTOR</div>
       <div id="panel-institutional" style="margin-bottom:14px"></div>
 
+      <!-- ═══════════════ 2. ALERTAS ATIVOS (7d vs 30d) ═══════════════ -->
+      <div class="card-lbl" style="padding:0 2px;margin-bottom:8px;margin-top:4px;color:var(--gold);font-weight:500;letter-spacing:2px">⚡ ALERTAS ATIVOS — SEMANA vs MÊS</div>
+      <div id="panel-alerts" style="margin-bottom:14px"></div>
+
+      <!-- KPIs resumo (compacto, sem gráfico) -->
       <div class="card-lbl" style="padding:0 2px;margin-bottom:8px">PESSOAL</div>
       <div class="kpi-grid" id="kpi-pessoal"></div>
       <div class="card-lbl" style="padding:0 2px;margin-bottom:8px;margin-top:4px">TRADE</div>
       <div class="kpi-grid-3" id="kpi-trade"></div>
       <div class="card-lbl" style="padding:0 2px;margin-bottom:8px;margin-top:4px">COMPORTAMENTAL</div>
       <div class="kpi-grid" id="kpi-behav"></div>
-      <!-- EFICIÊNCIA POR SETUP -->
-      <div class="card-lbl" style="padding:0 2px;margin-bottom:8px;margin-top:4px">SETUP TÉCNICO — EFICIÊNCIA</div>
-      <div id="kpi-setups" style="margin-bottom:11px"></div>
-      <div class="chart-card">
-        <div class="ct">Energia pessoal vs Resultado financeiro</div>
-        <div class="cs">Correlação direta</div>
-        <canvas id="c-corr" height="120"></canvas>
-      </div>
-      <div class="chart-card">
-        <div class="ct">Métricas ao longo do tempo</div>
-        <div class="cs">Energia · Disciplina · Adesão</div>
-        <canvas id="c-line" height="120"></canvas>
-      </div>
-      <div class="chart-card">
-        <div class="ct">Win rate por humor dominante</div>
-        <div class="cs">Estado pessoal → resultado operacional</div>
-        <canvas id="c-wr-mood" height="110"></canvas>
-      </div>
-      <!-- PAINEL HESITAÇÕES -->
+
+      <!-- ═══════════════ 3. SETUP TÉCNICO — filtrado n≥5 ═══════════════ -->
+      <div class="card-lbl" style="padding:0 2px;margin-bottom:8px;margin-top:4px">SETUP TÉCNICO — EFICIÊNCIA (n≥5)</div>
+      <div id="kpi-setups" style="margin-bottom:14px"></div>
+
+      <!-- ═══════════════ 4. HESITAÇÕES ═══════════════ -->
       <div class="card-lbl" style="padding:0 2px;margin-bottom:8px;margin-top:4px">HESITAÇÕES — CUSTO E PADRÕES</div>
-      <div id="panel-hesitacoes" style="margin-bottom:11px"></div>
+      <div id="panel-hesitacoes" style="margin-bottom:14px"></div>
 
-      <div class="chart-card">
-        <div class="ct">Gatilho da entrada vs resultado médio por op</div>
-        <div class="cs">Qual estado gera mais pontos/op</div>
-        <canvas id="c-state-res" height="110"></canvas>
-        <div id="state-res-fallback" style="display:none;font-size:10px;color:var(--dim);text-align:center;padding:8px">Registre o gatilho em cada operação para ativar este gráfico</div>
-      </div>
-      <div class="chart-card">
-        <div class="ct">Mapa de calor · consistência</div>
-        <div class="cs">Score diário · últimas 9 semanas</div>
-        <div class="hm-lbl-row"><div class="hml">D</div><div class="hml">S</div><div class="hml">T</div><div class="hml">Q</div><div class="hml">Q</div><div class="hml">S</div><div class="hml">S</div></div>
-        <div class="hm-grid" id="hm"></div>
-      </div>
-      <!-- HORÁRIO × RESULTADO -->
+      <!-- ═══════════════ 5. HORÁRIO × RESULTADO ═══════════════ -->
       <div class="card-lbl" style="padding:0 2px;margin-bottom:8px;margin-top:4px">HORÁRIO × RESULTADO</div>
-      <div id="panel-horario" style="margin-bottom:11px"></div>
+      <div id="panel-horario" style="margin-bottom:14px"></div>
 
-      <!-- ANÁLISE DE SEQUÊNCIA -->
+      <!-- ═══════════════ 6. ANÁLISE DE SEQUÊNCIA ═══════════════ -->
       <div class="card-lbl" style="padding:0 2px;margin-bottom:8px;margin-top:4px">ANÁLISE DE SEQUÊNCIA</div>
-      <div id="panel-sequencia" style="margin-bottom:11px"></div>
+      <div id="panel-sequencia" style="margin-bottom:14px"></div>
 
-      <!-- ANÁLISE ESTATÍSTICA AVANÇADA -->
+      <!-- ═══════════════ 7. ANÁLISE ESTATÍSTICA AVANÇADA ═══════════════ -->
       <div class="card-lbl" style="padding:0 2px;margin-bottom:8px;margin-top:4px">ANÁLISE ESTATÍSTICA AVANÇADA</div>
-      <div id="panel-stats" style="margin-bottom:11px"></div>
+      <div id="panel-stats" style="margin-bottom:14px"></div>
 
-      <div id="insights-wrap"></div>
+      <!-- ═══════════════ 8. DELTA EMOCIONAL PRÉ→PÓS × RESULTADO ═══════════════ -->
+      <div class="card-lbl" style="padding:0 2px;margin-bottom:8px;margin-top:4px">DELTA EMOCIONAL PRÉ→PÓS × RESULTADO</div>
+      <div id="panel-mood-delta" style="margin-bottom:14px"></div>
+
+      <!-- ═══════════════ 9. MAPA DE CALOR (encolhido, no fim) ═══════════════ -->
+      <div class="chart-card" style="padding:11px 12px">
+        <div style="font-size:10px;color:var(--hi)">Mapa de calor · consistência</div>
+        <div style="font-size:8px;color:var(--dim);margin-bottom:8px">Score diário · últimas 9 semanas</div>
+        <div class="hm-lbl-row" style="margin-bottom:2px"><div class="hml">D</div><div class="hml">S</div><div class="hml">T</div><div class="hml">Q</div><div class="hml">Q</div><div class="hml">S</div><div class="hml">S</div></div>
+        <div class="hm-grid" id="hm" style="grid-template-columns:repeat(7,1fr);gap:1px"></div>
+      </div>
     </div>
 
     <!-- ── LOG ── -->
@@ -2721,8 +2711,7 @@ function dayScore(d){const p=(d.energia||0)+(d.disciplina||0)+(d.clareza||0);con
 function renderDash(){
   const data=getFiltered().sort((a,b)=>a.date_iso.localeCompare(b.date_iso));
   renderDailyPanel();
-  renderScoreRing(data);renderKPIBlock(data);renderBehavKPIs(data);renderHeatmapDash();renderInsightsBlock(data);renderInstitutionalPanel();renderSetupEfficiency();renderHesPanel();renderHorarioPanel(data);renderSequenciaPanel(data);renderStatsPanel();
-  setTimeout(()=>{renderCorrChart(data);renderLineChart(data);renderWRMoodChart(data);renderStateResChart(data);},60);
+  renderScoreRing(data);renderKPIBlock(data);renderBehavKPIs(data);renderHeatmapDash();renderInstitutionalPanel();renderAlertsPanel();renderSetupEfficiency();renderHesPanel();renderHorarioPanel(data);renderSequenciaPanel(data);renderStatsPanel();renderMoodDeltaPanel();
 }
 
 // ── PAINEL DO DIA ─────────────────────────────
@@ -3028,6 +3017,120 @@ function renderInstitutionalPanel(){
   el.innerHTML=c1+c2+c3+c4+c5+c6;
 }
 
+// ── PAINEL DE ALERTAS ATIVOS (variance report — 7d vs 30d) ──
+function renderAlertsPanel(){
+  const el=document.getElementById('panel-alerts');if(!el) return;
+  const now=Date.now();
+  const c7=new Date(now-7*86400000),c30=new Date(now-30*86400000);
+  const d7=allData.filter(d=>!d.day_incomplete&&new Date(d.date_iso+'T12:00:00')>=c7);
+  const d30=allData.filter(d=>!d.day_incomplete&&new Date(d.date_iso+'T12:00:00')>=c30);
+  const ops7=[],ops30=[];
+  d7.forEach(d=>(d.t_ops_detail||[]).forEach(o=>ops7.push(o)));
+  d30.forEach(d=>(d.t_ops_detail||[]).forEach(o=>ops30.push(o)));
+  if(ops30.length<10){el.innerHTML='<div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:12px;text-align:center;color:var(--dim);font-size:10px">Poucos trades no último mês para comparar tendência (mín 10 ops).</div>';return;}
+  const alerts=[];
+  // Alerta 1: WR
+  const wr7=ops7.length?Math.round(ops7.filter(o=>o.pts>0).length/ops7.length*100):null;
+  const wr30=Math.round(ops30.filter(o=>o.pts>0).length/ops30.length*100);
+  if(wr7!=null&&ops7.length>=5){
+    const delta=wr7-wr30;
+    if(delta<=-10) alerts.push({tone:'red',line:`WR caiu ${Math.abs(delta)}pp — 7d: ${wr7}% · 30d: ${wr30}% (${ops7.length} vs ${ops30.length} ops).`});
+    else if(delta>=10) alerts.push({tone:'green',line:`WR subiu ${delta}pp — 7d: ${wr7}% · 30d: ${wr30}%. Mantenha o processo.`});
+  }
+  // Alerta 2: expectância em pts/op
+  const exp7=ops7.length?ops7.reduce((a,o)=>a+o.pts,0)/ops7.length:null;
+  const exp30=ops30.reduce((a,o)=>a+o.pts,0)/ops30.length;
+  if(exp7!=null&&ops7.length>=5){
+    const delta=exp7-exp30;
+    if(delta<=-2) alerts.push({tone:'red',line:`Ponto médio/op caiu — 7d: ${exp7.toFixed(1)}pts · 30d: ${exp30.toFixed(1)}pts.`});
+    else if(delta>=2) alerts.push({tone:'green',line:`Ponto médio/op subiu — 7d: ${exp7.toFixed(1)}pts · 30d: ${exp30.toFixed(1)}pts.`});
+  }
+  // Alerta 3: aderência ao plano
+  const plan7=ops7.filter(o=>o.plan_adherence&&o.plan_adherence.length);
+  const plan30=ops30.filter(o=>o.plan_adherence&&o.plan_adherence.length);
+  if(plan7.length>=3&&plan30.length>=5){
+    const in7=plan7.filter(o=>!o.plan_adherence.includes('off_plan')).length/plan7.length;
+    const in30=plan30.filter(o=>!o.plan_adherence.includes('off_plan')).length/plan30.length;
+    const delta=Math.round((in7-in30)*100);
+    if(delta<=-15) alerts.push({tone:'red',line:`Aderência ao plano caiu ${Math.abs(delta)}pp — 7d: ${Math.round(in7*100)}% · 30d: ${Math.round(in30*100)}%.`});
+    else if(delta>=15) alerts.push({tone:'green',line:`Aderência ao plano subiu ${delta}pp — 7d: ${Math.round(in7*100)}% · 30d: ${Math.round(in30*100)}%.`});
+  }
+  // Alerta 4: erros recorrentes reaparecendo
+  const err7={};ops7.forEach(o=>(o.error_tags||[]).filter(e=>e!=='sem_erro').forEach(e=>err7[e]=(err7[e]||0)+1));
+  const err30={};ops30.forEach(o=>(o.error_tags||[]).filter(e=>e!=='sem_erro').forEach(e=>err30[e]=(err30[e]||0)+1));
+  Object.entries(err7).forEach(([e,c7c])=>{
+    const c30c=err30[e]||0;
+    const rate7=c7c/Math.max(ops7.length,1);
+    const rate30=c30c/Math.max(ops30.length,1);
+    if(rate7>=rate30*1.5&&c7c>=2){
+      const lbl=ERROR_LABELS[e]||e;
+      alerts.push({tone:'red',line:`Erro "${lbl}" reaparecendo — ${c7c}× em 7d vs ${c30c}× em 30d. Aja sobre a regra que falhou.`});
+    }
+  });
+  // Alerta 5: circuit-breaker acionado no período
+  const cb7=d7.filter(d=>{const f=d.t_result_fpa||0,p=d.t_result_pf||0;return f<=-3000||p<=-3000;});
+  if(cb7.length>0) alerts.push({tone:'red',line:`Circuit-breaker acionado ${cb7.length}× nos últimos 7 dias. Prioridade absoluta esta semana.`});
+  // Alerta 6: convicção baixa com lote alto (padrão de risco)
+  const badSize7=ops7.filter(o=>o.conviction!=null&&o.conviction<=3&&o.lots&&o.lots>10);
+  if(badSize7.length>=2) alerts.push({tone:'red',line:`${badSize7.length}× você operou lote>10 com convicção ≤3 nos últimos 7 dias. Sizing sem edge.`});
+  // Alerta 7: hesitação subiu
+  const hes7=d7.reduce((a,d)=>a+((d.t_hesitations||[]).length),0);
+  const hes30=d30.reduce((a,d)=>a+((d.t_hesitations||[]).length),0);
+  const hesRate7=hes7/Math.max(d7.length,1),hesRate30=hes30/Math.max(d30.length,1);
+  if(hesRate7>=hesRate30*1.3&&hes7>=3) alerts.push({tone:'gold',line:`Hesitação por dia subiu — 7d: ${hesRate7.toFixed(1)} · 30d: ${hesRate30.toFixed(1)}. Medo da execução ativado.`});
+  if(!alerts.length){el.innerHTML='<div style="background:rgba(48,196,120,.1);border:1px solid rgba(48,196,120,.35);border-radius:8px;padding:11px 13px;color:var(--green);font-size:10px">✓ Nenhum alerta ativo. Últimos 7 dias em linha com últimos 30. Consistência mantida.</div>';return;}
+  el.innerHTML=alerts.map(a=>{
+    const bg=a.tone==='red'?'rgba(232,64,64,.1)':a.tone==='gold'?'rgba(212,160,40,.1)':'rgba(48,196,120,.1)';
+    const bd=a.tone==='red'?'rgba(232,64,64,.35)':a.tone==='gold'?'rgba(212,160,40,.35)':'rgba(48,196,120,.35)';
+    const col=a.tone==='red'?'var(--red)':a.tone==='gold'?'var(--gold)':'var(--green)';
+    return `<div style="background:${bg};border:1px solid ${bd};border-radius:8px;padding:9px 12px;margin-bottom:6px;font-size:10px;color:${col};line-height:1.5">${a.line}</div>`;
+  }).join('');
+}
+
+// ── PAINEL DELTA EMOCIONAL PRÉ→PÓS × RESULTADO ──
+function renderMoodDeltaPanel(){
+  const el=document.getElementById('panel-mood-delta');if(!el) return;
+  const days=({week:7,month:30,quarter:90,all:0})[currentPeriod]||0;
+  const cutoff=days>0?new Date(Date.now()-days*86400000):null;
+  const data=allData.filter(d=>!d.day_incomplete&&d.mood_pre&&d.mood_pos&&(d.t_result_fpa!=null||d.t_result_pf!=null)&&(!cutoff||new Date(d.date_iso+'T12:00:00')>=cutoff));
+  if(data.length<5){el.innerHTML='<div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:12px;text-align:center;color:var(--dim);font-size:10px">Registre humor pré-pregão E pós-pregão em mais dias para ativar este painel (mín 5 dias com ambos).</div>';return;}
+  // Classificação simplificada: humor pré vs pós = manteve / melhorou / piorou (positivo→neutro→negativo)
+  const positive=new Set(['focado','produtivo','calmo']);
+  const negative=new Set(['ansioso','disperso','cansado','frustrado','irritado','desanimado']);
+  const cat=m=>positive.has(m)?'pos':negative.has(m)?'neg':'neu';
+  const buckets={maintained_pos:{n:0,r:0,label:'Manteve positivo'},improved:{n:0,r:0,label:'Melhorou (neg/neu → pos)'},degraded:{n:0,r:0,label:'Piorou (pos → neg)'},maintained_neg:{n:0,r:0,label:'Manteve negativo'}};
+  data.forEach(d=>{
+    const p1=cat(d.mood_pre),p2=cat(d.mood_pos);
+    const r=(d.t_result_fpa||0)+(d.t_result_pf||0);
+    let key=null;
+    if(p1==='pos'&&p2==='pos') key='maintained_pos';
+    else if(p1==='neg'&&p2==='neg') key='maintained_neg';
+    else if(p1!=='pos'&&p2==='pos') key='improved';
+    else if(p1==='pos'&&p2==='neg') key='degraded';
+    if(key){buckets[key].n++;buckets[key].r+=r;}
+  });
+  const rows=Object.entries(buckets).filter(([,v])=>v.n>0).sort((a,b)=>b[1].r-a[1].r);
+  const total=data.length;
+  el.innerHTML=`<div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:11px 13px">
+    <div style="font-size:8px;color:var(--dim);margin-bottom:8px;line-height:1.4">Como você chegou vs como saiu do pregão — sinal comportamental sobre padrão de dia.</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      ${rows.map(([k,v])=>{
+        const avg=v.r/v.n;
+        const col=avg>=500?'var(--green)':avg>=-200?'var(--gold)':'var(--red)';
+        return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:var(--s1);border-radius:6px;font-size:10px;gap:8px;flex-wrap:wrap">
+          <span style="color:var(--hi)">${v.label}</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span style="font-size:9px;color:var(--dim)">${v.n}d (${Math.round(v.n/total*100)}%)</span>
+            <span style="color:${col};font-weight:500">R$ ${v.r>=0?'+':''}${Math.round(v.r).toLocaleString('pt-BR')} · ${Math.round(avg)>=0?'+':''}R$${Math.round(avg).toLocaleString('pt-BR')}/dia</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="font-size:9px;color:var(--dim);margin-top:8px;line-height:1.5;border-top:1px solid var(--b1);padding-top:7px">
+      ${(()=>{const worst=rows[rows.length-1];const best=rows[0];if(!worst||!best)return '';if(worst[0]==='degraded'&&worst[1].n>=3)return `⚠ Padrão perigoso: em ${worst[1].n} dias você começou bem e terminou mal — mais que emoção, é sinal de exposição a stress. Reveja horários e sequências desses dias.`;if(best[0]==='maintained_pos')return `Manter o estado positivo é seu padrão vencedor (${best[1].n} dias, média R$${Math.round(best[1].r/best[1].n).toLocaleString('pt-BR')}/dia).`;return 'Continue registrando pré e pós — este cruzamento é o sinal comportamental mais forte da sua amostra.';})()}
+    </div>
+  </div>`;
+}
 
 function renderSetupEfficiency(){
   const el=document.getElementById('kpi-setups');if(!el) return;
@@ -3039,37 +3142,35 @@ function renderSetupEfficiency(){
     if(op.pts>0) bySetup[s].w++;
     if(op.result_brl!=null){bySetup[s].brl+=op.result_brl;bySetup[s].nBrl++;}
   }));
-  const setups=Object.entries(bySetup);
-  if(!setups.length){el.innerHTML='<div style="font-size:10px;color:var(--dim);text-align:center;padding:8px">Registre o setup em cada operação para ver a eficiência aqui</div>';return;}
+  const setups=Object.entries(bySetup).filter(([,v])=>v.n>=5); // Filtro institucional: n≥5 obrigatório
+  if(!setups.length){el.innerHTML='<div style="font-size:10px;color:var(--dim);text-align:center;padding:12px;background:var(--s1);border:1px solid var(--b1);border-radius:8px">Nenhum setup ainda alcançou n≥5 no período — amostra insuficiente para conclusão. Setups com n<5 são anedota, não métrica.</div>';return;}
   // Média global de pts (prior para shrinkage)
   const globalAvg=allOps.reduce((a,o)=>a+o.pts,0)/allOps.length;
-  const K=5; // força do prior: equivale a 5 trades "médios" puxando para a média global
+  const K=5; // força do prior
   const entries=setups.map(([s,v])=>{
     const rawAvg=v.pts/v.n;
-    // Score ajustado: puxa setups de baixa amostra para a média global
     const adjAvg=(v.pts+K*globalAvg)/(v.n+K);
-    return{setup:s,rawAvg,adjAvg,wr:Math.round(v.w/v.n*100),n:v.n,avgBrl:v.nBrl>0?v.brl/v.nBrl:null};
+    return{setup:s,rawAvg,adjAvg,wr:Math.round(v.w/v.n*100),n:v.n,totalPts:v.pts,avgBrl:v.nBrl>0?v.brl/v.nBrl:null};
   }).sort((a,b)=>b.adjAvg-a.adjAvg);
   const top=entries.slice(0,10);
-  el.innerHTML=`<div style="font-size:8px;color:var(--dim);margin-bottom:6px;line-height:1.4">Ordenado por desempenho ajustado à amostra. Setups raros são puxados à média global para evitar ilusão de n baixo.</div>
+  el.innerHTML=`<div style="font-size:8px;color:var(--dim);margin-bottom:6px;line-height:1.4">Filtro obrigatório n≥5. Ordenado por <strong>pt/trade esperado ajustado</strong> (shrinkage). Setups com n baixo são puxados à média global para não gerar ilusão.</div>
   <div style="display:flex;flex-direction:column;gap:5px">${top.map(e=>{
     const color=e.adjAvg>0?'var(--green)':e.adjAvg>-5?'var(--gold)':'var(--red)';
     const barW=Math.min(Math.abs(e.adjAvg)/15*100,100);
-    const conf=e.n>=20?{t:'✓',c:'var(--green)',lbl:'confiável'}:e.n>=10?{t:'~',c:'var(--gold)',lbl:'parcial'}:{t:'⚠',c:'var(--red)',lbl:'amostra baixa'};
+    const conf=e.n>=20?{t:'✓',c:'var(--green)',lbl:'confiável'}:e.n>=10?{t:'~',c:'var(--gold)',lbl:'parcial'}:{t:'⚠',c:'var(--red)',lbl:'ainda pequena'};
     return`<div style="background:var(--s1);border:1px solid var(--b1);border-radius:8px;padding:9px 11px">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
-        <span style="font-size:10px;color:var(--hi)">${esc(e.setup)} <span style="color:${conf.c};font-size:9px" title="${conf.lbl}">${conf.t}</span></span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px;gap:6px;flex-wrap:wrap">
+        <span style="font-size:10px;color:var(--hi)">${esc(e.setup)} <span style="color:${conf.c};font-size:9px" title="${conf.lbl}">${conf.t} n=${e.n}</span></span>
         <div style="display:flex;gap:6px;align-items:center">
-          <span style="font-size:9px;color:var(--dim)">n=${e.n}</span>
           <span style="font-size:9px;padding:2px 7px;border-radius:6px;background:${e.wr>=65?'var(--gd)':'var(--rd)'};color:${e.wr>=65?'var(--green)':'var(--red)'}">${e.wr}% WR</span>
-          <span style="font-size:10px;font-weight:500;color:${color}" title="ajustado: ${e.adjAvg.toFixed(1)} · bruto: ${e.rawAvg.toFixed(1)}">${e.adjAvg>=0?'+':''}${e.adjAvg.toFixed(1)}pts</span>
+          <span style="font-size:10px;font-weight:500;color:${color}" title="Pontos por trade esperado — ajustado pela amostra. Bruto: ${e.rawAvg.toFixed(1)}">${e.adjAvg>=0?'+':''}${e.adjAvg.toFixed(1)}pt/op esp</span>
         </div>
       </div>
       <div style="height:3px;background:var(--b2);border-radius:2px">
         <div style="height:3px;width:${barW}%;background:${color};border-radius:2px;transition:width .3s"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;margin-top:3px">
-        <span style="font-size:8px;color:var(--dim)">bruto ${e.rawAvg>=0?'+':''}${e.rawAvg.toFixed(1)}pts</span>
+      <div style="display:flex;justify-content:space-between;margin-top:3px;flex-wrap:wrap;gap:6px">
+        <span style="font-size:8px;color:var(--dim)">bruto ${e.rawAvg>=0?'+':''}${e.rawAvg.toFixed(1)}pts · total ${e.totalPts>=0?'+':''}${Math.round(e.totalPts)}pts</span>
         ${e.avgBrl!=null?`<span style="font-size:8px;color:var(--dim)">R$ ${e.avgBrl>=0?'+':''}${Math.round(e.avgBrl).toLocaleString('pt-BR')}/op</span>`:''}
       </div>
     </div>`;
@@ -3331,15 +3432,15 @@ function renderStatsPanel(){
     bySetup[s].pts.push(op.pts);
     if(op.capture_pct!=null) bySetup[s].capture.push(op.capture_pct);
   }));
-  const setupStats=Object.entries(bySetup).filter(([,v])=>v.pts.length>=2).map(([s,v])=>{
+  const setupStats=Object.entries(bySetup).filter(([,v])=>v.pts.length>=5).map(([s,v])=>{
     const n=v.pts.length,wr=v.wins.length/n;
     const avgWin=v.wins.length?v.wins.reduce((a,b)=>a+b,0)/v.wins.length:0;
     const avgLoss=v.losses.length?Math.abs(v.losses.reduce((a,b)=>a+b,0)/v.losses.length):0;
-    const expectancy=wr*avgWin-(1-wr)*avgLoss; // E[pts/op]
+    const expectancy=wr*avgWin-(1-wr)*avgLoss; // Pontos esperados por trade
     const mean=v.pts.reduce((a,b)=>a+b,0)/n;
     const variance=v.pts.reduce((a,b)=>a+(b-mean)**2,0)/n;
     const stddev=Math.sqrt(variance);
-    const sharpe=stddev>0?mean/stddev:0; // Sharpe simplificado
+    const sharpe=stddev>0?mean/stddev:0;
     const avgCapture=v.capture.length?Math.round(v.capture.reduce((a,b)=>a+b,0)/v.capture.length):null;
     return{s,n,wr:Math.round(wr*100),avgWin:avgWin.toFixed(1),avgLoss:avgLoss.toFixed(1),expectancy,sharpe,avgCapture};
   }).sort((a,b)=>b.expectancy-a.expectancy);
@@ -3387,32 +3488,33 @@ function renderStatsPanel(){
     </div>
   </div>`:opsWithMFE.length>0?`<div style="font-size:9px;color:var(--dim);margin-bottom:10px;padding:7px 10px;background:var(--s2);border-radius:6px">Registre MFE em mais ${3-opsWithMFE.length} op(s) para análise de captura completa</div>`:'';
 
-  // Expectância por setup
+  // Ponto por trade esperado por setup
   const setupHtml=setupStats.length?`
-    <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:8px">Expectância por setup (E[pts/op])</div>
+    <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:4px">Ponto por trade esperado por setup (n≥5)</div>
+    <div style="font-size:8px;color:var(--dim);margin-bottom:8px;line-height:1.4">Quantos pontos, em média, cada trade daquele setup vale (considerando ganhos e perdas ponderados pelo WR). +5pt/op esp = a longo prazo você lucra 5pts por trade.</div>
     <div style="display:flex;flex-direction:column;gap:5px">
     ${setupStats.slice(0,6).map(e=>{
       const eColor=e.expectancy>0?'var(--green)':e.expectancy>-3?'var(--gold)':'var(--red)';
       return`<div style="background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:8px 11px">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;gap:4px;flex-wrap:wrap">
           <span style="font-size:10px;color:var(--hi)">${esc(e.s)}</span>
           <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
             <span style="font-size:8px;color:var(--dim)">n=${e.n}</span>
             <span style="font-size:8px;padding:1px 6px;border-radius:5px;background:${e.wr>=65?'var(--gd)':'var(--rd)'};color:${e.wr>=65?'var(--green)':'var(--red)'}">${e.wr}%WR</span>
-            <span style="font-size:9px;font-weight:500;color:${eColor}">E=${e.expectancy>=0?'+':''}${e.expectancy.toFixed(1)}pts</span>
-            <span style="font-size:8px;color:var(--dim)">Sharpe ${e.sharpe.toFixed(2)}</span>
+            <span style="font-size:9px;font-weight:500;color:${eColor}">${e.expectancy>=0?'+':''}${e.expectancy.toFixed(1)}pt/op esp</span>
+            <span style="font-size:8px;color:var(--dim)" title="Sharpe: retorno médio / volatilidade — quanto maior, mais consistente">Sharpe ${e.sharpe.toFixed(2)}</span>
             ${e.avgCapture!=null?`<span style="font-size:8px;color:var(--teal)">${e.avgCapture}%cap</span>`:''}
           </div>
         </div>
         <div style="font-size:8px;color:var(--dim)">Ganho médio: +${e.avgWin}pts · Perda média: -${e.avgLoss}pts</div>
       </div>`;
     }).join('')}
-    </div>`:'<div style="font-size:9px;color:var(--dim);padding:7px 10px;background:var(--s2);border-radius:6px">Selecione o setup em cada operação para calcular expectância por setup</div>';
+    </div>`:'<div style="font-size:9px;color:var(--dim);padding:7px 10px;background:var(--s2);border-radius:6px">Nenhum setup ainda tem n≥5 — precisamos de mais amostra por setup para calcular ponto esperado por trade.</div>';
 
   el.innerHTML=`<div style="background:var(--s1);border:1px solid rgba(78,124,248,.2);border-radius:var(--r);padding:13px">
     <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--blue);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between">
       <span>📊 Métricas institucionais</span>
-      <span style="font-size:7px;color:var(--dim)">Sharpe · Expectância · MFE</span>
+      <span style="font-size:7px;color:var(--dim)">Sharpe · Ponto esperado · MFE</span>
     </div>
     ${statKpis}${mfeHtml}${setupHtml}
   </div>`;
