@@ -366,6 +366,13 @@ tr:hover td{background:var(--s2)}
       <div class="pg-title">Dia Pessoal</div>
       <div class="pg-sub" id="pg-pessoal-date">—</div>
 
+      <!-- SELETOR DE DATA — editar dia passado -->
+      <div style="display:flex;gap:6px;align-items:center;padding:8px 11px;background:var(--s2);border:1px solid var(--b1);border-radius:8px;margin-bottom:11px">
+        <span style="font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;flex-shrink:0">Editando:</span>
+        <input type="date" id="pessoal-edit-date" class="time-inp" style="flex:1;font-size:10px;padding:6px 8px;color:var(--purp);border-color:var(--purp)" onchange="switchPessoalDate()">
+        <button onclick="switchPessoalDate('today')" style="font-size:9px;padding:5px 10px;background:var(--s3);border:1px solid var(--b1);border-radius:6px;color:var(--hi);cursor:pointer;font-family:'Geist Mono',monospace;flex-shrink:0">HOJE</button>
+      </div>
+
       <!-- FRASE ÂNCORA DO DIA -->
       <div class="anchor-card" id="anchor-card">
         <div class="anchor-quote" id="anchor-quote">Carregando...</div>
@@ -443,19 +450,6 @@ tr:hover td{background:var(--s2)}
             </div>
           </div>
           <div class="div" style="margin:10px 0"></div>
-          <!-- Pessoas -->
-          <div class="pilar-section">
-            <div class="pilar-header">
-              <div class="pilar-title">👥 <span>Pessoas</span> <span style="font-size:9px;color:var(--dim)">— família · clientes</span></div>
-              <div class="pilar-score" id="pscore-pessoas">0/0</div>
-            </div>
-            <div class="pilar-items" id="pitems-pessoas"></div>
-            <div class="pilar-add-row">
-              <input class="add-inp" id="pi-pessoas" placeholder="Adicionar item família…" onkeydown="if(event.key==='Enter'){addPilarItem('pessoas');event.preventDefault()}">
-              <button class="add-btn" onclick="addPilarItem('pessoas')">+</button>
-            </div>
-          </div>
-          <div class="div" style="margin:10px 0"></div>
           <!-- TRACKER DE VISITAS A CLIENTES -->
           <div class="pilar-section">
             <div class="pilar-header">
@@ -487,20 +481,34 @@ tr:hover td{background:var(--s2)}
         </div>
       </div>
 
-      <!-- AVALIAÇÃO DO DIA — perspectiva pessoal (não trade) -->
+      <!-- QUEM EU FUI HOJE — postura, não valia -->
       <div class="card">
-        <div class="card-lbl">🔆 Avaliação do dia</div>
-        <div style="font-size:9px;color:var(--dim);margin-bottom:12px;line-height:1.6">Independente do resultado financeiro — quem você foi hoje?</div>
+        <div class="card-lbl">🔆 Quem eu fui hoje</div>
+        <div style="font-size:9px;color:var(--dim);margin-bottom:11px;line-height:1.6">Independente do resultado, qual foi minha postura?</div>
 
-        <div class="sl-row">
-          <span class="sl-name" style="font-size:9px">Presença</span>
-          <input type="range" min="1" max="10" value="5" id="sl-presenca" oninput="sv('sl-presenca','sv-presenca')">
-          <span class="sl-val" id="sv-presenca">5</span>
+        <!-- Presença: 4 botões rápidos em vez de slider -->
+        <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Presença</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:12px" id="presenca-btns">
+          <button class="mo" data-v="2" onclick="selPresenca(this)">🌫️<br>Piloto auto</button>
+          <button class="mo" data-v="5" onclick="selPresenca(this)">🌊<br>Oscilei</button>
+          <button class="mo" data-v="8" onclick="selPresenca(this)">🎯<br>Presente</button>
+          <button class="mo" data-v="10" onclick="selPresenca(this)">✨<br>Total</button>
         </div>
-        <div style="font-size:8px;color:var(--dim);margin:-6px 0 10px 0;line-height:1.5">Você estava consciente e presente, ou no piloto automático?</div>
+        <input type="hidden" id="sl-presenca" value="5">
 
-        <input type="text" class="finp" id="f-proposito" placeholder="O que hoje confirmou que vale a pena continuar?" style="margin-bottom:0">
-        <div style="font-size:8px;color:var(--dim);margin-top:4px">Propósito funcional — conecte com o porquê, não com o resultado</div>
+        <!-- SIM / NÃO do dia — flags de aderência ao propósito -->
+        <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Aderência ao propósito</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+          <button class="os-btn" id="btn-sim-flag" onclick="toggleSimNaoFlag('sim',this)" style="padding:8px;font-size:10px;text-align:center">✓ SIM alinhado</button>
+          <button class="os-btn" id="btn-nao-flag" onclick="toggleSimNaoFlag('nao',this)" style="padding:8px;font-size:10px;text-align:center">✗ NÃO firme</button>
+        </div>
+        <div id="sim-detail-wrap" style="display:none;margin-bottom:8px">
+          <input type="text" class="finp" id="f-sim" placeholder="Ao que você disse SIM (opcional)…" style="margin-bottom:6px;font-size:10px">
+        </div>
+        <div id="nao-detail-wrap" style="display:none;margin-bottom:8px">
+          <input type="text" class="finp" id="f-nao" placeholder="A que você disse NÃO (opcional)…" style="font-size:10px">
+        </div>
+        <div style="font-size:8px;color:var(--dim);line-height:1.5;margin-top:4px">Toque para marcar. Detalhar é opcional — o clique já registra.</div>
       </div>
 
       <div class="card">
@@ -532,20 +540,15 @@ tr:hover td{background:var(--s2)}
         <div class="card-lbl">◈ Lição do dia</div>
         <textarea class="finp" id="f-lesson" placeholder="Uma frase. O que esse dia me ensinou…"></textarea>
       </div>
-      <div class="card">
-        <div class="card-lbl">❧ Uma coisa boa</div>
-        <input type="text" class="finp" id="f-good" placeholder="Específico, não genérico…">
-      </div>
 
       <div class="div"></div>
 
+      <!-- FOCO DE AMANHÃ — postura + tarefa em um só card -->
       <div class="card">
-        <div class="card-lbl">🌅 Intenção de amanhã</div>
-        <input type="text" class="finp" id="f-intent" placeholder="Amanhã opero como…">
-      </div>
-      <div class="card">
-        <div class="card-lbl">◆ MIT — tarefa mais importante</div>
-        <input type="text" class="finp" id="f-mit" placeholder="Se só isso acontecer, o dia foi válido…">
+        <div class="card-lbl">🌅 Foco de amanhã</div>
+        <div style="font-size:9px;color:var(--dim);margin-bottom:9px;line-height:1.5">Postura de como operar + a única tarefa que valida o dia.</div>
+        <input type="text" class="finp" id="f-intent" placeholder="Postura: amanhã opero como…" style="margin-bottom:6px">
+        <input type="text" class="finp" id="f-mit" placeholder="MIT: se só isso acontecer, dia foi válido…">
       </div>
       <div class="card">
         <div class="card-lbl">📅 Agenda de amanhã</div>
@@ -1121,52 +1124,78 @@ tr:hover td{background:var(--s2)}
 const MOODS={focado:{c:'#4e7cf8',bg:'#091028',e:'⚡'},calmo:{c:'#30c478',bg:'#061410',e:'🌊'},produtivo:{c:'#e8a020',bg:'#1e1400',e:'🔥'},disperso:{c:'#8c64f0',bg:'#120828',e:'🌀'},ansioso:{c:'#e84040',bg:'#1c0606',e:'⚡'},cansado:{c:'#424a6a',bg:'#10121e',e:'🌑'}};
 const DAYS=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 const MONTHS=['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-const PILAR_KEYS=['alma','corpo','espirito','pessoas'];
+const PILAR_KEYS=['alma','corpo','espirito'];
 
 // ── FRASES ÂNCORA — 7 por dia da semana, calibradas para trader com gargalo de medo ──
 const ANCHOR_PHRASES=[
-  // Domingo
-  {
-    quote:"Descanse com intenção, não por inércia. Quem se recupera com consciência chega segunda com vantagem sobre quem só esperou o fim de semana passar.",
-    source:"Joel Jota — princípio de recuperação ativa",
-    activation:"Pergunta: o que você vai fazer hoje para chegar segunda melhor do que estava sexta?"
-  },
-  // Segunda
-  {
-    quote:"A coragem não é ausência de medo. É entrar mesmo com medo e executar o processo. O resultado é consequência. O processo é sua responsabilidade.",
-    source:"David Goggins — Can't Hurt Me + Bernadinho Rezende — cultura de processo",
-    activation:"Pergunta: qual é a única coisa que você pode controlar totalmente hoje?"
-  },
-  // Terça
-  {
-    quote:"Você não está atrasado. Você está onde suas decisões te colocaram. A próxima decisão começa agora.",
-    source:"Flávio Augusto — Geração de Valor + Ícaro de Carvalho",
-    activation:"Pergunta: qual decisão pequena, feita agora, muda a trajetória do dia?"
-  },
-  // Quarta
-  {
-    quote:"O medo de errar é mais caro do que o erro. Calcule o custo real de não agir — ele sempre supera o custo de agir errado e aprender.",
-    source:"Elon Musk — first principles + Caio Carneiro — mentalidade comercial",
-    activation:"Pergunta: o que você está evitando hoje por medo de errar? Qual é o real custo de continuar evitando?"
-  },
-  // Quinta
-  {
-    quote:"Disciplina é fazer o que precisa ser feito no momento em que precisa, independente de como você está se sentindo. O sentimento segue a ação, não o contrário.",
-    source:"Jordan Peterson — 12 Rules for Life + Novak Djokovic — protocolo de consistência",
-    activation:"Pergunta: se você agisse como a melhor versão de si mesmo nas próximas 2 horas, o que faria primeiro?"
-  },
-  // Sexta
-  {
-    quote:"Resultado é lagging indicator. O que você pode medir hoje é o processo: executou o sistema? Tomou a decisão certa? O lucro vem depois de um volume de decisões corretas.",
-    source:"Talles Gomes — mentalidade de volume + Guto Galamba — fundamentos de performance",
-    activation:"Pergunta: independente do resultado desta semana, você seguiu o processo? Se não, o que especificamente mudaria?"
-  },
-  // Sábado
-  {
-    quote:"Revise como um cientista, não como um juiz. Dados não têm julgamento. Comportamentos têm padrões. Encontre o padrão, ajuste a variável, teste de novo.",
-    source:"Metodologia científica comportamental — Kahneman + Ericsson",
-    activation:"Pergunta: olhando esta semana como dado puro, qual foi o padrão mais importante que você quer replicar ou eliminar?"
-  }
+  // ─── DOMINGO — recuperação, retrospectiva, propósito
+  {quote:"Descanse com intenção, não por inércia. Quem se recupera com consciência chega segunda com vantagem sobre quem só esperou o fim de semana passar.",source:"Joel Jota — princípio de recuperação ativa",activation:"O que você vai fazer hoje para chegar segunda melhor do que estava sexta?",dow:0},
+  {quote:"Você tem poder sobre a sua mente — não sobre eventos externos. Perceba isso, e você encontrará força.",source:"Marco Aurélio — Meditações",activation:"Qual acontecimento da semana ainda te controla mentalmente? Solte-o antes da segunda começar.",dow:0},
+  {quote:"Não é que temos pouco tempo, é que perdemos muito. A vida é longa o suficiente para quem sabe usá-la.",source:"Sêneca — Sobre a brevidade da vida",activation:"O que na semana passada foi tempo bem usado? O que foi tempo perdido?",dow:0},
+  {quote:"O homem que move uma montanha começa carregando pedras pequenas.",source:"Confúcio",activation:"Qual pedra pequena você vai carregar amanhã em direção à sua montanha?",dow:0},
+  {quote:"Aquele que tem um porquê para viver pode suportar quase qualquer como.",source:"Nietzsche — via Viktor Frankl",activation:"Reconecte com seu porquê antes de fazer os planos da semana.",dow:0},
+  {quote:"Ordene sua alma, ordene sua semana. A caos externo é reflexo do caos interno não confrontado.",source:"Jordan Peterson — 12 Rules for Life",activation:"Onde está o caos interno que você tem evitado olhar?",dow:0},
+  {quote:"Silêncio deliberado é um dos hábitos mais raros e mais rentáveis.",source:"Naval Ravikant",activation:"Reserve 30 minutos de silêncio total hoje — sem tela, sem áudio, sem estímulo.",dow:0},
+
+  // ─── SEGUNDA — coragem, início, ação
+  {quote:"A coragem não é ausência de medo. É entrar mesmo com medo e executar o processo. O resultado é consequência. O processo é sua responsabilidade.",source:"David Goggins — Can't Hurt Me + Bernadinho Rezende",activation:"Qual é a única coisa que você pode controlar totalmente hoje?",dow:1},
+  {quote:"Nenhum vento é favorável para quem não sabe para onde vai.",source:"Sêneca",activation:"Escreva em uma linha: para onde essa semana precisa te levar?",dow:1},
+  {quote:"Comece o dia dizendo a si mesmo: hoje encontrarei o intrometido, o ingrato, o violento, o traiçoeiro. Nada disso me tira do curso.",source:"Marco Aurélio — Meditações",activation:"Antecipe: quais 3 coisas vão tentar tirar você do plano hoje?",dow:1},
+  {quote:"Não sofra por antecipação. O que temes pode nunca chegar. E se chegar, você aguenta.",source:"Sêneca — Cartas a Lucílio",activation:"O que você antecipou sofrer hoje sem base real?",dow:1},
+  {quote:"O primeiro passo não te leva onde quer chegar. Ele te tira de onde não pode ficar.",source:"Rocky Balboa — via Cirilo",activation:"Qual passo pequeno tira você hoje do lugar onde não pode ficar?",dow:1},
+  {quote:"O que os homens temem mais é dar o primeiro passo. Depois disso, o passo continua sozinho.",source:"Confúcio",activation:"Que primeiro passo você vai dar antes das 10h hoje?",dow:1},
+  {quote:"Ser é fazer. Existência precede essência — você é o que você repete fazer.",source:"Sartre / Aristóteles combinados",activation:"Que ação de hoje precisa refletir quem você quer ser?",dow:1},
+  {quote:"Você não precisa ver a escada inteira, só o próximo degrau.",source:"Martin Luther King Jr.",activation:"Qual é o próximo degrau — não o topo, só o próximo?",dow:1},
+
+  // ─── TERÇA — decisão, responsabilidade
+  {quote:"Você não está atrasado. Você está onde suas decisões te colocaram. A próxima decisão começa agora.",source:"Flávio Augusto — Geração de Valor",activation:"Qual decisão pequena, feita agora, muda a trajetória do dia?",dow:2},
+  {quote:"Entre o estímulo e a resposta há um espaço. Nesse espaço está o seu poder de escolha. E na escolha está a sua liberdade.",source:"Viktor Frankl — Em Busca de Sentido",activation:"Hoje, quando algo te tirar do centro, encontre o espaço antes de responder.",dow:2},
+  {quote:"Não fuja para o futuro. Aja no presente. O futuro é feito das ações do agora.",source:"Marco Aurélio",activation:"Qual ação você está adiando esperando um momento melhor?",dow:2},
+  {quote:"Não é o que te acontece, mas como você reage que importa.",source:"Epicteto — Enchiridion",activation:"O que aconteceu ontem que ainda pesa? Você reagiu ou respondeu?",dow:2},
+  {quote:"A liberdade começa quando você para de esperar aprovação para agir.",source:"Nietzsche — Assim falou Zaratustra",activation:"De quem você ainda espera aprovação para fazer o que sabe que precisa?",dow:2},
+  {quote:"Assumir responsabilidade não é culpa. É poder. Culpa te paralisa. Responsabilidade te move.",source:"Jocko Willink — Extreme Ownership",activation:"Onde você está confundindo culpa com responsabilidade?",dow:2},
+  {quote:"Se você não paga pelo que quer com sacrifício, vai pagar com arrependimento.",source:"Randy Pausch — The Last Lecture",activation:"Qual sacrifício pequeno hoje evita um arrependimento grande depois?",dow:2},
+  {quote:"O maior perigo para a maioria de nós não é que nossa mira seja alta demais e erremos, mas que seja baixa demais e acertemos.",source:"Michelangelo",activation:"Onde sua mira está baixa demais no trade e na vida?",dow:2},
+
+  // ─── QUARTA — medo, custo da inação
+  {quote:"O medo de errar é mais caro do que o erro. Calcule o custo real de não agir — ele sempre supera o custo de agir errado e aprender.",source:"Elon Musk — first principles + Caio Carneiro",activation:"O que você está evitando hoje por medo de errar? Qual é o custo real de continuar evitando?",dow:3},
+  {quote:"O obstáculo é o caminho. O que está no meio do caminho vira o próprio caminho.",source:"Marco Aurélio / Ryan Holiday — The Obstacle is the Way",activation:"Qual obstáculo desta semana é, na verdade, o próprio ensinamento?",dow:3},
+  {quote:"Sofremos mais na imaginação do que na realidade.",source:"Sêneca — Cartas a Lucílio",activation:"Liste o pior cenário. Agora liste o realista. Qual dos dois te paralisa?",dow:3},
+  {quote:"Não é o que te acontece que te derrota. É o que você fala para si mesmo sobre o que te aconteceu.",source:"Epicteto",activation:"Que narrativa interna sobre um evento recente precisa ser reescrita?",dow:3},
+  {quote:"A morte sorri para todos. Tudo o que podemos fazer é sorrir de volta.",source:"Marco Aurélio",activation:"Se hoje fosse o último dia, o que você faria diferente antes das 12h?",dow:3},
+  {quote:"O homem sofre principalmente por causa das coisas que teme, não das coisas que acontecem.",source:"Marco Aurélio",activation:"O que você teme hoje que talvez nunca aconteça?",dow:3},
+  {quote:"Nada é tão intolerável quanto uma sucessão de dias belos.",source:"Goethe",activation:"Se hoje é um dia difícil, é aí que o caráter se forma — não nos fáceis.",dow:3},
+  {quote:"Quem se acovarda diante da tarefa se torna escravo dela.",source:"Nietzsche",activation:"Qual tarefa você está adiando e virando escravo dela?",dow:3},
+
+  // ─── QUINTA — disciplina, hábito
+  {quote:"Disciplina é fazer o que precisa ser feito no momento em que precisa, independente de como você está se sentindo. O sentimento segue a ação, não o contrário.",source:"Jordan Peterson + Novak Djokovic",activation:"Se você agisse como a melhor versão de si nas próximas 2 horas, o que faria primeiro?",dow:4},
+  {quote:"Somos o que fazemos repetidamente. A excelência, portanto, não é um ato, mas um hábito.",source:"Aristóteles",activation:"Qual hábito, se repetido por 30 dias, muda mais sua trajetória?",dow:4},
+  {quote:"Cada hábito é um voto no tipo de pessoa que você quer se tornar.",source:"James Clear — Atomic Habits",activation:"Qual foi o último voto — em quem — que você deu com seu comportamento?",dow:4},
+  {quote:"Não confie em como se sente. Confie em o que você faz repetidamente.",source:"Cirilo (mentor)",activation:"O que seus últimos 7 dias dizem sobre quem você é — independente do que você sente?",dow:4},
+  {quote:"O que te disciplina hoje te liberta amanhã. O que te libera hoje te escraviza amanhã.",source:"Zig Ziglar / princípio estóico",activation:"Qual pequena liberdade de hoje vai custar caro amanhã?",dow:4},
+  {quote:"Motivação te faz começar. Hábito te faz continuar.",source:"Jim Rohn",activation:"Onde você depende de motivação onde deveria ter sistema?",dow:4},
+  {quote:"A vida das pessoas comuns é dominada pela emoção. A vida das pessoas excepcionais é dominada pelo processo.",source:"Guto Galamba — mentalidade de performance",activation:"Onde a emoção ainda dita sua execução hoje?",dow:4},
+  {quote:"O sucesso é a soma de pequenos esforços repetidos dia após dia.",source:"Robert Collier",activation:"Qual esforço pequeno, se repetido hoje, sábado vai valer muito?",dow:4},
+
+  // ─── SEXTA — resultado vs processo
+  {quote:"Resultado é lagging indicator. O que você pode medir hoje é o processo: executou o sistema? Tomou a decisão certa? O lucro vem depois de um volume de decisões corretas.",source:"Talles Gomes + Guto Galamba",activation:"Independente do resultado desta semana, você seguiu o processo? Se não, o que muda?",dow:5},
+  {quote:"Julgue-se pelo que você fez, não pelo que aconteceu depois. Processo é seu; resultado é do universo.",source:"Marco Aurélio adaptado",activation:"Separe: das perdas desta semana, quais foram processo ruim e quais foram apenas cauda?",dow:5},
+  {quote:"O jogo longo é vencido por quem consegue ficar no jogo. Sobreviver é edge.",source:"Nassim Taleb — Skin in the Game",activation:"O que você fez esta semana que reduziu seu tempo no jogo?",dow:5},
+  {quote:"Vantagem composta pertence a quem não faz besteira.",source:"Charlie Munger",activation:"Que besteira você quase fez esta semana e evitou? Reforce essa memória.",dow:5},
+  {quote:"Grande quando estou certo, pequeno quando não sei.",source:"Stanley Druckenmiller",activation:"Esta semana, você foi grande quando estava certo? Ou pequeno quando podia ser grande?",dow:5},
+  {quote:"Nunca aumente o risco depois de uma perda. Isso não é gestão, é vingança contra o mercado.",source:"Paul Tudor Jones",activation:"Você tentou revanche esta semana? Onde?",dow:5},
+  {quote:"O trader amador foca em quanto pode ganhar. O trader profissional foca em quanto pode perder.",source:"Ed Seykota — Market Wizards",activation:"Onde seu foco esteve esta semana: no ganho ou na proteção?",dow:5},
+  {quote:"Ganhar dinheiro é fácil. Manter dinheiro é difícil. Multiplicar dinheiro é uma arte.",source:"Warren Buffett adaptado",activation:"Em qual dos três você está esta semana?",dow:5},
+
+  // ─── SÁBADO — revisão, padrão
+  {quote:"Revise como um cientista, não como um juiz. Dados não têm julgamento. Comportamentos têm padrões. Encontre o padrão, ajuste a variável, teste de novo.",source:"Metodologia Kahneman + Ericsson",activation:"Qual foi o padrão mais importante da semana que você quer replicar ou eliminar?",dow:6},
+  {quote:"A vida não examinada não vale ser vivida.",source:"Sócrates",activation:"Reserve 20 minutos hoje para examinar a semana sem julgamento.",dow:6},
+  {quote:"Toda tarde ao fim do dia, pergunte: qual defeito curei hoje? Contra qual vício resisti? Em que sou melhor?",source:"Sêneca — Sobre a Ira",activation:"Faça isso agora sobre a semana. Escreva as respostas.",dow:6},
+  {quote:"O olho que vê tudo, exceto a si mesmo, é o próprio dos tolos.",source:"Marco Aurélio",activation:"Onde você viu erro em tudo esta semana menos em você mesmo?",dow:6},
+  {quote:"O que não pode ser medido não pode ser melhorado. Mas o que é medido sem contexto é ruído.",source:"Peter Drucker + Kahneman",activation:"O que você mediu esta semana? Foi medida ou foi ruído?",dow:6},
+  {quote:"Não é o mais forte que sobrevive, nem o mais inteligente. É o que melhor se adapta.",source:"Charles Darwin",activation:"O que você precisa se adaptar antes da próxima semana?",dow:6},
+  {quote:"Persistência é a habilidade de continuar quando o excitamento inicial acabou.",source:"Angela Duckworth — Grit",activation:"Onde você está confundindo falta de excitação com falta de progresso?",dow:6},
+  {quote:"A calma é a maior manifestação de poder.",source:"James Allen — Como um homem pensa",activation:"Em qual momento desta semana você perdeu a calma? Reveja e ajuste.",dow:6}
 ];
 const ALL_SETUPS=['Op1','Op2','MetN','DupPr','DivOc','Cont','Emotivo','DnçVw','FlCtVw','MOLEQUE','RtMeSg','D-1','News','Aj','Aj 0,5','Aj 0,75','Aj 1,0','Aj 1,25','Aj 1,5','Fec','Fec 0,5','Fec 0,75','Fec 1,00','Fec 1,25','Fec 1,50','Ab','DvR 2','DvR 10','DvR 210','DvI 2','DvI 5','DvI 10','DvI 210','DvRI 2','DvRI 10','DvRI 210','Bseg 2','Bseg 10','Bseg 210','FOMO','Marc','SlAg','Fluxo','Vwap 0','Vwap 0,20','Vwap 0,25','Vwap 0,40','Vwap 0,50','Vwap 0,60','Vwap 0,75','Vwap 1,00','50%','1delta','2deltas','1MDelta','MRc2','MRc10','MIr2','MIf5','RtM5','Rt50I2','Rt50I5','Cirilo','BarraG','8-17','8 mm','PA','St10'];
 const ENTRY_STATES={planejado:{label:'📋 Planejado',cls:'sel-plan'},atrasado:{label:'⏰ Atrasado',cls:'sel-gold'},emotivo:{label:'🔥 Emotivo',cls:'sel-danger'},medo_falha:{label:'😨 Medo falha',cls:'sel-danger'},oportunidade:{label:'💡 Oportunidade',cls:'sel-gold'},cirilo:{label:'🎯 Cirilo',cls:'sel-cirilo'},desfocado:{label:'🌀 Desfocado',cls:'sel-danger'},revanche:{label:'⚡ Revanche',cls:'sel-danger'},ross:{label:'📐 Ross',cls:'sel-plan'}};
@@ -1178,7 +1207,7 @@ let selectedMood=null,moodPre=null,moodPos=null,wins=[],fails=[],agenda=[],trade
 let adhState={e1:false,no_e3:false,stop:false,partial:false,entry:false,size:false};
 let chatHistory=[],isTyping=false,notifPermission=false;
 let sleepQuality=null;
-let pilares={alma:[],corpo:[],espirito:[],pessoas:[]};
+let pilares={alma:[],corpo:[],espirito:[]};
 let visits=[];  // [{client, time, note, done, value_est}]
 let hesReasons=[];let hesSetups=[];let hesSegs=[];let hesIfr=[];
 let selectedSetups=[],setupUsage={};
@@ -1206,6 +1235,8 @@ function setupFamily(s){return SETUP_FAMILY[s]||'Outro';}
 let newOpAdh={size:false};
 let preChecklist={planejamento:false,visualizacao:false,chegada45:false,regioes:false,stopdia:false};
 let tradeEditDate=null; // null = today, 'YYYY-MM-DD' = other day
+let pessoalEditDate=null; // null = today, 'YYYY-MM-DD' = other day
+let simFlag=false,naoFlag=false;
 let editingOpIdx=null;  // null = new op, number = editing existing
 
 // ── ESTRUTURA E1/E2/E3 ────────────────────────
@@ -1489,6 +1520,88 @@ function switchTradeDate(iso){
   loadTradeForms(tradeDateISO());
 }
 
+// ── EDITAR DIA PASSADO — PESSOAL ────────────
+function pessoalDateISO(){return pessoalEditDate||todayISO();}
+function switchPessoalDate(mode){
+  const sel=document.getElementById('pessoal-edit-date');
+  const today=todayISO();
+  let iso;
+  if(mode==='today'){iso=today;if(sel) sel.value=today;pessoalEditDate=null;}
+  else{iso=sel?sel.value:today;pessoalEditDate=(iso&&iso!==today)?iso:null;}
+  // Atualiza subtítulo do card
+  const dateEl=document.getElementById('pg-pessoal-date');
+  if(dateEl){
+    const d=new Date(iso+'T12:00:00');
+    dateEl.textContent=d.toLocaleDateString('pt-BR',{weekday:'long',day:'2-digit',month:'long'})+(pessoalEditDate?' · EDITANDO':'');
+    dateEl.style.color=pessoalEditDate?'var(--purp)':'';
+  }
+  loadPessoalForms(iso);
+}
+
+// Carrega os campos da aba Pessoal para o dia iso (mesmo lógica de loadTodayForms mas só a parte pessoal)
+function loadPessoalForms(dateISO){
+  const e=allData.find(d=>d.date_iso===dateISO)||{};
+  // Reset — só a parte pessoal (não mexe trade)
+  moodPre=null;moodPos=null;sleepQuality=null;simFlag=false;naoFlag=false;
+  document.querySelectorAll('#mood-pre-grid .mo, #mood-pos-grid .mo, #presenca-btns .mo, .sq').forEach(b=>b.classList.remove('sel'));
+  const bSim=document.getElementById('btn-sim-flag');if(bSim) bSim.classList.remove('sel-plan');
+  const bNao=document.getElementById('btn-nao-flag');if(bNao) bNao.classList.remove('sel-danger');
+  const swSim=document.getElementById('sim-detail-wrap');if(swSim) swSim.style.display='none';
+  const swNao=document.getElementById('nao-detail-wrap');if(swNao) swNao.style.display='none';
+  [['sl-e','sv-e',5],['sl-d','sv-d',5],['sl-c','sv-c',5]].forEach(([s,v,d])=>{const se=document.getElementById(s),ve=document.getElementById(v);if(se) se.value=d;if(ve) ve.textContent=String(d);});
+  const slP=document.getElementById('sl-presenca');if(slP) slP.value=5;
+  ['f-mood-pre-note','f-mood-pos-note','f-lesson','f-intent','f-mit','f-sim','f-nao','sleep-bed','sleep-wake'].forEach(id=>{const el=document.getElementById(id);if(el) el.value='';});
+  wins=[];fails=[];agenda=[];
+  pilares={alma:[],corpo:[],espirito:[]};
+  PILAR_KEYS.forEach(k=>renderPilar(k));
+  renderList('win');renderList('fail');renderAgenda();
+  if(!e.date_iso) return;
+  // Popula com dados do dia
+  if(e.mood_pre||e.mood){moodPre=e.mood_pre||e.mood;document.querySelectorAll('#mood-pre-grid .mo').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+moodPre+"'")) b.classList.add('sel');});}
+  if(e.mood_pos){moodPos=e.mood_pos;document.querySelectorAll('#mood-pos-grid .mo').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+e.mood_pos+"'")) b.classList.add('sel');});}
+  if(e.mood_pre_note){const el=document.getElementById('f-mood-pre-note');if(el) el.value=e.mood_pre_note;}
+  if(e.mood_pos_note){const el=document.getElementById('f-mood-pos-note');if(el) el.value=e.mood_pos_note;}
+  [['sl-e','sv-e','energia'],['sl-d','sv-d','disciplina'],['sl-c','sv-c','clareza']].forEach(([s,v,k])=>{if(e[k]){const se=document.getElementById(s),ve=document.getElementById(v);if(se) se.value=e[k];if(ve) ve.textContent=e[k];}});
+  if(e.presenca!=null){const slP2=document.getElementById('sl-presenca');if(slP2) slP2.value=e.presenca;
+    let closest=null,dmin=99;document.querySelectorAll('#presenca-btns .mo').forEach(b=>{const v=+b.dataset.v;const d=Math.abs(v-e.presenca);if(d<dmin){dmin=d;closest=b;}});
+    if(closest) closest.classList.add('sel');
+  }
+  if(e.sim_flag){simFlag=true;const b=document.getElementById('btn-sim-flag');if(b) b.classList.add('sel-plan');if(e.sim_detail){const el=document.getElementById('f-sim');if(el){el.value=e.sim_detail;document.getElementById('sim-detail-wrap').style.display='block';}}}
+  if(e.nao_flag){naoFlag=true;const b=document.getElementById('btn-nao-flag');if(b) b.classList.add('sel-danger');if(e.nao_detail){const el=document.getElementById('f-nao');if(el){el.value=e.nao_detail;document.getElementById('nao-detail-wrap').style.display='block';}}}
+  wins=e.wins||[];fails=e.fails||[];agenda=e.agenda||[];
+  renderList('win');renderList('fail');renderAgenda();
+  ['lesson','intent','mit'].forEach(k=>{const el=document.getElementById('f-'+k);if(el&&e[k]) el.value=e[k];});
+  if(e.sleep_bed){const el=document.getElementById('sleep-bed');if(el) el.value=e.sleep_bed;}
+  if(e.sleep_wake){const el=document.getElementById('sleep-wake');if(el) el.value=e.sleep_wake;}
+  if(e.sleep_quality){sleepQuality=e.sleep_quality;document.querySelectorAll('.sq').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+e.sleep_quality+"'")) b.classList.add('sel');});}
+  if(e.sleep_bed&&e.sleep_wake) calcSleepDur();
+  if(e.pilares) loadPilares(e.pilares);
+}
+
+// ── PRESENÇA como botões ──
+function selPresenca(btn){
+  document.querySelectorAll('#presenca-btns .mo').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  const v=+btn.dataset.v;
+  const sl=document.getElementById('sl-presenca');if(sl) sl.value=v;
+}
+
+// ── SIM/NÃO FLAGS ──
+function toggleSimNaoFlag(kind,btn){
+  if(kind==='sim'){
+    simFlag=!simFlag;
+    btn.classList.toggle('sel-plan',simFlag);
+    const wrap=document.getElementById('sim-detail-wrap');if(wrap) wrap.style.display=simFlag?'block':'none';
+    if(!simFlag){const f=document.getElementById('f-sim');if(f) f.value='';}
+  } else {
+    naoFlag=!naoFlag;
+    btn.classList.toggle('sel-danger',naoFlag);
+    const wrap=document.getElementById('nao-detail-wrap');if(wrap) wrap.style.display=naoFlag?'block':'none';
+    if(!naoFlag){const f=document.getElementById('f-nao');if(f) f.value='';}
+  }
+}
+
+
 function loadTradeForms(dateISO){
   const e=allData.find(d=>d.date_iso===dateISO)||{};
   // Reset trade fields
@@ -1584,9 +1697,23 @@ function selNewOpIfr(btn){
 
 // ── FRASE ÂNCORA ─────────────────────────────
 function renderAnchorPhrase(){
-  const dow=new Date().getDay(); // 0=Dom, 1=Seg...
-  const p=ANCHOR_PHRASES[dow];
-  if(!p) return;
+  const now=new Date();
+  const dow=now.getDay(); // 0=Dom, 1=Seg...
+  const dayPool=ANCHOR_PHRASES.filter(p=>p.dow===dow);
+  if(!dayPool.length) return;
+  // Cursor por dia da semana — avança 1 posição/dia mesmo se você não abriu o app
+  const key='anchor_cursor_'+dow;
+  const dateKey='anchor_date_'+dow;
+  const todayStr=now.toISOString().slice(0,10);
+  let idx=parseInt(localStorage.getItem(key)||'0');
+  const lastDate=localStorage.getItem(dateKey);
+  if(lastDate!==todayStr){
+    // Novo dia daquela semana → avança
+    idx=(idx+1)%dayPool.length;
+    localStorage.setItem(key,String(idx));
+    localStorage.setItem(dateKey,todayStr);
+  }
+  const p=dayPool[idx%dayPool.length];
   const q=document.getElementById('anchor-quote');
   const s=document.getElementById('anchor-source');
   const a=document.getElementById('anchor-activation');
@@ -2415,17 +2542,25 @@ function resetForms(){
   preChecklist={planejamento:false,visualizacao:false,chegada45:false,regioes:false,stopdia:false};
   document.querySelectorAll('#mood-pre-grid .mo, #mood-pos-grid .mo').forEach(b=>b.classList.remove('sel'));
   document.querySelectorAll('.sq').forEach(b=>b.classList.remove('sel'));
-  [['sl-e','sv-e'],['sl-d','sv-d'],['sl-c','sv-c'],['sl-presenca','sv-presenca']].forEach(([s,v])=>{
+  [['sl-e','sv-e'],['sl-d','sv-d'],['sl-c','sv-c']].forEach(([s,v])=>{
     const se=document.getElementById(s),ve=document.getElementById(v);
     if(se){se.value=5;}if(ve){ve.textContent='5';}
   });
-  ['f-mood-pre-note','f-mood-pos-note','f-lesson','f-good','f-intent','f-mit','f-proposito'].forEach(id=>{
+  // Presença — sem slider, hidden com default 5
+  const slP=document.getElementById('sl-presenca');if(slP) slP.value=5;
+  document.querySelectorAll('#presenca-btns .mo').forEach(b=>b.classList.remove('sel'));
+  ['f-mood-pre-note','f-mood-pos-note','f-lesson','f-intent','f-mit','f-sim','f-nao'].forEach(id=>{
     const el=document.getElementById(id);if(el) el.value='';
   });
+  simFlag=false;naoFlag=false;
+  const bSim=document.getElementById('btn-sim-flag');if(bSim) bSim.classList.remove('sel-plan');
+  const bNao=document.getElementById('btn-nao-flag');if(bNao) bNao.classList.remove('sel-danger');
+  const swSim=document.getElementById('sim-detail-wrap');if(swSim) swSim.style.display='none';
+  const swNao=document.getElementById('nao-detail-wrap');if(swNao) swNao.style.display='none';
   ['sleep-bed','sleep-wake'].forEach(id=>{const el=document.getElementById(id);if(el) el.value='';});
   document.getElementById('sleep-dur-display')&&(document.getElementById('sleep-dur-display').style.display='none');
   wins=[];fails=[];agenda=[];tradeOps=[];hesitations=[];visits=[];
-  pilares={alma:[],corpo:[],espirito:[],pessoas:[]};
+  pilares={alma:[],corpo:[],espirito:[]};
   PILAR_KEYS.forEach(k=>renderPilar(k));
   renderList('win');renderList('fail');renderAgenda();renderOps();renderHes();renderVisits();
   ['t-felling','t-mesa','t-pa','t-analysis','t-avoid','hes-detail'].forEach(id=>{
@@ -2446,17 +2581,28 @@ function loadTodayForms(){
   tradeEditDate=null;
   const notice=document.getElementById('trade-date-notice');
   if(notice) notice.style.display='none';
+  // Init pessoal edit-date selector to today
+  const pdSel=document.getElementById('pessoal-edit-date');
+  if(pdSel) pdSel.value=todayISO();
+  pessoalEditDate=null;
   if(!e.date_iso) return;  // sem registro de hoje: formulário fica vazio
   // Carrega dados de HOJE — pessoal
   if(e.mood_pre||e.mood){moodPre=e.mood_pre||e.mood;document.querySelectorAll('#mood-pre-grid .mo').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+moodPre+"'")) b.classList.add('sel');});}
   if(e.mood_pos){moodPos=e.mood_pos;document.querySelectorAll('#mood-pos-grid .mo').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+e.mood_pos+"'")) b.classList.add('sel');});}
   if(e.mood_pre_note){const el=document.getElementById('f-mood-pre-note');if(el) el.value=e.mood_pre_note;}
   if(e.mood_pos_note){const el=document.getElementById('f-mood-pos-note');if(el) el.value=e.mood_pos_note;}
-  [['sl-e','sv-e','energia'],['sl-d','sv-d','disciplina'],['sl-c','sv-c','clareza'],['sl-presenca','sv-presenca','presenca']].forEach(([s,v,k])=>{if(e[k]){const se=document.getElementById(s),ve=document.getElementById(v);if(se) se.value=e[k];if(ve) ve.textContent=e[k];}});
-  if(e.proposito){const el=document.getElementById('f-proposito');if(el) el.value=e.proposito;}
+  [['sl-e','sv-e','energia'],['sl-d','sv-d','disciplina'],['sl-c','sv-c','clareza']].forEach(([s,v,k])=>{if(e[k]){const se=document.getElementById(s),ve=document.getElementById(v);if(se) se.value=e[k];if(ve) ve.textContent=e[k];}});
+  if(e.presenca!=null){const slP=document.getElementById('sl-presenca');if(slP) slP.value=e.presenca;
+    // marca botão mais próximo do valor
+    let closest=null,dmin=99;document.querySelectorAll('#presenca-btns .mo').forEach(b=>{const v=+b.dataset.v;const d=Math.abs(v-e.presenca);if(d<dmin){dmin=d;closest=b;}});
+    if(closest) closest.classList.add('sel');
+  }
+  // Sim/Nao flags
+  if(e.sim_flag){simFlag=true;const b=document.getElementById('btn-sim-flag');if(b) b.classList.add('sel-plan');if(e.sim_detail){const el=document.getElementById('f-sim');if(el){el.value=e.sim_detail;document.getElementById('sim-detail-wrap').style.display='block';}}}
+  if(e.nao_flag){naoFlag=true;const b=document.getElementById('btn-nao-flag');if(b) b.classList.add('sel-danger');if(e.nao_detail){const el=document.getElementById('f-nao');if(el){el.value=e.nao_detail;document.getElementById('nao-detail-wrap').style.display='block';}}}
   wins=e.wins||[];fails=e.fails||[];agenda=e.agenda||[];tradeOps=e.t_ops_detail||[];hesitations=e.t_hesitations||[];
   renderList('win');renderList('fail');renderAgenda();renderOps();renderHes();
-  ['lesson','good','intent','mit'].forEach(k=>{const el=document.getElementById('f-'+k);if(el&&e[k]) el.value=e[k];});
+  ['lesson','intent','mit'].forEach(k=>{const el=document.getElementById('f-'+k);if(el&&e[k]) el.value=e[k];});
   if(e.sleep_bed){const el=document.getElementById('sleep-bed');if(el) el.value=e.sleep_bed;}
   if(e.sleep_wake){const el=document.getElementById('sleep-wake');if(el) el.value=e.sleep_wake;}
   if(e.sleep_quality){sleepQuality=e.sleep_quality;document.querySelectorAll('.sq').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+e.sleep_quality+"'")) b.classList.add('sel');});}
@@ -2549,13 +2695,15 @@ async function savePessoal(){
   // Captura obs dos pilares
   const pilaresData={};
   PILAR_KEYS.forEach(k=>{pilaresData[k]=pilares[k].map(item=>({text:item.text,done:item.done}));});
+  const editDate=pessoalEditDate||todayISO();
+  const editLabel=new Date(editDate+'T12:00:00').toLocaleDateString('pt-BR');
+  const editDow=new Date(editDate+'T12:00:00').getDay();
   const entry={
-    ...todayEntry(),
-    date_iso:todayISO(),date_label:new Date().toLocaleDateString('pt-BR'),
-    day_of_week:new Date().getDay(),
+    ...(allData.find(d=>d.date_iso===editDate)||{}),
+    date_iso:editDate,date_label:editLabel,
+    day_of_week:editDow,
     mood:moodPre||'calmo',
     presenca:+document.getElementById('sl-presenca').value,
-    proposito:document.getElementById('f-proposito').value.trim(),
     mood_pre:moodPre,
     mood_pre_note:document.getElementById('f-mood-pre-note').value.trim(),
     mood_pos:moodPos,
@@ -2565,9 +2713,12 @@ async function savePessoal(){
     clareza:+document.getElementById('sl-c').value,
     wins:[...wins],fails:[...fails],
     lesson:document.getElementById('f-lesson').value.trim(),
-    good:document.getElementById('f-good').value.trim(),
     intent:document.getElementById('f-intent').value.trim(),
     mit:document.getElementById('f-mit').value.trim(),
+    sim_flag:!!simFlag,
+    sim_detail:document.getElementById('f-sim')?.value.trim()||'',
+    nao_flag:!!naoFlag,
+    nao_detail:document.getElementById('f-nao')?.value.trim()||'',
     agenda:[...agenda],
     visits:visits.map(v=>({client:v.client,time:v.time,note:v.note,done:v.done,skips:v.skips||[]})),
     sleep_bed:document.getElementById('sleep-bed').value||null,
@@ -4027,7 +4178,9 @@ Energia:${avgField(sorted,'energia')} | Disciplina:${avgField(sorted,'disciplina
 Delta pré→pós: ${deltaDays.length} dias com mudança de humor
 Top padrões: ${topMoodPairs||'—'}
 4 Pilares (completo/com registro):
-  Alma:${pilarC.alma} Corpo:${pilarC.corpo} Espírito:${pilarC.espirito} Pessoas:${pilarC.pessoas}
+  Alma:${pilarC.alma} Corpo:${pilarC.corpo} Espírito:${pilarC.espirito}
+Aderência ao propósito (Sim/Não do dia):
+  ${(()=>{const sim=sorted.filter(d=>d.sim_flag).length,nao=sorted.filter(d=>d.nao_flag).length,tot=sorted.length;return `SIM alinhado: ${sim}/${tot} dias (${Math.round(sim/tot*100)}%) · NÃO firme: ${nao}/${tot} dias (${Math.round(nao/tot*100)}%)`})()}
 
 ════════════════════════════════════════
 15. CONVICÇÃO × SIZING × RESULTADO (Druckenmiller)
