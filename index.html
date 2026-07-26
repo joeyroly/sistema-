@@ -268,6 +268,15 @@ tr:hover td{background:var(--s2)}
 .op-card.expanded .op-detail{display:block}
 .op-state-grid{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.scb{background:var(--s3);border:1px solid var(--b1);border-radius:7px;padding:8px 4px;text-align:center;transition:all .18s}
+.scb-n{font-family:'Fraunces',serif;font-size:1rem;color:var(--dim);line-height:1}
+.scb-lbl{font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-top:3px}
+.scb.pass{background:rgba(48,196,120,.15);border-color:rgba(48,196,120,.5)}
+.scb.pass .scb-n,.scb.pass .scb-lbl{color:var(--green)}
+.scb.fail{background:rgba(232,64,64,.15);border-color:rgba(232,64,64,.5)}
+.scb.fail .scb-n,.scb.fail .scb-lbl{color:var(--red)}
+.scb.neutral{background:rgba(212,160,40,.1);border-color:rgba(212,160,40,.35)}
+.scb.neutral .scb-n,.scb.neutral .scb-lbl{color:var(--gold)}
 .os-btn{padding:4px 9px;border-radius:12px;background:var(--s3);border:1px solid var(--b1);font-size:8px;color:var(--dim);cursor:pointer;font-family:'Geist Mono',monospace;transition:all .15s;white-space:nowrap}
 .os-btn.sel-plan{border-color:var(--green);background:var(--gd);color:var(--green)}
 .os-btn.sel-danger{border-color:var(--red);background:var(--rd);color:var(--red)}
@@ -371,6 +380,30 @@ tr:hover td{background:var(--s2)}
         <span style="font-size:9px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;flex-shrink:0">Editando:</span>
         <input type="date" id="pessoal-edit-date" class="time-inp" style="flex:1;font-size:10px;padding:6px 8px;color:var(--purp);border-color:var(--purp)" onchange="switchPessoalDate()">
         <button onclick="switchPessoalDate('today')" style="font-size:9px;padding:5px 10px;background:var(--s3);border:1px solid var(--b1);border-radius:6px;color:var(--hi);cursor:pointer;font-family:'Geist Mono',monospace;flex-shrink:0">HOJE</button>
+      </div>
+
+      <!-- SCORE COMPORTAMENTAL DO DIA — o novo número principal -->
+      <div id="score-home-card" style="background:linear-gradient(135deg,var(--s2),var(--s3));border:1px solid var(--b1);border-radius:12px;padding:14px;margin-bottom:11px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px">
+          <div>
+            <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:3px">Score comportamental de hoje</div>
+            <div style="font-family:'Fraunces',serif;font-size:2.4rem;line-height:1;color:var(--hi)" id="score-home-num">—/5</div>
+            <div style="font-size:9px;color:var(--dim);margin-top:4px" id="score-home-lbl">execução do modelo</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:3px">Resultado do dia</div>
+            <div style="font-family:'Fraunces',serif;font-size:1.1rem;line-height:1;color:var(--dim)" id="score-home-brl">R$ 0</div>
+            <div style="font-size:8px;color:var(--dim);margin-top:4px">consequência</div>
+          </div>
+        </div>
+        <div id="score-home-cards" style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px">
+          <div class="scb" data-i="1" title="Checklist 5/5 antes das 09h"><div class="scb-n">1</div><div class="scb-lbl">Check</div></div>
+          <div class="scb" data-i="2" title="Máximo 2 ops no dia"><div class="scb-n">2</div><div class="scb-lbl">2 ops</div></div>
+          <div class="scb" data-i="3" title="Gatilho válido em todas as ops"><div class="scb-n">3</div><div class="scb-lbl">Gatilho</div></div>
+          <div class="scb" data-i="4" title="Registro completo em todas as ops"><div class="scb-n">4</div><div class="scb-lbl">Registro</div></div>
+          <div class="scb" data-i="5" title="Sem gatilho banido"><div class="scb-n">5</div><div class="scb-lbl">Sem risco</div></div>
+        </div>
+        <div id="score-home-hint" style="font-size:9px;color:var(--dim);margin-top:10px;line-height:1.5;padding-top:9px;border-top:1px solid var(--b1)">Preencha o dia para ver o score.</div>
       </div>
 
       <!-- FRASE ÂNCORA DO DIA -->
@@ -513,7 +546,7 @@ tr:hover td{background:var(--s2)}
 
       <div class="card">
         <div class="card-lbl">📊 Métricas pessoais</div>
-        <div class="sl-row"><span class="sl-name">Energia</span><input type="range" min="1" max="10" value="5" id="sl-e" oninput="sv('sl-e','sv-e')"><span class="sl-val" id="sv-e">5</span></div>
+        <div class="sl-row"><span class="sl-name">Energia</span><input type="range" min="1" max="10" value="5" id="sl-e" oninput="sv('sl-e','sv-e');checkEnergiaBaixa()"><span class="sl-val" id="sv-e">5</span></div>
         <div class="sl-row"><span class="sl-name">Disciplina</span><input type="range" min="1" max="10" value="5" id="sl-d" oninput="sv('sl-d','sv-d')"><span class="sl-val" id="sv-d">5</span></div>
         <div class="sl-row"><span class="sl-name">Clareza</span><input type="range" min="1" max="10" value="5" id="sl-c" oninput="sv('sl-c','sv-c')"><span class="sl-val" id="sv-c">5</span></div>
       </div>
@@ -620,7 +653,10 @@ tr:hover td{background:var(--s2)}
 
         <!-- Form nova operação -->
         <div style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:11px">
-          <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:9px">Nova operação</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
+            <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)">Nova operação</div>
+            <div id="ops-counter-header" style="font-size:9px;font-weight:500;letter-spacing:.5px;color:var(--green)">Op 1/2 do dia</div>
+          </div>
 
           <!-- ═══════════════════════════════════════════════════════════
                BLOCO 1 — ANTES DE ENTRAR (pré-clique, 10 segundos)
@@ -990,6 +1026,10 @@ tr:hover td{background:var(--s2)}
       <!-- PAINEL DO DIA — tendências recentes, alertas de risco -->
       <div id="daily-panel" style="margin-bottom:11px"></div>
 
+      <!-- ═══════════════ 0. COMPORTAMENTO — Score histórico ═══════════════ -->
+      <div class="card-lbl" style="padding:0 2px;margin-bottom:8px;margin-top:4px;color:var(--teal);font-weight:500;letter-spacing:2px">🎯 COMPORTAMENTO — EXECUÇÃO DO MODELO</div>
+      <div id="panel-behavior" style="margin-bottom:14px"></div>
+
       <!-- ═══════════════ 1. PAINEL DO GESTOR ═══════════════ -->
       <div class="card-lbl" style="padding:0 2px;margin-bottom:8px;margin-top:4px;color:var(--purp);font-weight:500;letter-spacing:2px">📊 PAINEL DO GESTOR</div>
       <div id="panel-institutional" style="margin-bottom:14px"></div>
@@ -1200,6 +1240,13 @@ const ANCHOR_PHRASES=[
 const ALL_SETUPS=['Op1','Op2','MetN','DupPr','DivOc','Cont','Emotivo','DnçVw','FlCtVw','MOLEQUE','RtMeSg','D-1','News','Aj','Aj 0,5','Aj 0,75','Aj 1,0','Aj 1,25','Aj 1,5','Fec','Fec 0,5','Fec 0,75','Fec 1,00','Fec 1,25','Fec 1,50','Ab','DvR 2','DvR 10','DvR 210','DvI 2','DvI 5','DvI 10','DvI 210','DvRI 2','DvRI 10','DvRI 210','Bseg 2','Bseg 10','Bseg 210','FOMO','Marc','SlAg','Fluxo','Vwap 0','Vwap 0,20','Vwap 0,25','Vwap 0,40','Vwap 0,50','Vwap 0,60','Vwap 0,75','Vwap 1,00','50%','1delta','2deltas','1MDelta','MRc2','MRc10','MIr2','MIf5','RtM5','Rt50I2','Rt50I5','Cirilo','BarraG','8-17','8 mm','PA','St10'];
 const ENTRY_STATES={planejado:{label:'📋 Planejado',cls:'sel-plan'},atrasado:{label:'⏰ Atrasado',cls:'sel-gold'},emotivo:{label:'🔥 Emotivo',cls:'sel-danger'},medo_falha:{label:'😨 Medo falha',cls:'sel-danger'},oportunidade:{label:'💡 Oportunidade',cls:'sel-gold'},cirilo:{label:'🎯 Cirilo',cls:'sel-cirilo'},desfocado:{label:'🌀 Desfocado',cls:'sel-danger'},revanche:{label:'⚡ Revanche',cls:'sel-danger'},ross:{label:'📐 Ross',cls:'sel-plan'}};
 const ERROR_LABELS={entrou_cedo:'entrou cedo',entrou_tarde:'entrou tarde',saiu_cedo:'saiu cedo',saiu_tarde:'saiu tarde',nao_entrou:'não entrou',moveu_stop:'moveu stop',tamanho_errado:'tamanho errado',revanche:'revanche',sem_erro:'sem erro'};
+// Gatilhos:
+//   VÁLIDOS (verde) — Planejado, Cirilo
+//   NEUTROS (amarelo) — Oportunidade, Medo falha
+//   BANIDOS (vermelho) — Emotivo, Atrasado, Desfocado, Revanche, Ross, FOMO
+const VALID_TRIGGERS=['planejado','cirilo'];
+const BANNED_TRIGGERS=['emotivo','atrasado','desfocado','revanche','ross','fomo'];
+const NEUTRAL_TRIGGERS=['oportunidade','medo_falha'];
 
 // ── STATE ─────────────────────────────────────
 let SB=null,useOffline=false,allData=[],currentPeriod='all';
@@ -1496,6 +1543,7 @@ function renderPreChecklist(){
     const dot=el.querySelector('.adh-dot');if(dot) dot.style.background=preChecklist[k]?'var(--green)':'var(--b2)';
     const txt=el.querySelector('.adh-text');if(txt) txt.style.color=preChecklist[k]?'var(--green)':'var(--dim)';
   });
+  renderScoreHome();
 }
 
 // ── DATE SWITCHER — lançar trades de outros dias ──
@@ -1576,6 +1624,10 @@ function loadPessoalForms(dateISO){
   if(e.sleep_quality){sleepQuality=e.sleep_quality;document.querySelectorAll('.sq').forEach(b=>{if(b.getAttribute('onclick')?.includes("'"+e.sleep_quality+"'")) b.classList.add('sel');});}
   if(e.sleep_bed&&e.sleep_wake) calcSleepDur();
   if(e.pilares) loadPilares(e.pilares);
+  renderScoreHome();
+  // Reset alertas one-shot ao trocar de dia
+  energiaAlertShown=false;
+  window.overrideEnergiaBaixa=false;
 }
 
 // ── PRESENÇA como botões ──
@@ -1932,7 +1984,7 @@ function calcSleepDur(){
   document.getElementById('sleep-dur-val').textContent=`${h}h${m>0?m+'m':''}`;
   document.getElementById('sleep-dur-display').style.display='block';
 }
-function selSQ(btn,q){document.querySelectorAll('.sq').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');sleepQuality=q;}
+function selSQ(btn,q){document.querySelectorAll('.sq').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');sleepQuality=q;if(q==='ruim') checkEnergiaBaixa();renderScoreHome();}
 function calcSleepMins(bed,wake){if(!bed||!wake) return null;const [bh,bm]=bed.split(':').map(Number),[wh,wm]=wake.split(':').map(Number);let bM=bh*60+bm,wM=wh*60+wm;if(wM<bM) wM+=1440;return wM-bM;}
 
 // ── 4 PILARES — lista ─────────────────────────
@@ -1983,10 +2035,21 @@ function selNewOpState(btn){
   const v=btn.dataset.v;
   const idx=newOpStates.indexOf(v);
   if(idx>=0){newOpStates.splice(idx,1);btn.classList.remove('sel-plan','sel-danger','sel-cirilo','sel-gold');}
-  else{newOpStates.push(v);const cfg=ENTRY_STATES[v];if(cfg) btn.classList.add(cfg.cls);}
+  else{newOpStates.push(v);const cfg=ENTRY_STATES[v];if(cfg) btn.classList.add(cfg.cls);coachCheckTrigger(v);}
 }
 
 function addOp(){
+  // COACH — bloqueia 3ª op se não for edição. Fluxo async via callback.
+  if(editingOpIdx===null&&tradeOps.length>=2){
+    coachCheckOpLimit(function(canProceed){
+      if(canProceed) addOpCore();
+    });
+    return;
+  }
+  addOpCore();
+}
+
+function addOpCore(){
   const dir=document.getElementById('op-dir').value;
   const pts=parseFloat(document.getElementById('op-pts').value);
   const e1Lots=parseInt(document.getElementById('op-e1-lots')?.value)||0;
@@ -2176,6 +2239,8 @@ function renderOps(){
     const execColor=op.exec_score>=8?'var(--green)':op.exec_score>=5?'var(--blue)':'var(--red)';
     const showLegacyEmo=op.emo_intensity!=null;
     const showLegacyExec=op.exec_score!=null;
+    const coachMsg=coachPostOpMessage(op);
+    const coachLine=coachMsg?`<div style="font-size:10px;padding:5px 9px;background:${coachMsg.tone==='red'?'rgba(232,64,64,.1)':coachMsg.tone==='gold'?'rgba(212,160,40,.1)':coachMsg.tone==='green'?'rgba(48,196,120,.1)':'rgba(78,124,248,.1)'};color:${coachMsg.tone==='red'?'var(--red)':coachMsg.tone==='gold'?'var(--gold)':coachMsg.tone==='green'?'var(--green)':'var(--blue)'};border-radius:6px;margin-top:6px;line-height:1.4">💬 ${coachMsg.text}</div>`:'';
     return`<div class="op-card" id="opcard-${i}">
       <div class="op-card-top">
         <span class="op-dir-badge ${op.dir==='C'?'op-c':'op-v'}">${op.dir==='C'?'▲ C':'▼ V'}</span>
@@ -2200,6 +2265,7 @@ function renderOps(){
         ${exitReasons.map(r=>`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:${dangerExits.includes(r)?'var(--rd)':'var(--gd)'};color:${dangerExits.includes(r)?'var(--red)':'var(--green)'}">${r}</span>`).join('')}
         ${stateLabels.length?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--s3);color:var(--dim)">${stateLabels.join(' + ')}</span>`:''}
       </div>
+      ${coachLine}
       <div class="op-detail">
         <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px">
           <span style="font-size:9px;background:var(--s3);border:1px solid var(--b1);padding:2px 8px;border-radius:8px;color:var(--dim)">${stateLabel}</span>
@@ -2210,7 +2276,7 @@ function renderOps(){
         </div>
         ${adhChips?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:6px">${adhChips}</div>`:''}
         ${setupsStr?`<div style="font-size:9px;color:var(--teal);margin-bottom:6px">📋 ${setupsStr}</div>`:''}
-        ${(op.mfe||op.mae)?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">${op.mfe?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--td);color:var(--teal)">MFE ${op.mfe}pts${op.capture_pct!=null?' · captura '+op.capture_pct+'%':''}</span>`:''} ${op.mae?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--rd);color:var(--red)">MAE ${op.mae}pts</span>`:''}</div>`:''}
+        ${(op.mfe||op.mae)?`<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px">${op.mfe?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--td);color:var(--teal)">↑ Máx a favor ${op.mfe}pts${op.capture_pct!=null?' · aproveitou '+op.capture_pct+'%':''}</span>`:''} ${op.mae?`<span style="font-size:9px;padding:2px 8px;border-radius:8px;background:var(--rd);color:var(--red)">↓ Máx contra ${op.mae}pts</span>`:''}</div>`:''}
         ${op.note?`<div style="font-size:10px;color:var(--text);line-height:1.6;background:var(--s3);border-radius:6px;padding:7px 9px">${esc(op.note)}</div>`:''}
         <textarea class="op-note-inp" id="op-corr-${i}" placeholder="Correção: o que executaria diferente? (escreva agora)" style="width:100%;min-height:32px;font-size:9px;margin-top:5px" oninput="autoResizeTA(this);saveOpCorr(${i},this.value)">${esc(op.corr||'')||''}</textarea>
       </div>
@@ -2234,6 +2300,8 @@ function renderOps(){
   const adhEl=document.getElementById('ops-adh');
   if(adhEl) adhEl.textContent=avgAdh!=null?avgAdh.toFixed(1)+'/10':'—';
   renderRiskAlarm();
+  updateOpsCounterHeader();
+  renderScoreHome();
 }
 
 // ── ALARME DE RISCO DINÂMICO (Griffin/Citadel) ──
@@ -2276,7 +2344,7 @@ function renderRiskAlarm(){
     const pctStop=stopPerAccount>0?Math.round(Math.min(Math.abs(dayFPA),Math.abs(dayPF))/stopPerAccount*100):0;
     headerHtml=`<div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:8px 11px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
       <div style="display:flex;gap:12px;flex-wrap:wrap">
-        <div><div style="font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase">P&L do dia</div><div style="font-family:'Fraunces',serif;font-size:1.15rem;color:${brlColor}">R$ ${dayBRL>=0?'+':''}${Math.round(dayBRL).toLocaleString('pt-BR')}</div></div>
+        <div><div style="font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase">Resultado do dia</div><div style="font-family:'Fraunces',serif;font-size:1.15rem;color:${brlColor}">R$ ${dayBRL>=0?'+':''}${Math.round(dayBRL).toLocaleString('pt-BR')}</div></div>
         <div><div style="font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase">F+PA</div><div style="font-size:10px;color:${dayFPA>=0?'var(--green)':'var(--red)'}">${dayFPA>=0?'+':''}${Math.round(dayFPA).toLocaleString('pt-BR')}</div></div>
         <div><div style="font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase">PF</div><div style="font-size:10px;color:${dayPF>=0?'var(--green)':'var(--red)'}">${dayPF>=0?'+':''}${Math.round(dayPF).toLocaleString('pt-BR')}</div></div>
       </div>
@@ -2686,6 +2754,318 @@ function renderBriefing(){
   el.innerHTML=html;
 }
 
+// ═══════════════════════════════════════════════════════════════
+// SCORE COMPORTAMENTAL — 5 cards verificados por dado real
+// ═══════════════════════════════════════════════════════════════
+// Retorna {cards:[{i,status,reason}], score:0-5} para um dia
+// status: 'pass' | 'fail' | 'neutral' | 'pending'
+function computeScoreForDay(entry){
+  if(!entry) entry={};
+  const ops=entry.t_ops_detail||[];
+  const cards=[];
+  // ── Card 1: Checklist 5/5 completo antes das 09h
+  const pre=entry.pre_checklist||{};
+  const preKeys=['planejamento','visualizacao','chegada45','regioes','stopdia'];
+  const preCount=preKeys.filter(k=>pre[k]===true).length;
+  // regra 09h: se hoje e agora ainda antes de 09h → pending; senão avalia
+  const isToday=entry.date_iso===todayISO();
+  const now=new Date();
+  const before9=isToday&&(now.getHours()<9);
+  if(preCount===5){cards.push({i:1,status:'pass',reason:'Checklist 5/5 completo'});}
+  else if(before9){cards.push({i:1,status:'pending',reason:`${preCount}/5 · faltam ${5-preCount} até as 09h`});}
+  else{cards.push({i:1,status:'fail',reason:`Só ${preCount}/5 preenchidos`});}
+
+  // ── Card 2: Máx 2 ops
+  if(ops.length===0){cards.push({i:2,status:'pending',reason:'0 ops registradas'});}
+  else if(ops.length<=2){cards.push({i:2,status:'pass',reason:`${ops.length} op${ops.length>1?'s':''}`});}
+  else{cards.push({i:2,status:'fail',reason:`${ops.length} ops — excedeu limite de 2`});}
+
+  // ── Card 3: 100% das ops com gatilho VÁLIDO (planejado ou cirilo).
+  // Neutro (oportunidade / medo_falha) não conta contra, mas exige outro gatilho válido para passar.
+  // Banido derruba direto (mas é o Card 5 quem mede isso).
+  if(ops.length===0){cards.push({i:3,status:'pending',reason:'sem ops'});}
+  else {
+    let ok=true;let sample=null;
+    for(const op of ops){
+      const trigs=(op.entry_states||(op.entry_state?[op.entry_state]:[])).map(t=>String(t).toLowerCase());
+      const hasValid=trigs.some(t=>VALID_TRIGGERS.includes(t));
+      const onlyNeutral=trigs.length>0&&trigs.every(t=>NEUTRAL_TRIGGERS.includes(t));
+      if(!hasValid&&!onlyNeutral){ok=false;sample=trigs.join(',')||'sem gatilho';break;}
+    }
+    if(ok) cards.push({i:3,status:'pass',reason:`gatilho ok em ${ops.length} op${ops.length>1?'s':''}`});
+    else cards.push({i:3,status:'fail',reason:`op sem gatilho válido (${sample})`});
+  }
+
+  // ── Card 4: Registro completo — todas as ops com conv, MFE, MAE, motivo saída
+  if(ops.length===0){cards.push({i:4,status:'pending',reason:'sem ops'});}
+  else {
+    let missing=[];
+    for(const op of ops){
+      const gaps=[];
+      if(op.conviction==null) gaps.push('conv');
+      if(op.mfe==null) gaps.push('máx a favor');
+      if(op.mae==null) gaps.push('máx contra');
+      const exits=op.exit_reasons||(op.exit_reason?[op.exit_reason]:[]);
+      if(!exits.length) gaps.push('motivo saída');
+      if(gaps.length){missing=gaps;break;}
+    }
+    if(!missing.length) cards.push({i:4,status:'pass',reason:'registro completo'});
+    else cards.push({i:4,status:'fail',reason:`falta: ${missing.join(', ')}`});
+  }
+
+  // ── Card 5: Sem gatilho banido em NENHUMA op
+  if(ops.length===0){cards.push({i:5,status:'pending',reason:'sem ops'});}
+  else {
+    let bad=null;
+    for(const op of ops){
+      const trigs=(op.entry_states||(op.entry_state?[op.entry_state]:[])).map(t=>String(t).toLowerCase());
+      const b=trigs.find(t=>BANNED_TRIGGERS.includes(t));
+      if(b){bad=b;break;}
+    }
+    if(!bad) cards.push({i:5,status:'pass',reason:'nenhum gatilho banido'});
+    else cards.push({i:5,status:'fail',reason:`op com "${bad}" — gatilho banido`});
+  }
+
+  // Score final: soma dos 'pass' (pending vira 0)
+  const score=cards.filter(c=>c.status==='pass').length;
+  return {cards,score};
+}
+
+// Constrói o entry ao vivo do formulário atual (para score de HOJE em tempo real)
+function currentLiveEntry(){
+  const base=(allData.find(d=>d.date_iso===todayISO())||{});
+  return {
+    ...base,
+    date_iso:todayISO(),
+    pre_checklist:{...(base.pre_checklist||{}),...preChecklist},
+    t_ops_detail:tradeOps.length?tradeOps:(base.t_ops_detail||[]),
+    t_result_fpa:base.t_result_fpa,
+    t_result_pf:base.t_result_pf,
+  };
+}
+
+function renderScoreHome(){
+  const card=document.getElementById('score-home-card');
+  if(!card) return;
+  // usa dia editado se for editando; senão hoje ao vivo
+  let entry;
+  if(pessoalEditDate){entry=allData.find(d=>d.date_iso===pessoalEditDate)||{date_iso:pessoalEditDate};}
+  else{entry=currentLiveEntry();}
+  const {cards,score}=computeScoreForDay(entry);
+  const num=document.getElementById('score-home-num');
+  if(num) num.textContent=`${score}/5`;
+  const lbl=document.getElementById('score-home-lbl');
+  const brl=document.getElementById('score-home-brl');
+  const fpa=(entry.t_result_fpa||0),pf=(entry.t_result_pf||0);const totalBRL=fpa+pf;
+  if(brl){brl.textContent=`R$ ${totalBRL>=0?'+':''}${Math.round(totalBRL).toLocaleString('pt-BR')}`;brl.style.color=totalBRL>=0?'var(--green)':'var(--red)';}
+  if(lbl){
+    if(score===5) lbl.textContent='execução perfeita';
+    else if(score>=4) lbl.textContent='boa execução';
+    else if(score>=3) lbl.textContent='mediana';
+    else if(score>=1) lbl.textContent='fora do modelo';
+    else lbl.textContent='sem execução do modelo';
+  }
+  // cards
+  cards.forEach(c=>{
+    const el=document.querySelector(`#score-home-cards .scb[data-i="${c.i}"]`);
+    if(!el) return;
+    el.classList.remove('pass','fail','neutral');
+    if(c.status==='pass') el.classList.add('pass');
+    else if(c.status==='fail') el.classList.add('fail');
+    else if(c.status==='neutral') el.classList.add('neutral');
+    el.title=c.reason;
+  });
+  // Hint texto abaixo dos cards — pega o pior card falho
+  const hint=document.getElementById('score-home-hint');
+  if(hint){
+    const failed=cards.filter(c=>c.status==='fail');
+    if(!failed.length){
+      const pending=cards.filter(c=>c.status==='pending').length;
+      hint.textContent=pending?`${5-pending} card${(5-pending)!==1?'s':''} avaliado${(5-pending)!==1?'s':''} — continue preenchendo`:'✓ Todos os cards passaram. Execução do modelo hoje.';
+      hint.style.color=pending?'var(--dim)':'var(--green)';
+    } else {
+      hint.textContent=`Falhou no card ${failed[0].i}: ${failed[0].reason}`;
+      hint.style.color='var(--red)';
+    }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════
+// POPUP GENÉRICO — reutilizado em vários bloqueios
+// ═══════════════════════════════════════════════════════════════
+function showCoachModal({title,body,accent='var(--red)',buttons}){
+  const old=document.getElementById('coach-modal');if(old) old.remove();
+  const btnsHtml=(buttons||[{label:'Entendido',action:'close',accent}])
+    .map((b,idx)=>`<button data-idx="${idx}" style="flex:1;padding:11px 8px;background:${b.accent||'var(--s3)'};border:none;border-radius:8px;color:#fff;font-family:'Geist Mono',monospace;font-size:10px;font-weight:500;cursor:pointer;letter-spacing:.5px">${b.label}</button>`).join('');
+  const modal=document.createElement('div');modal.id='coach-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .15s ease';
+  modal.innerHTML=`<div style="background:var(--s2);border:2px solid ${accent};border-radius:12px;padding:18px;max-width:360px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.6)">
+    <div style="font-size:12px;font-weight:500;color:${accent};margin-bottom:11px;letter-spacing:.5px;line-height:1.4">${title}</div>
+    <div style="font-size:11px;color:var(--text);line-height:1.65;margin-bottom:14px">${body}</div>
+    <div style="display:flex;gap:6px">${btnsHtml}</div>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.querySelectorAll('button[data-idx]').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const i=+btn.dataset.idx;
+      const cfg=(buttons||[{action:'close'}])[i];
+      modal.remove();
+      if(cfg.action==='callback'&&typeof cfg.callback==='function') cfg.callback();
+    });
+  });
+  modal.addEventListener('click',e=>{if(e.target===modal&&(!buttons||buttons.length===0)) modal.remove();});
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COACH: verificação de gatilho ao selecionar (chamado em selNewOpState)
+// ═══════════════════════════════════════════════════════════════
+function coachCheckTrigger(triggerVal){
+  const t=String(triggerVal).toLowerCase();
+  if(BANNED_TRIGGERS.includes(t)){
+    // Bloqueio duro: desmarcar
+    showCoachModal({
+      title:'🛑 Gatilho banido — não abra este trade',
+      body:`Você marcou <strong style="color:var(--red)">${triggerVal}</strong>. Este gatilho está na sua lista de gatilhos que fazem você perder dinheiro consistentemente.<br><br>Regra do seu modelo: não opere neste estado.`,
+      accent:'var(--red)',
+      buttons:[
+        {label:'Cancelar entrada',action:'callback',accent:'var(--red)',callback:()=>{
+          // Desmarca o gatilho no state
+          const idx=newOpStates.indexOf(triggerVal);
+          if(idx>=0){newOpStates.splice(idx,1);}
+          document.querySelectorAll('#new-op-state-btns .os-btn').forEach(b=>{if(b.dataset.v===triggerVal) b.classList.remove('sel-plan','sel-gold','sel-danger','sel-cirilo');});
+          showToast('Trade abortado. Bem feito.');
+        }},
+        {label:'Registrar como observação (não operar)',action:'callback',accent:'var(--gold)',callback:()=>{
+          showToast('Registre a observação — não operou é vitória.');
+        }}
+      ]
+    });
+    return false;
+  }
+  if(NEUTRAL_TRIGGERS.includes(t)&&t==='oportunidade'){
+    // Aviso amarelo — oportunidade sozinha é permitida mas alerta
+    setTimeout(()=>{
+      // Só alerta se for o único gatilho após 1 tick
+      const hasValid=newOpStates.some(s=>VALID_TRIGGERS.includes(String(s).toLowerCase()));
+      if(!hasValid){
+        showCoachModal({
+          title:'⚠ Oportunidade sem plano',
+          body:`Você marcou apenas <strong style="color:var(--gold)">Oportunidade</strong>. Não é gatilho banido — mas também não estava no seu plano.<br><br>Se apareceu e não deu para hesitar, ok. Mas confirme: convicção alta? Setup limpo? Se sim, siga. Se está forçando, respire.`,
+          accent:'var(--gold)',
+          buttons:[{label:'Sigo — vi a oportunidade',action:'close',accent:'var(--gold)'},{label:'Pensei melhor, não vou',action:'callback',accent:'var(--dim)',callback:()=>{
+            const idx=newOpStates.indexOf('oportunidade');
+            if(idx>=0){newOpStates.splice(idx,1);}
+            document.querySelectorAll('#new-op-state-btns .os-btn').forEach(b=>{if(b.dataset.v==='oportunidade') b.classList.remove('sel-plan','sel-gold','sel-danger','sel-cirilo');});
+          }}]
+        });
+      }
+    },80);
+  }
+  return true;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COACH: contador de ops no header do form + bloqueio 3ª op
+// ═══════════════════════════════════════════════════════════════
+function updateOpsCounterHeader(){
+  const el=document.getElementById('ops-counter-header');
+  if(!el) return;
+  const n=tradeOps.length;
+  if(editingOpIdx!==null){el.textContent=`Editando op ${editingOpIdx+1}`;el.style.color='var(--purp)';return;}
+  if(n===0){el.textContent='Op 1/2 do dia';el.style.color='var(--green)';}
+  else if(n===1){el.textContent='Op 2/2 do dia — ÚLTIMA';el.style.color='var(--gold)';}
+  else if(n===2){el.textContent='Limite de 2 ops atingido';el.style.color='var(--red)';}
+  else{el.textContent=`${n} ops — EXCEDEU LIMITE`;el.style.color='var(--red)';}
+}
+
+// Bloqueio quando tenta abrir 3ª op — chamado do addOp() antes de salvar
+function coachCheckOpLimit(callback){
+  const n=tradeOps.length;
+  if(editingOpIdx!==null||n<2){callback(true);return;}
+  showCoachModal({
+    title:'🛑 Você já bateu o limite de 2 ops hoje',
+    body:`Seu modelo prevê no máximo 2 ops por dia. Dias com 3 ou mais operações no seu histórico são consistentemente piores.<br><br>Se você abrir uma 3ª, precisa registrar por quê — vai pro seu Issue Log.`,
+    accent:'var(--red)',
+    buttons:[
+      {label:'Fecha a mesa — não opero',action:'callback',accent:'var(--green)',callback:()=>{showToast('Boa decisão. Salvou o mês.');callback(false);}},
+      {label:'Confirmar exceção com justificativa',action:'callback',accent:'var(--red)',callback:()=>{
+        const reason=prompt('Escreva por que essa 3ª op é justificável (vai pro seu Issue Log):');
+        if(reason&&reason.trim().length>10){
+          // Anexa nota à op sendo criada
+          const noteEl=document.getElementById('new-op-note');
+          if(noteEl) noteEl.value=(noteEl.value?noteEl.value+'\n':'')+`[EXCEÇÃO 3ª+ op]: ${reason.trim()}`;
+          callback(true);
+        } else {
+          showToast('Justificativa muito curta. Trade abortado.',true);
+          callback(false);
+        }
+      }}
+    ]
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COACH: alerta pré-mercado se energia ≤4 ou sono ruim
+// ═══════════════════════════════════════════════════════════════
+let energiaAlertShown=false;
+function checkEnergiaBaixa(){
+  if(energiaAlertShown) return;
+  const e=todayEntry();
+  const energia=+document.getElementById('sl-e')?.value||5;
+  const sq=sleepQuality;
+  const isBelow=(energia<=4)||(sq==='ruim');
+  if(!isBelow) return;
+  // busca média histórica em dias com energia ≤4
+  const lowE=allData.filter(d=>d.energia!=null&&d.energia<=4&&d.t_result_fpa!=null);
+  const avgLowE=lowE.length?lowE.reduce((a,d)=>a+d.t_result_fpa,0)/lowE.length:null;
+  const avgTxt=avgLowE!=null?`Seu resultado médio em dias assim: <strong style="color:var(--red)">R$ ${avgLowE>=0?'+':''}${Math.round(avgLowE).toLocaleString('pt-BR')}/dia</strong> (n=${lowE.length}).`:'';
+  energiaAlertShown=true;
+  showCoachModal({
+    title:'⚠ Estado abaixo do mínimo operacional',
+    body:`Você marcou <strong>energia ${energia}/10${sq==='ruim'?' + sono ruim':''}</strong>. ${avgTxt}<br><br>Não é hora de operar. Se operar mesmo assim, o dia será marcado como "fora do modelo" — você e eu vamos ver isso depois no relatório.<br><br>Sugestão: hoje é dia de treinar, estudar, visitar cliente.`,
+    accent:'var(--red)',
+    buttons:[
+      {label:'Vou parar hoje — bom senso',action:'callback',accent:'var(--green)',callback:()=>{showToast('Sabedoria é lucro invisível.');}},
+      {label:'Vou operar mesmo assim',action:'callback',accent:'var(--red)',callback:()=>{
+        // marca flag para o save
+        window.overrideEnergiaBaixa=true;
+        showToast('Registrado. Sem tamanho grande.');
+      }}
+    ]
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════
+// COACH: mensagem pós-op (linha compacta no card, sem popup)
+// ═══════════════════════════════════════════════════════════════
+function coachPostOpMessage(op){
+  // Compara com histórico do mesmo setup
+  if(!op.setups||!op.setups.length) return null;
+  const setup=op.setups[0];
+  const histSameSetup=[];
+  allData.forEach(d=>(d.t_ops_detail||[]).forEach(o=>{
+    if(o!==op&&o.setups&&o.setups.includes(setup)) histSameSetup.push(o);
+  }));
+  if(histSameSetup.length<5) return null;
+  const histAvg=histSameSetup.reduce((a,o)=>a+o.pts,0)/histSameSetup.length;
+  const histWinRate=histSameSetup.filter(o=>o.pts>0).length/histSameSetup.length;
+  const opBRL=(op.result_brl||0)+(op.result_brl_pf||0);
+  // Linguagem direta e humana:
+  if(histAvg<0&&op.pts<0){
+    return{tone:'red',text:`Você perde dinheiro consistentemente neste setup. Média histórica: ${histAvg.toFixed(1)}pts.`};
+  }
+  if(op.pts>0&&op.mfe&&op.mfe>op.pts*1.8){
+    return{tone:'gold',text:`Você saiu cedo. O trade ia até ${op.mfe}pts, você pegou ${op.pts}pts.`};
+  }
+  if(op.pts<0&&histWinRate>=0.55){
+    return{tone:'blue',text:`Setup que costuma ganhar (${Math.round(histWinRate*100)}% no seu histórico). Hoje foi cauda — não force reset.`};
+  }
+  if(op.pts>0&&histWinRate>=0.6){
+    return{tone:'green',text:`Setup que você domina. Continue.`};
+  }
+  return null;
+}
+
 // ── SAVE ──────────────────────────────────────
 async function savePessoal(){
   const btn=document.getElementById('btn-p');btn.disabled=true;btn.textContent='Salvando…';
@@ -2719,6 +3099,7 @@ async function savePessoal(){
     sim_detail:document.getElementById('f-sim')?.value.trim()||'',
     nao_flag:!!naoFlag,
     nao_detail:document.getElementById('f-nao')?.value.trim()||'',
+    override_energia_baixa:!!window.overrideEnergiaBaixa,
     agenda:[...agenda],
     visits:visits.map(v=>({client:v.client,time:v.time,note:v.note,done:v.done,skips:v.skips||[]})),
     sleep_bed:document.getElementById('sleep-bed').value||null,
@@ -2952,7 +3333,7 @@ function dayScore(d){const p=(d.energia||0)+(d.disciplina||0)+(d.clareza||0);con
 function renderDash(){
   const data=getFiltered().sort((a,b)=>a.date_iso.localeCompare(b.date_iso));
   renderDailyPanel();
-  renderScoreRing(data);renderKPIBlock(data);renderBehavKPIs(data);renderHeatmapDash();renderInstitutionalPanel();renderAlertsPanel();renderSetupEfficiency();renderHesPanel();renderHorarioPanel(data);renderSequenciaPanel(data);renderStatsPanel();renderMoodDeltaPanel();
+  renderScoreRing(data);renderKPIBlock(data);renderBehavKPIs(data);renderHeatmapDash();renderBehaviorPanel();renderInstitutionalPanel();renderAlertsPanel();renderSetupEfficiency();renderHesPanel();renderHorarioPanel(data);renderSequenciaPanel(data);renderStatsPanel();renderMoodDeltaPanel();
 }
 
 // ── PAINEL DO DIA ─────────────────────────────
@@ -3102,7 +3483,87 @@ function renderHesPanel(){
     </div>`;
 }
 
-// ── PAINEL DO GESTOR (institucional) ─────────
+// ── PAINEL COMPORTAMENTO ─────────
+// Score histórico + streak + correlação Score × Resultado
+function renderBehaviorPanel(){
+  const el=document.getElementById('panel-behavior');if(!el) return;
+  const days=({week:7,month:30,quarter:90,all:0})[currentPeriod]||0;
+  const cutoff=days>0?new Date(Date.now()-days*86400000):null;
+  const period=allData.filter(d=>!cutoff||new Date(d.date_iso+'T12:00:00')>=cutoff);
+  const withOps=period.filter(d=>(d.t_ops_detail||[]).length>0).sort((a,b)=>a.date_iso.localeCompare(b.date_iso));
+  if(!withOps.length){
+    el.innerHTML='<div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:14px;text-align:center;color:var(--dim);font-size:10px">Sem dias com operações no período.</div>';
+    return;
+  }
+  const scored=withOps.map(d=>{const r=computeScoreForDay(d);return{date:d.date_iso,score:r.score,brl:(d.t_result_fpa||0)+(d.t_result_pf||0),cards:r.cards};});
+  const avgScore=scored.reduce((a,d)=>a+d.score,0)/scored.length;
+  const perfect=scored.filter(d=>d.score===5).length;
+  const good=scored.filter(d=>d.score>=4).length;
+  const bad=scored.filter(d=>d.score<=2).length;
+  // Streak: dias 4+ consecutivos até o dia mais recente
+  let streak=0;
+  for(let i=scored.length-1;i>=0;i--){if(scored[i].score>=4) streak++;else break;}
+  // Card que mais falha
+  const cardFails={1:0,2:0,3:0,4:0,5:0};
+  scored.forEach(d=>d.cards.forEach(c=>{if(c.status==='fail') cardFails[c.i]++;}));
+  const worstEntry=Object.entries(cardFails).sort((a,b)=>b[1]-a[1])[0];
+  const worstName={1:'Checklist 5/5',2:'Máx 2 ops',3:'Gatilho válido',4:'Registro completo',5:'Sem gatilho banido'}[+worstEntry[0]];
+  // Correlação Score × Resultado
+  const avgByScore={};
+  for(let s=0;s<=5;s++){
+    const daysS=scored.filter(d=>d.score===s);
+    if(daysS.length) avgByScore[s]={n:daysS.length,avg:daysS.reduce((a,d)=>a+d.brl,0)/daysS.length};
+  }
+  // ── RENDER ──
+  const card=(title,body,color)=>`<div style="background:var(--s2);border:1px solid var(--b1);border-left:3px solid ${color||'var(--teal)'};border-radius:8px;padding:11px 13px;margin-bottom:8px"><div style="font-size:8px;color:var(--dim);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px">${title}</div>${body}</div>`;
+  const metric=(lbl,val,color,sub)=>`<div style="flex:1;min-width:80px"><div style="font-size:8px;color:var(--dim);text-transform:uppercase;letter-spacing:1px;margin-bottom:2px">${lbl}</div><div style="font-family:'Fraunces',serif;font-size:1.1rem;color:${color||'var(--hi)'};line-height:1.1">${val}</div>${sub?`<div style="font-size:8px;color:var(--dim);margin-top:2px">${sub}</div>`:''}</div>`;
+
+  const c1=card(`Score do período (${scored.length} dias com ops)`,`
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px">
+      ${metric('Score médio',avgScore.toFixed(1)+'/5',avgScore>=4?'var(--green)':avgScore>=3?'var(--gold)':'var(--red)')}
+      ${metric('Dias 5/5',perfect,'var(--green)',`${Math.round(perfect/scored.length*100)}% dos dias`)}
+      ${metric('Dias 4+',good,'var(--teal)',`${Math.round(good/scored.length*100)}% dos dias`)}
+      ${metric('Dias ≤2',bad,'var(--red)','fora do modelo')}
+      ${metric('Streak 4+ atual',streak+'d',streak>=3?'var(--green)':'var(--dim)','dias seguidos')}
+    </div>
+    <div style="font-size:9px;color:var(--dim);line-height:1.5;border-top:1px solid var(--b1);padding-top:7px">
+      ${avgScore>=4?'Execução consistente. Continue.':avgScore>=3?'Média — dá pra melhorar 1 ponto focando em 1 card.':'Fora do modelo na maior parte dos dias. Consertar antes de escalar tamanho.'}
+    </div>`,avgScore>=4?'var(--green)':avgScore>=3?'var(--gold)':'var(--red)');
+
+  const c2=card('Card que mais falha — seu gargalo comportamental',`
+    <div style="font-size:11px;color:var(--red);margin-bottom:6px">Card ${worstEntry[0]}: <strong>${worstName}</strong> falhou ${worstEntry[1]}× no período</div>
+    <div style="display:flex;flex-direction:column;gap:4px">
+      ${Object.entries(cardFails).sort((a,b)=>b[1]-a[1]).map(([i,n])=>{
+        const name={1:'Checklist 5/5',2:'Máx 2 ops',3:'Gatilho válido',4:'Registro completo',5:'Sem gatilho banido'}[+i];
+        const pct=Math.round(n/scored.length*100);
+        return `<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--dim)"><span>${name}</span><span style="color:${n>0?'var(--red)':'var(--green)'}">${n}× (${pct}%)</span></div>`;
+      }).join('')}
+    </div>
+    <div style="font-size:9px;color:var(--dim);line-height:1.5;border-top:1px solid var(--b1);padding-top:7px;margin-top:8px">
+      Foque em 1 card por semana. Consertar o gargalo sobe o score inteiro.
+    </div>`,'var(--gold)');
+
+  const c3=card('Score × Resultado — como sua execução se traduz em dinheiro',`
+    <div style="display:flex;flex-direction:column;gap:5px">
+      ${[5,4,3,2,1,0].filter(s=>avgByScore[s]).map(s=>{
+        const v=avgByScore[s];
+        const color=v.avg>0?'var(--green)':v.avg>-500?'var(--gold)':'var(--red)';
+        return `<div style="display:flex;justify-content:space-between;padding:6px 10px;background:var(--s1);border-radius:6px;font-size:10px;align-items:center">
+          <span style="color:var(--hi)">Score ${s}/5</span>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span style="color:var(--dim);font-size:9px">${v.n} dia${v.n>1?'s':''}</span>
+            <span style="color:${color};font-weight:500">R$ ${v.avg>=0?'+':''}${Math.round(v.avg).toLocaleString('pt-BR')}/dia</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="font-size:9px;color:var(--dim);line-height:1.5;border-top:1px solid var(--b1);padding-top:7px;margin-top:8px">
+      Se o score sobe e o resultado médio sobe junto, a hipótese está confirmada: modelo protegido = dinheiro consistente.
+    </div>`,'var(--purp)');
+
+  el.innerHTML=c1+c2+c3;
+}
+
 // Filosofia: n≥20 é conclusão; 10≤n<20 é observação; n<10 é ruído (não aparece).
 function renderInstitutionalPanel(){
   const el=document.getElementById('panel-institutional');if(!el) return;
@@ -4053,7 +4514,30 @@ Win rate histórico documentado: ~68%. Gargalo identificado: medo da execução.
 Mentor operacional: Cirilo. Metodologia: científica-comportamental (ABC).
 
 ════════════════════════════════════════
-1. RESULTADO FINANCEIRO
+0. SCORE COMPORTAMENTAL DO PERÍODO
+════════════════════════════════════════
+${(()=>{
+  const daysWithOps=sorted.filter(d=>(d.t_ops_detail||[]).length>0);
+  if(!daysWithOps.length) return 'Sem dias com operações no período.';
+  const scores=daysWithOps.map(d=>computeScoreForDay(d).score);
+  const avg=scores.reduce((a,v)=>a+v,0)/scores.length;
+  const perfect=scores.filter(s=>s===5).length;
+  const good=scores.filter(s=>s>=4).length;
+  const bad=scores.filter(s=>s<=2).length;
+  const cards={c1:0,c2:0,c3:0,c4:0,c5:0};
+  daysWithOps.forEach(d=>{const r=computeScoreForDay(d);r.cards.forEach(c=>{if(c.status==='fail') cards['c'+c.i]++;});});
+  const worstCard=Object.entries(cards).sort((a,b)=>b[1]-a[1])[0];
+  const worstName={c1:'Checklist 5/5',c2:'Máx 2 ops',c3:'Gatilho válido',c4:'Registro completo',c5:'Sem gatilho banido'}[worstCard[0]];
+  return `Score médio: ${avg.toFixed(1)}/5 (${daysWithOps.length} dias com ops)
+Dias 5/5 (execução perfeita do modelo): ${perfect}/${daysWithOps.length} (${Math.round(perfect/daysWithOps.length*100)}%)
+Dias 4+ (boa execução): ${good}/${daysWithOps.length} (${Math.round(good/daysWithOps.length*100)}%)
+Dias ≤2 (fora do modelo): ${bad}/${daysWithOps.length}
+Card que mais falha: ${worstName} — ${worstCard[1]}× no período
+→ Regra do modelo: Score é o número principal. Resultado é consequência.`;
+})()}
+
+════════════════════════════════════════
+1. RESULTADO DO PERÍODO
 ════════════════════════════════════════
 Felling+PA: R$${Math.round(totalFPA).toLocaleString('pt-BR')}
 PF (mesa): R$${Math.round(totalPF).toLocaleString('pt-BR')}
