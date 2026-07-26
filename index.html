@@ -1203,7 +1203,7 @@ const SETUP_FAMILY={
   'Op1':'Próprio','Op2':'Próprio','DupPr':'Próprio','DivOc':'Próprio','MOLEQUE':'Próprio','News':'Notícia','Cirilo':'Cirilo','PA':'Próprio',
 };
 function setupFamily(s){return SETUP_FAMILY[s]||'Outro';}
-let newOpAdh={e1:false,no_e3:false,stop:false,entry:false,size:false};
+let newOpAdh={size:false};
 let preChecklist={planejamento:false,visualizacao:false,chegada45:false,regioes:false,stopdia:false};
 let tradeEditDate=null; // null = today, 'YYYY-MM-DD' = other day
 let editingOpIdx=null;  // null = new op, number = editing existing
@@ -1899,12 +1899,15 @@ function addOp(){
   const result_brl_pf=hasPf&&(lotsPf||lots)?ptsPf*(lotsPf||lots)*10:null;
   const capture_pct=mfeAbs&&pts>0?Math.round(pts/mfeAbs*100):null;
   const r_multiple=riskAbs?Math.round(pts/riskAbs*100)/100:null;
-  // Adesão automática por regra (não só autoavaliada):
-  // - stop: auto-reprova se pts <= -16 (regra 15pts + tolerância de slippage de 1pt)
-  // - no_e3: auto-reprova se e3_lots > 0
-  const autoAdh={...newOpAdh};
-  if(pts<=-16) autoAdh.stop=false;
-  if(e3Lots>0) autoAdh.no_e3=false;
+  // Adesão do trade: 3 dimensões coerentes
+  //   size    → autoavaliado (o único checkbox que sobrou pré/pós-refactor)
+  //   stop    → automático: pts>-16 = respeitou (regra 15pts + 1pt slippage)
+  //   no_e3   → automático: e3_lots===0 = respeitou o modelo E1+E2
+  const autoAdh={
+    size: newOpAdh.size===true,
+    stop: pts>-16,
+    no_e3: e3Lots===0
+  };
   const opData={dir,pts,pts_pf:hasPf?ptsPf:null,lots:lots||null,e1_lots:e1Lots,e2_lots:e2Lots,e3_lots:e3Lots,e2_tipo:e2Tipo,estrutura,lots_pf:lotsPf,result_brl,result_brl_pf,mfe:mfeAbs,mae:maeAbs,mfe_ref:MFE_MAE_REFERENCE,capture_pct,risk_planned:riskAbs,r_multiple,conviction:newOpConv,plan_adherence:[...newOpPlan],error_tags:[...newOpErrors],note,time,entry_states:[...newOpStates],adh_items:autoAdh,adh_auto_overrides:{stop:pts<=-16,no_e3:e3Lots>0},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups],segs:[...newOpSegs],ifr:[...newOpIfr]};
   if(editingOpIdx!==null){
     // Edit mode: preserve corr from existing
@@ -1971,7 +1974,7 @@ function editOp(idx){
   newOpIfr=[...(op.ifr||[])];
   document.querySelectorAll('#new-op-ifr-btns .os-btn').forEach(b=>{b.classList.remove('sel-plan');if(newOpIfr.includes(b.dataset.v)) b.classList.add('sel-plan');});
   // Adh
-  newOpAdh={...{e1:false,no_e3:false,stop:false,entry:false,size:false},...(op.adh_items||{})};
+  newOpAdh={size:false,...(op.adh_items||{})};
   document.querySelectorAll('#new-op-adh-grid .adh-item').forEach(el=>{const k=el.dataset.k;el.classList.toggle('yes',newOpAdh[k]===true);});
   calcOpResult();
   // Update button label
@@ -2005,7 +2008,7 @@ function clearNewOpForm(){
   document.querySelectorAll('#new-op-adh-grid .adh-item').forEach(el=>{el.classList.remove('yes');const d=el.querySelector('.adh-dot');if(d) d.style.background='var(--b2)';const t=el.querySelector('.adh-text');if(t) t.style.color='var(--dim)';});
   newOpStates=[];newOpPartials=[];newOpExits=[];newOpSetups=[];newOpSegs=[];newOpIfr=[];
   newOpConv=null;newOpPlan=[];newOpErrors=[];
-  newOpAdh={e1:false,no_e3:false,stop:false,entry:false,size:false};
+  newOpAdh={size:false};
   const searchEl=document.getElementById('op-setup-search');if(searchEl) searchEl.value='';
   renderOpSetupTags('');
   const info=document.getElementById('op-setup-sel-info');if(info) info.style.display='none';
@@ -4056,7 +4059,11 @@ ${famStr}
 ════════════════════════════════════════
 ${sorted.slice(-10).map(d=>{
   const ops=(d.t_ops_detail||[]);
-  const opsStr=ops.length?ops.map(op=>`    [${op.time||'?'}] ${op.dir} ${op.pts>=0?'+':''}${op.pts}pts ${op.estrutura?'['+(ESTRUTURA_LABEL[op.estrutura]||op.estrutura)+(op.e1_lots?' '+op.e1_lots+(op.e2_lots?'+'+op.e2_lots:'')+(op.e3_lots?'+'+op.e3_lots:''):'')+'] ':''}${op.r_multiple!=null?(op.r_multiple>=0?'+':'')+op.r_multiple+'R ':''}conv:${n(op.conviction)} MFE:${n(op.mfe)} MAE:${n(op.mae)} captura:${op.mfe&&op.pts>0?Math.round(op.pts/op.mfe*100)+'%':'—'} MEDO:${n(op.emo_intensity)} exec:${n(op.exec_score)} adh:${fmtN(calcAdhScore(op),0)}/10\n      exit:[${getExitReasons(op).join(',')||'—'}] erro:[${(op.error_tags||[]).filter(e=>e!=='sem_erro').join(',')||'—'}] plano:[${(op.plan_adherence||[]).join(',')||'—'}] seg:[${(op.segs||[]).join(',')||'—'}] ifr:[${(op.ifr||[]).join(',')||'—'}] setup:[${(op.setups||[]).join(',')||'—'}] gatilho:[${(op.entry_states||[op.entry_state]).filter(Boolean).join(',')||'—'}]`).join('\n'):'    sem ops registradas';
+  const opsStr=ops.length?ops.map(op=>{
+    const legacyEmo=op.emo_intensity!=null?` MEDO:${op.emo_intensity}`:'';
+    const legacyExec=op.exec_score!=null?` exec:${op.exec_score}`:'';
+    return `    [${op.time||'?'}] ${op.dir} ${op.pts>=0?'+':''}${op.pts}pts ${op.estrutura?'['+(ESTRUTURA_LABEL[op.estrutura]||op.estrutura)+(op.e1_lots?' '+op.e1_lots+(op.e2_lots?'+'+op.e2_lots:'')+(op.e3_lots?'+'+op.e3_lots:''):'')+'] ':''}${op.r_multiple!=null?(op.r_multiple>=0?'+':'')+op.r_multiple+'R ':''}conv:${n(op.conviction)} MFE:${n(op.mfe)} MAE:${n(op.mae)} captura:${op.mfe&&op.pts>0?Math.round(op.pts/op.mfe*100)+'%':'—'}${legacyEmo}${legacyExec} adh:${fmtN(calcAdhScore(op),0)}/10\n      exit:[${getExitReasons(op).join(',')||'—'}] erro:[${(op.error_tags||[]).filter(e=>e!=='sem_erro').join(',')||'—'}] plano:[${(op.plan_adherence||[]).join(',')||'—'}] seg:[${(op.segs||[]).join(',')||'—'}] ifr:[${(op.ifr||[]).join(',')||'—'}] setup:[${(op.setups||[]).join(',')||'—'}] gatilho:[${(op.entry_states||[op.entry_state]).filter(Boolean).join(',')||'—'}]`;
+  }).join('\n'):'    sem ops registradas';
   return`[${d.date_label||d.date_iso}] pré:${d.mood_pre||d.mood||'—'}→pós:${d.mood_pos||'—'} E:${d.energia||'—'} sono:${d.sleep_quality||'—'} F+PA:R$${d.t_result_fpa!=null?Math.round(d.t_result_fpa).toLocaleString('pt-BR'):'—'} PF:R$${d.t_result_pf!=null?Math.round(d.t_result_pf).toLocaleString('pt-BR'):'—'} WR:${d.t_wr||'—'}% adh:${n(d.t_adh)}/10\n${opsStr}`;
 }).join('\n')}`;
 }
