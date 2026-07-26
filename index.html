@@ -382,30 +382,6 @@ tr:hover td{background:var(--s2)}
         <button onclick="switchPessoalDate('today')" style="font-size:9px;padding:5px 10px;background:var(--s3);border:1px solid var(--b1);border-radius:6px;color:var(--hi);cursor:pointer;font-family:'Geist Mono',monospace;flex-shrink:0">HOJE</button>
       </div>
 
-      <!-- SCORE COMPORTAMENTAL DO DIA — o novo número principal -->
-      <div id="score-home-card" style="background:linear-gradient(135deg,var(--s2),var(--s3));border:1px solid var(--b1);border-radius:12px;padding:14px;margin-bottom:11px">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px">
-          <div>
-            <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:3px">Score comportamental de hoje</div>
-            <div style="font-family:'Fraunces',serif;font-size:2.4rem;line-height:1;color:var(--hi)" id="score-home-num">—/5</div>
-            <div style="font-size:9px;color:var(--dim);margin-top:4px" id="score-home-lbl">execução do modelo</div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:3px">Resultado do dia</div>
-            <div style="font-family:'Fraunces',serif;font-size:1.1rem;line-height:1;color:var(--dim)" id="score-home-brl">R$ 0</div>
-            <div style="font-size:8px;color:var(--dim);margin-top:4px">consequência</div>
-          </div>
-        </div>
-        <div id="score-home-cards" style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px">
-          <div class="scb" data-i="1" title="Checklist 5/5 antes das 09h"><div class="scb-n">1</div><div class="scb-lbl">Check</div></div>
-          <div class="scb" data-i="2" title="Máximo 2 ops no dia"><div class="scb-n">2</div><div class="scb-lbl">2 ops</div></div>
-          <div class="scb" data-i="3" title="Gatilho válido em todas as ops"><div class="scb-n">3</div><div class="scb-lbl">Gatilho</div></div>
-          <div class="scb" data-i="4" title="Registro completo em todas as ops"><div class="scb-n">4</div><div class="scb-lbl">Registro</div></div>
-          <div class="scb" data-i="5" title="Sem gatilho banido"><div class="scb-n">5</div><div class="scb-lbl">Sem risco</div></div>
-        </div>
-        <div id="score-home-hint" style="font-size:9px;color:var(--dim);margin-top:10px;line-height:1.5;padding-top:9px;border-top:1px solid var(--b1)">Preencha o dia para ver o score.</div>
-      </div>
-
       <!-- FRASE ÂNCORA DO DIA -->
       <div class="anchor-card" id="anchor-card">
         <div class="anchor-quote" id="anchor-quote">Carregando...</div>
@@ -618,6 +594,30 @@ tr:hover td{background:var(--s2)}
       <!-- ANÁLISE DE ONTEM — aparece acima do pré-pregão como lembrete -->
       <div id="yesterday-trade-review" style="display:none"></div>
 
+      <!-- SCORE COMPORTAMENTAL DO DIA — no topo do Trade (contexto correto) -->
+      <div id="score-home-card" style="background:linear-gradient(135deg,var(--s2),var(--s3));border:1px solid var(--b1);border-radius:12px;padding:14px;margin-bottom:11px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:11px">
+          <div>
+            <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:3px">Score de hoje</div>
+            <div style="font-family:'Fraunces',serif;font-size:2.4rem;line-height:1;color:var(--hi)" id="score-home-num">—/5</div>
+            <div style="font-size:9px;color:var(--dim);margin-top:4px" id="score-home-lbl">execução do modelo</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:8px;letter-spacing:2px;text-transform:uppercase;color:var(--dim);margin-bottom:3px">Resultado</div>
+            <div style="font-family:'Fraunces',serif;font-size:1.1rem;line-height:1;color:var(--dim)" id="score-home-brl">R$ 0</div>
+            <div style="font-size:8px;color:var(--dim);margin-top:4px">consequência</div>
+          </div>
+        </div>
+        <div id="score-home-cards" style="display:grid;grid-template-columns:repeat(5,1fr);gap:5px">
+          <div class="scb" data-i="1" title="Checklist 5/5 antes das 09h"><div class="scb-n">1</div><div class="scb-lbl">Check</div></div>
+          <div class="scb" data-i="2" title="Máximo 2 ops no dia"><div class="scb-n">2</div><div class="scb-lbl">2 ops</div></div>
+          <div class="scb" data-i="3" title="Gatilho válido em todas as ops"><div class="scb-n">3</div><div class="scb-lbl">Gatilho</div></div>
+          <div class="scb" data-i="4" title="Registro completo em todas as ops"><div class="scb-n">4</div><div class="scb-lbl">Registro</div></div>
+          <div class="scb" data-i="5" title="Sem gatilho banido"><div class="scb-n">5</div><div class="scb-lbl">Sem risco</div></div>
+        </div>
+        <div id="score-home-hint" style="font-size:9px;color:var(--dim);margin-top:10px;line-height:1.5;padding-top:9px;border-top:1px solid var(--b1)">Preencha o dia para ver o score.</div>
+      </div>
+
       <!-- ESTADO PRÉ-PREGÃO -->
       <div class="card">
         <div class="card-lbl">🌅 Estado pré-pregão</div>
@@ -633,6 +633,13 @@ tr:hover td{background:var(--s2)}
             <div class="adh-item" onclick="togglePreCheck(this,'regioes')" data-k="regioes"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">🗺️ Mapeou regiões de entradas?</div></div>
             <div class="adh-item" onclick="togglePreCheck(this,'stopdia')" data-k="stopdia"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">🛑 Definiu stop do dia?</div></div>
           </div>
+        </div>
+
+        <!-- ENERGIA no pré-pregão — coach aciona alerta E≤4 aqui -->
+        <div style="background:var(--s3);border:1px solid var(--b1);border-radius:8px;padding:10px 11px;margin-bottom:11px">
+          <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim);margin-bottom:8px">⚡ Energia antes de operar</div>
+          <div class="sl-row" style="margin-bottom:0"><span class="sl-name" style="font-size:9px">Energia</span><input type="range" min="1" max="10" value="5" id="sl-e-pre" oninput="syncEnergiaPre(this.value);checkEnergiaBaixa()"><span class="sl-val" id="sv-e-pre">5</span></div>
+          <div style="font-size:8px;color:var(--dim);margin-top:5px;line-height:1.4">Energia ≤4 dispara alerta do coach. Se operar assim, o dia fica marcado como "fora do modelo".</div>
         </div>
 
         <div class="mood-grid" id="mood-pre-grid">
@@ -1638,6 +1645,13 @@ function selPresenca(btn){
   const sl=document.getElementById('sl-presenca');if(sl) sl.value=v;
 }
 
+// ── ENERGIA PRÉ-PREGÃO (separada da energia de fim-de-dia) ──
+// Ambas viram campos independentes: energia_pre e energia (fim-de-dia).
+// Coach usa energia_pre para decidir sobre operar.
+function syncEnergiaPre(v){
+  const val=document.getElementById('sv-e-pre');if(val) val.textContent=v;
+}
+
 // ── SIM/NÃO FLAGS ──
 function toggleSimNaoFlag(kind,btn){
   if(kind==='sim'){
@@ -1664,6 +1678,10 @@ function loadTradeForms(dateISO){
   hesReasons=[];hesSetups=[];hesSegs=[];hesIfr=[];editingHesIdx=null;editingOpIdx=null;
   ['f-mood-pre-note','f-mood-pos-note','t-analysis','t-avoid','hes-detail'].forEach(id=>{const el=document.getElementById(id);if(el) el.value='';});
   ['t-felling','t-mesa','t-pa'].forEach(id=>{const el=document.getElementById(id);if(el) el.value='';});
+  // Reset energia pré-pregão
+  const preE=document.getElementById('sl-e-pre'),preEval=document.getElementById('sv-e-pre');
+  if(preE) preE.value=5;if(preEval) preEval.textContent='5';
+  energiaAlertShown=false;window.overrideEnergiaBaixa=false;
   renderOps();renderHes();renderPreChecklist();
   document.getElementById('t-total-fpa')&&(document.getElementById('t-total-fpa').textContent='R$ 0');
   document.getElementById('t-total-pf')&&(document.getElementById('t-total-pf').textContent='R$ 0');
@@ -1673,6 +1691,9 @@ function loadTradeForms(dateISO){
   if(e.mood_pre_note){const el=document.getElementById('f-mood-pre-note');if(el) el.value=e.mood_pre_note;}
   if(e.mood_pos_note){const el=document.getElementById('f-mood-pos-note');if(el) el.value=e.mood_pos_note;}
   if(e.pre_checklist) Object.assign(preChecklist,e.pre_checklist);
+  // Carrega energia pré-pregão (retrocompatibilidade: usa e.energia se energia_pre não existe)
+  const enPre=e.energia_pre!=null?e.energia_pre:(e.energia||null);
+  if(enPre!=null){if(preE) preE.value=enPre;if(preEval) preEval.textContent=enPre;}
   renderPreChecklist();
   tradeOps=e.t_ops_detail||[];hesitations=e.t_hesitations||[];
   renderOps();renderHes();
@@ -1681,6 +1702,25 @@ function loadTradeForms(dateISO){
   safe('t-analysis',e.t_analysis);safe('t-avoid',e.t_avoid);
   if(e.t_hes_detail){const el=document.getElementById('hes-detail');if(el) el.value=e.t_hes_detail;}
   if(document.getElementById('t-felling')) calcTotals();
+  // BANNER de dia_incompleto — sinaliza que este dia tem R$ mas não tem ops registradas.
+  renderDayIncompleteBanner(e);
+  renderScoreHome();
+}
+
+function renderDayIncompleteBanner(e){
+  let box=document.getElementById('day-incomplete-banner');
+  if(!box){
+    box=document.createElement('div');box.id='day-incomplete-banner';box.style.cssText='margin-bottom:11px;display:none';
+    const opCard=document.querySelector('.op-list')?.parentElement;
+    if(opCard&&opCard.parentElement) opCard.parentElement.insertBefore(box,opCard);
+  }
+  if(!e||!e.day_incomplete||(e.t_ops_detail&&e.t_ops_detail.length>0)){box.style.display='none';return;}
+  const totalBRL=(e.t_result_fpa||0)+(e.t_result_pf||0);
+  box.style.display='block';
+  box.innerHTML=`<div style="background:rgba(212,160,40,.12);border:2px solid rgba(212,160,40,.5);border-radius:9px;padding:11px 13px">
+    <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:5px;font-weight:500">⚠️ Dia pendente de backfill</div>
+    <div style="font-size:10px;color:var(--text);line-height:1.5">Este dia tem resultado <strong style="color:${totalBRL>=0?'var(--green)':'var(--red)'}">R$ ${totalBRL>=0?'+':''}${Math.round(totalBRL).toLocaleString('pt-BR')}</strong> mas nenhuma operação registrada.<br>Registre as ops de memória agora para que este dia entre nas análises. Ao salvar com ops, a flag limpa automaticamente.</div>
+  </div>`;
 }
 
 // ── ANÁLISE DE ONTEM no topo do Trade ────────
@@ -2831,14 +2871,18 @@ function computeScoreForDay(entry){
   return {cards,score};
 }
 
-// Constrói o entry ao vivo do formulário atual (para score de HOJE em tempo real)
+// Constrói o entry ao vivo do formulário atual (para score em tempo real do dia aberto)
 function currentLiveEntry(){
-  const base=(allData.find(d=>d.date_iso===todayISO())||{});
+  // Prioridade: dia sendo editado no trade > dia sendo editado no pessoal > hoje
+  const iso=tradeEditDate||pessoalEditDate||todayISO();
+  const base=(allData.find(d=>d.date_iso===iso)||{});
+  // Só espelha state do form (checklist, tradeOps) se estivermos olhando o mesmo dia carregado
+  const isCurrentLoad=iso===(tradeEditDate||pessoalEditDate||todayISO());
   return {
     ...base,
-    date_iso:todayISO(),
-    pre_checklist:{...(base.pre_checklist||{}),...preChecklist},
-    t_ops_detail:tradeOps.length?tradeOps:(base.t_ops_detail||[]),
+    date_iso:iso,
+    pre_checklist:isCurrentLoad?{...(base.pre_checklist||{}),...preChecklist}:(base.pre_checklist||{}),
+    t_ops_detail:isCurrentLoad&&tradeOps.length?tradeOps:(base.t_ops_detail||[]),
     t_result_fpa:base.t_result_fpa,
     t_result_pf:base.t_result_pf,
   };
@@ -2847,10 +2891,7 @@ function currentLiveEntry(){
 function renderScoreHome(){
   const card=document.getElementById('score-home-card');
   if(!card) return;
-  // usa dia editado se for editando; senão hoje ao vivo
-  let entry;
-  if(pessoalEditDate){entry=allData.find(d=>d.date_iso===pessoalEditDate)||{date_iso:pessoalEditDate};}
-  else{entry=currentLiveEntry();}
+  const entry=currentLiveEntry();
   const {cards,score}=computeScoreForDay(entry);
   const num=document.getElementById('score-home-num');
   if(num) num.textContent=`${score}/5`;
@@ -3010,13 +3051,15 @@ function coachCheckOpLimit(callback){
 let energiaAlertShown=false;
 function checkEnergiaBaixa(){
   if(energiaAlertShown) return;
-  const e=todayEntry();
-  const energia=+document.getElementById('sl-e')?.value||5;
+  // Prioriza sl-e-pre (pré-pregão, aba Trade). Se ausente, cai para sl-e (fim-de-dia).
+  const preEl=document.getElementById('sl-e-pre');
+  const endEl=document.getElementById('sl-e');
+  const energia=+((preEl&&preEl.value)||(endEl&&endEl.value)||5);
   const sq=sleepQuality;
   const isBelow=(energia<=4)||(sq==='ruim');
   if(!isBelow) return;
-  // busca média histórica em dias com energia ≤4
-  const lowE=allData.filter(d=>d.energia!=null&&d.energia<=4&&d.t_result_fpa!=null);
+  // busca média histórica em dias com energia ≤4 (usa energia_pre se disponível, senão energia)
+  const lowE=allData.filter(d=>{const e=d.energia_pre!=null?d.energia_pre:d.energia;return e!=null&&e<=4&&d.t_result_fpa!=null;});
   const avgLowE=lowE.length?lowE.reduce((a,d)=>a+d.t_result_fpa,0)/lowE.length:null;
   const avgTxt=avgLowE!=null?`Seu resultado médio em dias assim: <strong style="color:var(--red)">R$ ${avgLowE>=0?'+':''}${Math.round(avgLowE).toLocaleString('pt-BR')}/dia</strong> (n=${lowE.length}).`:'';
   energiaAlertShown=true;
@@ -3146,6 +3189,8 @@ async function saveTrade(){
     t_wr:ops_n>0?Math.round(ops_w/ops_n*100):null,
     t_adh:t_adh,
     day_incomplete:dayIncomplete,
+    energia_pre:+(document.getElementById('sl-e-pre')?.value||5),
+    override_energia_baixa:!!window.overrideEnergiaBaixa,
     mood_pre:moodPre,
     mood_pre_note:(document.getElementById('f-mood-pre-note')?.value||'').trim(),
     mood_pos:moodPos,
@@ -3570,7 +3615,7 @@ function renderInstitutionalPanel(){
   // Coleta ops respeitando o período selecionado
   const days=({week:7,month:30,quarter:90,all:0})[currentPeriod]||0;
   const cutoff=days>0?new Date(Date.now()-days*86400000):null;
-  const filtered=allData.filter(d=>!cutoff||new Date(d.date_iso+'T12:00:00')>=cutoff&&!d.day_incomplete);
+  const filtered=allData.filter(d=>!cutoff||new Date(d.date_iso+'T12:00:00')>=cutoff);
   const allOps=[];filtered.forEach(d=>(d.t_ops_detail||[]).forEach(op=>allOps.push(op)));
   if(!allOps.length){el.innerHTML='<div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:14px;text-align:center;color:var(--dim);font-size:10px">Sem operações no período selecionado.</div>';return;}
   const fmt=(v,d=1)=>v!=null&&!isNaN(v)?Number(v).toFixed(d):'—';
@@ -3724,8 +3769,8 @@ function renderAlertsPanel(){
   const el=document.getElementById('panel-alerts');if(!el) return;
   const now=Date.now();
   const c7=new Date(now-7*86400000),c30=new Date(now-30*86400000);
-  const d7=allData.filter(d=>!d.day_incomplete&&new Date(d.date_iso+'T12:00:00')>=c7);
-  const d30=allData.filter(d=>!d.day_incomplete&&new Date(d.date_iso+'T12:00:00')>=c30);
+  const d7=allData.filter(d=>new Date(d.date_iso+'T12:00:00')>=c7);
+  const d30=allData.filter(d=>new Date(d.date_iso+'T12:00:00')>=c30);
   const ops7=[],ops30=[];
   d7.forEach(d=>(d.t_ops_detail||[]).forEach(o=>ops7.push(o)));
   d30.forEach(d=>(d.t_ops_detail||[]).forEach(o=>ops30.push(o)));
@@ -3794,7 +3839,7 @@ function renderMoodDeltaPanel(){
   const el=document.getElementById('panel-mood-delta');if(!el) return;
   const days=({week:7,month:30,quarter:90,all:0})[currentPeriod]||0;
   const cutoff=days>0?new Date(Date.now()-days*86400000):null;
-  const data=allData.filter(d=>!d.day_incomplete&&d.mood_pre&&d.mood_pos&&(d.t_result_fpa!=null||d.t_result_pf!=null)&&(!cutoff||new Date(d.date_iso+'T12:00:00')>=cutoff));
+  const data=allData.filter(d=>d.mood_pre&&d.mood_pos&&(d.t_result_fpa!=null||d.t_result_pf!=null)&&(!cutoff||new Date(d.date_iso+'T12:00:00')>=cutoff));
   if(data.length<5){el.innerHTML='<div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:12px;text-align:center;color:var(--dim);font-size:10px">Registre humor pré-pregão E pós-pregão em mais dias para ativar este painel (mín 5 dias com ambos).</div>';return;}
   // Classificação simplificada: humor pré vs pós = manteve / melhorou / piorou (positivo→neutro→negativo)
   const positive=new Set(['focado','produtivo','calmo']);
