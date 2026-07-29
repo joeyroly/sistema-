@@ -2962,19 +2962,34 @@ function showCoachModal({title,body,accent='var(--red)',buttons}){
 // ═══════════════════════════════════════════════════════════════
 function coachCheckTrigger(triggerVal){
   const t=String(triggerVal).toLowerCase();
+  // Detecta contexto: se pts saída já preenchido OU pós-block expandido OU editando op existente,
+  // estamos REGISTRANDO trade fechado — não é decisão pré-clique. Skip do bloqueio.
+  const ptsEl=document.getElementById('op-pts');
+  const alreadyFilled=ptsEl&&ptsEl.value.trim()!=='';
+  const postExpanded=document.getElementById('op-post-block')?.style.display==='block';
+  const isEditing=editingOpIdx!==null;
+  const isPostFact=alreadyFilled||postExpanded||isEditing;
+
   if(BANNED_TRIGGERS.includes(t)){
-    // Bloqueio duro: desmarcar
+    if(isPostFact){
+      // Registro pós-fato: mantém o gatilho, marca aviso passivo, sem popup bloqueante
+      showToast(`⚠ Gatilho ${triggerVal} registrado — falha no Score do dia`,false);
+      return true;
+    }
+    // Decisão pré-clique: popup bloqueante clássico + escape "já operei"
     showCoachModal({
       title:'🛑 Gatilho banido — não abra este trade',
       body:`Você marcou <strong style="color:var(--red)">${triggerVal}</strong>. Este gatilho está na sua lista de gatilhos que fazem você perder dinheiro consistentemente.<br><br>Regra do seu modelo: não opere neste estado.`,
       accent:'var(--red)',
       buttons:[
         {label:'Cancelar entrada',action:'callback',accent:'var(--red)',callback:()=>{
-          // Desmarca o gatilho no state
           const idx=newOpStates.indexOf(triggerVal);
           if(idx>=0){newOpStates.splice(idx,1);}
           document.querySelectorAll('#new-op-state-btns .os-btn').forEach(b=>{if(b.dataset.v===triggerVal) b.classList.remove('sel-plan','sel-gold','sel-danger','sel-cirilo');});
           showToast('Trade abortado. Bem feito.');
+        }},
+        {label:'Já operei — só registrando',action:'callback',accent:'var(--dim)',callback:()=>{
+          showToast(`Registrado. Falha no Score do dia.`);
         }},
         {label:'Registrar como observação (não operar)',action:'callback',accent:'var(--gold)',callback:()=>{
           showToast('Registre a observação — não operou é vitória.');
@@ -2984,9 +2999,9 @@ function coachCheckTrigger(triggerVal){
     return false;
   }
   if(NEUTRAL_TRIGGERS.includes(t)&&t==='oportunidade'){
-    // Aviso amarelo — oportunidade sozinha é permitida mas alerta
+    // Não alerta em pós-fato — mesma lógica
+    if(isPostFact) return true;
     setTimeout(()=>{
-      // Só alerta se for o único gatilho após 1 tick
       const hasValid=newOpStates.some(s=>VALID_TRIGGERS.includes(String(s).toLowerCase()));
       if(!hasValid){
         showCoachModal({
@@ -3023,6 +3038,9 @@ function updateOpsCounterHeader(){
 function coachCheckOpLimit(callback){
   const n=tradeOps.length;
   if(editingOpIdx!==null||n<2){callback(true);return;}
+  // Skip do bloqueio se estiver fazendo backfill (dia passado) — decisão já foi tomada
+  const isBackfill=tradeEditDate&&tradeEditDate!==todayISO();
+  if(isBackfill){callback(true);return;}
   showCoachModal({
     title:'🛑 Você já bateu o limite de 2 ops hoje',
     body:`Seu modelo prevê no máximo 2 ops por dia. Dias com 3 ou mais operações no seu histórico são consistentemente piores.<br><br>Se você abrir uma 3ª, precisa registrar por quê — vai pro seu Issue Log.`,
@@ -3032,7 +3050,6 @@ function coachCheckOpLimit(callback){
       {label:'Confirmar exceção com justificativa',action:'callback',accent:'var(--red)',callback:()=>{
         const reason=prompt('Escreva por que essa 3ª op é justificável (vai pro seu Issue Log):');
         if(reason&&reason.trim().length>10){
-          // Anexa nota à op sendo criada
           const noteEl=document.getElementById('new-op-note');
           if(noteEl) noteEl.value=(noteEl.value?noteEl.value+'\n':'')+`[EXCEÇÃO 3ª+ op]: ${reason.trim()}`;
           callback(true);
@@ -3051,6 +3068,9 @@ function coachCheckOpLimit(callback){
 let energiaAlertShown=false;
 function checkEnergiaBaixa(){
   if(energiaAlertShown) return;
+  // Skip se estamos backfillando dia passado — decisão de operar já foi tomada
+  const isBackfill=tradeEditDate&&tradeEditDate!==todayISO();
+  if(isBackfill) return;
   // Prioriza sl-e-pre (pré-pregão, aba Trade). Se ausente, cai para sl-e (fim-de-dia).
   const preEl=document.getElementById('sl-e-pre');
   const endEl=document.getElementById('sl-e');
