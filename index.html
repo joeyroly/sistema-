@@ -268,6 +268,7 @@ tr:hover td{background:var(--s2)}
 .op-card.expanded .op-detail{display:block}
 .op-state-grid{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes pulseRed{0%,100%{border-color:rgba(232,64,64,.7);box-shadow:0 0 0 0 rgba(232,64,64,.3)}50%{border-color:rgba(232,64,64,1);box-shadow:0 0 0 6px rgba(232,64,64,0)}}
 .scb{background:var(--s3);border:1px solid var(--b1);border-radius:7px;padding:8px 4px;text-align:center;transition:all .18s}
 .scb-n{font-family:'Fraunces',serif;font-size:1rem;color:var(--dim);line-height:1}
 .scb-lbl{font-size:7px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-top:3px}
@@ -616,6 +617,15 @@ tr:hover td{background:var(--s2)}
           <div class="scb" data-i="5" title="Sem gatilho banido"><div class="scb-n">5</div><div class="scb-lbl">Sem risco</div></div>
         </div>
         <div id="score-home-hint" style="font-size:9px;color:var(--dim);margin-top:10px;line-height:1.5;padding-top:9px;border-top:1px solid var(--b1)">Preencha o dia para ver o score.</div>
+      </div>
+
+      <!-- MODO CANSAÇO — ativação manual em dias de exaustão -->
+      <div id="tired-mode-card" style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:10px 12px;margin-bottom:11px;display:flex;justify-content:space-between;align-items:center;gap:10px">
+        <div style="flex:1">
+          <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:2px">Modo cansaço</div>
+          <div style="font-size:8px;color:var(--dim);line-height:1.4">Cansado, dormiu mal, ou sente o padrão de auto-sabotagem? Ative. Fricção máxima o dia inteiro.</div>
+        </div>
+        <button id="tired-mode-btn" onclick="toggleTiredMode()" style="padding:8px 14px;background:var(--s3);border:1px solid var(--b1);border-radius:8px;color:var(--dim);font-family:'Geist Mono',monospace;font-size:10px;cursor:pointer;font-weight:500;flex-shrink:0;transition:all .2s">OFF</button>
       </div>
 
       <!-- ESTADO PRÉ-PREGÃO -->
@@ -1441,10 +1451,106 @@ function preEntryMissing(){
 
 // Chamado quando E1 ou risco mudam — dispara popup preventivo se dados históricos apontam risco
 function checkPreEntry(){
+  // Skip todos os coach checks se estamos backfillando dia passado
+  const isBackfill=tradeEditDate&&tradeEditDate!==todayISO();
+  if(isBackfill) return;
   // Flag D: horário-armadilha (se hora de agora for de baixo edge histórico)
   const now=new Date();
   const hr=now.getHours();
   showHorarioFlag(hr);
+  // PONTO 1: aviso "última op" quando abrindo a 2ª (tradeOps.length === 1)
+  showLastOpWarning();
+  // PONTO 3: bloqueio duro ao começar preencher 3ª op
+  showThirdOpHardBlock();
+  // PONTO 5: bloqueio absoluto após 2 losses
+  showTwoLossesHardBlock();
+}
+
+// PONTO 1 — Aviso amarelo ao começar 2ª op (ou 1ª se tiredMode)
+let lastOpWarningShown=false;
+function showLastOpWarning(){
+  if(lastOpWarningShown) return;
+  if(editingOpIdx!==null) return;
+  const threshold=tiredMode?0:1; // tired mode: alerta já na 1ª (antes de qualquer op)
+  if(tradeOps.length!==threshold) return;
+  lastOpWarningShown=true;
+  const bodyNormal=`Esta é sua <strong>2ª op</strong>. Depois dela, <strong style="color:var(--red)">mesa fechada por regra do modelo</strong>.<br><br>Se ela for stop, você não opera de volta. Se ela for alvo, você fecha o Profit.<br><br>Antes de puxar: convicção alta? Setup no plano? Ou tá forçando pra "recuperar"?`;
+  const bodyTired=`💤 Modo cansaço ativo. Esta é sua <strong>1ª e talvez ÚNICA op</strong> hoje.<br><br>Você reconheceu que tá exausto. Isso é sabedoria. Agora respeite.<br><br>Antes de puxar: convicção 5? Setup pristino? Se não, feche a plataforma.`;
+  showCoachModal({
+    title:tiredMode?'⚠ 1ª op em modo cansaço — cuidado dobrado':'⚠ Última op do dia',
+    body:tiredMode?bodyTired:bodyNormal,
+    accent:'var(--gold)',
+    buttons:[{label:'Entendi — sigo com foco',action:'close',accent:'var(--gold)'}]
+  });
+}
+
+// PONTO 3 — Bloqueio duro ao começar preencher 3ª op (ou 2ª se tiredMode)
+let thirdOpBlockShown=false;
+function showThirdOpHardBlock(){
+  if(editingOpIdx!==null) return;
+  const threshold=tiredMode?1:2;
+  if(tradeOps.length<threshold) return;
+  if(thirdOpBlockShown) return;
+  thirdOpBlockShown=true;
+  const nMax=tiredMode?1:2;
+  showCoachModal({
+    title:'🛑 Você está prestes a violar sua regra',
+    body:`Você já tem <strong>${tradeOps.length} op${tradeOps.length>1?'s':''} registrada${tradeOps.length>1?'s':''} hoje</strong>. ${tiredMode?'Modo cansaço = máx 1 op.':'Seu modelo prevê máx 2 ops.'}<br><br>Feche o formulário. Feche a plataforma. Volta amanhã.<br><br>Se você seguir mesmo assim, terá que justificar por escrito.`,
+    accent:'var(--red)',
+    buttons:[
+      {label:'Fecho — não opero',action:'callback',accent:'var(--green)',callback:()=>{
+        clearNewOpForm();
+        showToast('Boa. Salvou o mês.');
+      }},
+      {label:'Vou justificar e seguir',action:'close',accent:'var(--red)'}
+    ]
+  });
+}
+
+// PONTO 5 — Bloqueio absoluto após 2 losses (ou 1 loss se tiredMode)
+let twoLossesBlockShown=false;
+function showTwoLossesHardBlock(){
+  if(editingOpIdx!==null) return;
+  const nLossThreshold=tiredMode?1:2;
+  if(tradeOps.length<nLossThreshold) return;
+  const lastN=tradeOps.slice(-nLossThreshold);
+  const allLoss=lastN.every(o=>o.pts<0);
+  if(!allLoss) return;
+  if(twoLossesBlockShown) return;
+  twoLossesBlockShown=true;
+  const title=tiredMode?'🛑 STOP em modo cansaço — MESA FECHADA':'🛑 2 LOSSES — MESA FECHADA';
+  const body=tiredMode?
+    `Você tomou <strong style="color:var(--red)">1 stop em modo cansaço</strong>. Regra: <strong>mesa fechada</strong>. Sem exceção.<br><br>Feche o Profit. Vá dormir 30 minutos. Ou coma. Ou caminhe.<br><br>O corpo tá pedindo. Escuta.` :
+    `Você teve <strong style="color:var(--red)">2 stops seguidos hoje</strong>. Regra do seu modelo: <strong>mesa fechada</strong>. Sem exceção.<br><br>Feche o Profit. Vá caminhar 20 minutos. Coma alguma coisa. Não abra o gráfico até amanhã.<br><br>Você já perdeu duas vezes hoje. A terceira vai custar mais.`;
+  showCoachModal({
+    title,body,accent:'var(--red)',
+    buttons:[
+      {label:'Vou fechar a plataforma agora',action:'callback',accent:'var(--red)',callback:()=>{
+        clearNewOpForm();
+        showToast('Fecha o Profit. Amanhã tem mais.',false);
+      }}
+    ]
+  });
+}
+
+// PONTO 2 — Após save da 2ª op, popup de compromisso (ou 1ª se tiredMode)
+function showSecondOpCloseModal(){
+  const isBackfill=tradeEditDate&&tradeEditDate!==todayISO();
+  if(isBackfill) return;
+  const threshold=tiredMode?1:2;
+  if(tradeOps.length!==threshold) return;
+  const bodyNormal=`Suas <strong>2 ops do dia estão registradas</strong>. Pelo modelo, o dia acabou.<br><br><strong style="color:var(--red)">Feche o Profit agora.</strong> Toda vez que você deixou aberto "só pra ver", entrou uma 3ª. Você conhece o padrão.<br><br>O trabalho de hoje acabou. Vai fazer outra coisa.`;
+  const bodyTired=`Sua <strong>1 op em modo cansaço</strong> foi registrada. Pelo modelo, o dia acabou.<br><br><strong style="color:var(--red)">Feche o Profit agora e vá descansar.</strong> Você reconheceu o cansaço — agora honre.`;
+  showCoachModal({
+    title:'✅ Op registrada — MESA FECHADA',
+    body:tiredMode?bodyTired:bodyNormal,
+    accent:'var(--red)',
+    buttons:[
+      {label:'Vou fechar a plataforma',action:'callback',accent:'var(--green)',callback:()=>{
+        showToast('Dia de trade encerrado. Bem feito.',false);
+      }}
+    ]
+  });
 }
 
 // FLAG D — Horário-armadilha (WR histórico do horário)
@@ -1511,6 +1617,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   ['t-felling','t-mesa','t-pa'].forEach(id=>{const el=document.getElementById(id);if(el) el.addEventListener('input',calcTotals);});
   setupUsage=JSON.parse(localStorage.getItem('setup_usage')||'{}');
   renderOpSetupTags('');
+  loadTiredMode();
   installPWA();
   const SB_URL='https://oovjuojqolysfonqmqgh.supabase.co';
   const SB_KEY='sb_publishable_6nW470GtFjLDjH2GbZ2iug_JtOIQ-Nn';
@@ -1682,6 +1789,7 @@ function loadTradeForms(dateISO){
   const preE=document.getElementById('sl-e-pre'),preEval=document.getElementById('sv-e-pre');
   if(preE) preE.value=5;if(preEval) preEval.textContent='5';
   energiaAlertShown=false;window.overrideEnergiaBaixa=false;
+  lastOpWarningShown=false;thirdOpBlockShown=false;twoLossesBlockShown=false;horarioFlagShownFor=null;
   renderOps();renderHes();renderPreChecklist();
   document.getElementById('t-total-fpa')&&(document.getElementById('t-total-fpa').textContent='R$ 0');
   document.getElementById('t-total-pf')&&(document.getElementById('t-total-pf').textContent='R$ 0');
@@ -2151,6 +2259,11 @@ function addOpCore(){
   }
   clearNewOpForm();
   renderOps();
+  // PONTO 2 — Popup de compromisso após save da última op permitida (2 normal, 1 tired)
+  const closeThreshold=tiredMode?1:2;
+  if(editingOpIdx===null&&tradeOps.length===closeThreshold){
+    setTimeout(()=>showSecondOpCloseModal(),350);
+  }
 }
 
 function editOp(idx){
@@ -2934,7 +3047,43 @@ function renderScoreHome(){
 // ═══════════════════════════════════════════════════════════════
 // POPUP GENÉRICO — reutilizado em vários bloqueios
 // ═══════════════════════════════════════════════════════════════
-function showCoachModal({title,body,accent='var(--red)',buttons}){
+// ═══════════════════════════════════════════════════════════════
+// SOM DE ALERTA — WebAudio, sem arquivos externos
+// Toca sequência tonal grave→médio→grave, chama atenção sem ser irritante
+// ═══════════════════════════════════════════════════════════════
+let audioCtx=null;
+function coachSound(kind='warn'){
+  try{
+    if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+    if(audioCtx.state==='suspended') audioCtx.resume();
+    const ctx=audioCtx;
+    const now=ctx.currentTime;
+    const play=(freq,start,dur,vol=0.15)=>{
+      const osc=ctx.createOscillator();
+      const gain=ctx.createGain();
+      osc.type='sine';
+      osc.frequency.value=freq;
+      gain.gain.setValueAtTime(0,now+start);
+      gain.gain.linearRampToValueAtTime(vol,now+start+0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001,now+start+dur);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now+start);
+      osc.stop(now+start+dur+0.02);
+    };
+    if(kind==='critical'){
+      // Vermelho: 3 toques agudos e curtos, urgente
+      play(880,0,0.12,0.20);play(880,0.15,0.12,0.20);play(880,0.30,0.18,0.22);
+    } else if(kind==='warn'){
+      // Amarelo: 2 toques descendentes, aviso
+      play(660,0,0.14,0.15);play(440,0.18,0.20,0.15);
+    } else if(kind==='ding'){
+      // Verde: 1 toque agradável, confirmação
+      play(880,0,0.12,0.10);play(1320,0.10,0.15,0.10);
+    }
+  }catch(e){/* silencioso se áudio bloqueado */}
+}
+
+function showCoachModal({title,body,accent='var(--red)',buttons,sound}){
   const old=document.getElementById('coach-modal');if(old) old.remove();
   const btnsHtml=(buttons||[{label:'Entendido',action:'close',accent}])
     .map((b,idx)=>`<button data-idx="${idx}" style="flex:1;padding:11px 8px;background:${b.accent||'var(--s3)'};border:none;border-radius:8px;color:#fff;font-family:'Geist Mono',monospace;font-size:10px;font-weight:500;cursor:pointer;letter-spacing:.5px">${b.label}</button>`).join('');
@@ -2946,6 +3095,15 @@ function showCoachModal({title,body,accent='var(--red)',buttons}){
     <div style="display:flex;gap:6px">${btnsHtml}</div>
   </div>`;
   document.body.appendChild(modal);
+  // Som: usa param explícito ou infere do accent (vermelho=critical, gold=warn)
+  const autoSound=sound||(accent==='var(--red)'?'critical':accent==='var(--gold)'?'warn':'ding');
+  coachSound(autoSound);
+  // Vibração no mobile
+  if(navigator.vibrate){
+    if(autoSound==='critical') navigator.vibrate([80,60,80,60,120]);
+    else if(autoSound==='warn') navigator.vibrate([60,80,60]);
+    else navigator.vibrate(40);
+  }
   modal.querySelectorAll('button[data-idx]').forEach(btn=>{
     btn.addEventListener('click',()=>{
       const i=+btn.dataset.idx;
@@ -3027,11 +3185,28 @@ function updateOpsCounterHeader(){
   const el=document.getElementById('ops-counter-header');
   if(!el) return;
   const n=tradeOps.length;
+  const isBackfill=tradeEditDate&&tradeEditDate!==todayISO();
   if(editingOpIdx!==null){el.textContent=`Editando op ${editingOpIdx+1}`;el.style.color='var(--purp)';return;}
+  if(isBackfill&&n>=2){el.textContent=`${n} ops · backfill`;el.style.color='var(--dim)';return;}
   if(n===0){el.textContent='Op 1/2 do dia';el.style.color='var(--green)';}
-  else if(n===1){el.textContent='Op 2/2 do dia — ÚLTIMA';el.style.color='var(--gold)';}
-  else if(n===2){el.textContent='Limite de 2 ops atingido';el.style.color='var(--red)';}
-  else{el.textContent=`${n} ops — EXCEDEU LIMITE`;el.style.color='var(--red)';}
+  else if(n===1){el.textContent='Op 2/2 — ÚLTIMA';el.style.color='var(--gold)';}
+  else if(n>=2){el.textContent='🛑 MESA FECHADA';el.style.color='var(--red)';el.style.fontWeight='700';}
+  // Banner persistente MESA FECHADA quando ops≥2 e não é backfill nem edição
+  let banner=document.getElementById('mesa-fechada-banner');
+  const showBanner=(n>=2&&editingOpIdx===null&&!isBackfill);
+  if(showBanner){
+    if(!banner){
+      banner=document.createElement('div');banner.id='mesa-fechada-banner';
+      banner.style.cssText='background:linear-gradient(90deg,rgba(232,64,64,.25),rgba(232,64,64,.1));border:2px solid rgba(232,64,64,.7);border-radius:9px;padding:12px 14px;margin-bottom:12px;text-align:center;animation:pulseRed 2s ease-in-out infinite';
+      // insere logo antes do form
+      const form=document.querySelector('#op-list')?.parentElement;
+      if(form) form.insertBefore(banner,document.querySelector('#op-list').nextSibling);
+    }
+    banner.style.display='block';
+    banner.innerHTML=`<div style="font-size:12px;font-weight:700;color:var(--red);letter-spacing:1.5px;margin-bottom:4px">🛑 MESA FECHADA</div><div style="font-size:9px;color:var(--red);line-height:1.5;opacity:.9">Você não deveria estar aqui. Feche o Profit.</div>`;
+  } else if(banner) {
+    banner.style.display='none';
+  }
 }
 
 // Bloqueio quando tenta abrir 3ª op — chamado do addOp() antes de salvar
@@ -3066,6 +3241,45 @@ function coachCheckOpLimit(callback){
 // COACH: alerta pré-mercado se energia ≤4 ou sono ruim
 // ═══════════════════════════════════════════════════════════════
 let energiaAlertShown=false;
+let tiredMode=false; // ativado manualmente, persistente no dia via localStorage
+function loadTiredMode(){
+  const today=todayISO();
+  const stored=localStorage.getItem('tired_mode_date');
+  tiredMode=(stored===today);
+  updateTiredModeUI();
+}
+function toggleTiredMode(){
+  tiredMode=!tiredMode;
+  const today=todayISO();
+  if(tiredMode) localStorage.setItem('tired_mode_date',today);
+  else localStorage.removeItem('tired_mode_date');
+  updateTiredModeUI();
+  if(tiredMode){
+    showCoachModal({
+      title:'💤 MODO CANSAÇO ATIVADO',
+      body:`Reconhecer o cansaço é o primeiro passo pra não sabotar.<br><br>Hoje o coach vai ser mais rígido:<br>• Alerta na 1ª op (não na 2ª)<br>• Bloqueio já na 2ª op<br>• Mesa fechada após 1 stop, não 2<br><br>Se você respeitar isso hoje, amanhã acorda mais forte. Se burlar hoje, amanhã acorda pior.`,
+      accent:'var(--purp)',
+      buttons:[{label:'Entendi — vou respeitar',action:'close',accent:'var(--purp)'}]
+    });
+  }
+  // Re-run checks against novos thresholds
+  checkPreEntry();
+}
+function updateTiredModeUI(){
+  const btn=document.getElementById('tired-mode-btn');
+  if(!btn) return;
+  if(tiredMode){
+    btn.textContent='ATIVO';
+    btn.style.background='var(--purp)';
+    btn.style.color='#fff';
+    btn.style.borderColor='var(--purp)';
+  } else {
+    btn.textContent='OFF';
+    btn.style.background='var(--s3)';
+    btn.style.color='var(--dim)';
+    btn.style.borderColor='var(--b1)';
+  }
+}
 function checkEnergiaBaixa(){
   if(energiaAlertShown) return;
   // Skip se estamos backfillando dia passado — decisão de operar já foi tomada
