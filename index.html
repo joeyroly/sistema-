@@ -716,10 +716,12 @@ tr:hover td{background:var(--s2)}
             <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px">Gatilho psicológico</div>
             <div class="op-state-grid" id="new-op-state-btns" style="margin-bottom:8px">
               <button class="os-btn" data-v="planejado" onclick="selNewOpState(this)">📋 Planejado</button>
+              <button class="os-btn" data-v="leitura_regiao" onclick="selNewOpState(this)">🗺️ Leitura região</button>
+              <button class="os-btn" data-v="oportunidade" onclick="selNewOpState(this)">💡 Oportunidade</button>
+              <button class="os-btn" data-v="cirilo_valida" onclick="selNewOpState(this)">🎯 Cirilo valida plano</button>
+              <button class="os-btn" data-v="cirilo_puro" onclick="selNewOpState(this)">🎯 Cirilo puro</button>
               <button class="os-btn" data-v="emotivo" onclick="selNewOpState(this)">🔥 Emotivo</button>
               <button class="os-btn" data-v="medo_falha" onclick="selNewOpState(this)">😨 Medo falha</button>
-              <button class="os-btn" data-v="oportunidade" onclick="selNewOpState(this)">💡 Oportunidade</button>
-              <button class="os-btn" data-v="cirilo" onclick="selNewOpState(this)">🎯 Cirilo</button>
               <button class="os-btn" data-v="desfocado" onclick="selNewOpState(this)">🌀 Desfocado</button>
               <button class="os-btn" data-v="revanche" onclick="selNewOpState(this)">⚡ Revanche</button>
               <button class="os-btn" data-v="ross" onclick="selNewOpState(this)">📐 Ross</button>
@@ -1262,13 +1264,13 @@ const ANCHOR_PHRASES=[
   {quote:"A calma é a maior manifestação de poder.",source:"James Allen — Como um homem pensa",activation:"Em qual momento desta semana você perdeu a calma? Reveja e ajuste.",dow:6}
 ];
 const ALL_SETUPS=['Op1','Op2','MetN','DupPr','DivOc','Cont','Emotivo','DnçVw','FlCtVw','MOLEQUE','RtMeSg','D-1','News','Aj','Aj 0,5','Aj 0,75','Aj 1,0','Aj 1,25','Aj 1,5','Fec','Fec 0,5','Fec 0,75','Fec 1,00','Fec 1,25','Fec 1,50','Ab','DvR 2','DvR 10','DvR 210','DvI 2','DvI 5','DvI 10','DvI 210','DvRI 2','DvRI 10','DvRI 210','Bseg 2','Bseg 10','Bseg 210','FOMO','Marc','SlAg','Fluxo','Vwap 0','Vwap 0,20','Vwap 0,25','Vwap 0,40','Vwap 0,50','Vwap 0,60','Vwap 0,75','Vwap 1,00','50%','1delta','2deltas','1MDelta','MRc2','MRc10','MIr2','MIf5','RtM5','Rt50I2','Rt50I5','Cirilo','BarraG','8-17','8 mm','PA','St10'];
-const ENTRY_STATES={planejado:{label:'📋 Planejado',cls:'sel-plan'},atrasado:{label:'⏰ Atrasado',cls:'sel-gold'},emotivo:{label:'🔥 Emotivo',cls:'sel-danger'},medo_falha:{label:'😨 Medo falha',cls:'sel-danger'},oportunidade:{label:'💡 Oportunidade',cls:'sel-gold'},cirilo:{label:'🎯 Cirilo',cls:'sel-cirilo'},desfocado:{label:'🌀 Desfocado',cls:'sel-danger'},revanche:{label:'⚡ Revanche',cls:'sel-danger'},ross:{label:'📐 Ross',cls:'sel-plan'}};
+const ENTRY_STATES={planejado:{label:'📋 Planejado',cls:'sel-plan'},leitura_regiao:{label:'🗺️ Leitura região',cls:'sel-plan'},atrasado:{label:'⏰ Atrasado',cls:'sel-gold'},emotivo:{label:'🔥 Emotivo',cls:'sel-danger'},medo_falha:{label:'😨 Medo falha',cls:'sel-danger'},oportunidade:{label:'💡 Oportunidade',cls:'sel-gold'},cirilo:{label:'🎯 Cirilo',cls:'sel-cirilo'},cirilo_valida:{label:'🎯 Cirilo valida plano',cls:'sel-cirilo'},cirilo_puro:{label:'🎯 Cirilo puro',cls:'sel-cirilo'},desfocado:{label:'🌀 Desfocado',cls:'sel-danger'},revanche:{label:'⚡ Revanche',cls:'sel-danger'},ross:{label:'📐 Ross',cls:'sel-plan'}};
 const ERROR_LABELS={entrou_cedo:'entrou cedo',entrou_tarde:'entrou tarde',saiu_cedo:'saiu cedo',saiu_tarde:'saiu tarde',nao_entrou:'não entrou',moveu_stop:'moveu stop',tamanho_errado:'tamanho errado',revanche:'revanche',sem_erro:'sem erro'};
-// Gatilhos:
-//   VÁLIDOS (verde) — Planejado, Cirilo
-//   NEUTROS (amarelo) — Oportunidade, Medo falha
+// Gatilhos após refino da sessão 02/08/2026:
+//   VÁLIDOS (verde, no Score) — Planejado, Leitura de região, Cirilo valida plano, Cirilo puro
+//   NEUTROS (amarelo) — Oportunidade (impulso reativo puro)
 //   BANIDOS (vermelho) — Emotivo, Atrasado, Desfocado, Revanche, Ross, FOMO
-const VALID_TRIGGERS=['planejado','cirilo'];
+const VALID_TRIGGERS=['planejado','leitura_regiao','cirilo','cirilo_valida','cirilo_puro'];
 const BANNED_TRIGGERS=['emotivo','atrasado','desfocado','revanche','ross','fomo'];
 const NEUTRAL_TRIGGERS=['oportunidade','medo_falha'];
 
@@ -1824,6 +1826,9 @@ function loadTradeForms(dateISO){
   if(preE) preE.value=5;if(preEval) preEval.textContent='5';
   energiaAlertShown=false;window.overrideEnergiaBaixa=false;
   lastOpWarningShown=false;thirdOpBlockShown=false;twoLossesBlockShown=false;horarioFlagShownFor=null;
+  // Reset backfill state — só ativa quando o usuário seleciona explicitamente
+  window.backfillConfidence=null;
+  window.pendingThirdOpAfterFilter=false;
   renderOps();renderHes();renderPreChecklist();
   document.getElementById('t-total-fpa')&&(document.getElementById('t-total-fpa').textContent='R$ 0');
   document.getElementById('t-total-pf')&&(document.getElementById('t-total-pf').textContent='R$ 0');
@@ -1856,13 +1861,39 @@ function renderDayIncompleteBanner(e){
     const opCard=document.querySelector('.op-list')?.parentElement;
     if(opCard&&opCard.parentElement) opCard.parentElement.insertBefore(box,opCard);
   }
-  if(!e||!e.day_incomplete||(e.t_ops_detail&&e.t_ops_detail.length>0)){box.style.display='none';return;}
+  const isBackfill=tradeEditDate&&tradeEditDate!==todayISO();
+  const hasOps=(e?.t_ops_detail||[]).length>0;
+  // Mostra o painel de backfill quando: dia incompleto sem ops OU backfilling qualquer dia passado
+  if(!e||(!e.day_incomplete&&!isBackfill)||(e.day_incomplete&&hasOps&&!isBackfill)){box.style.display='none';return;}
   const totalBRL=(e.t_result_fpa||0)+(e.t_result_pf||0);
   box.style.display='block';
-  box.innerHTML=`<div style="background:rgba(212,160,40,.12);border:2px solid rgba(212,160,40,.5);border-radius:9px;padding:11px 13px">
-    <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:5px;font-weight:500">⚠️ Dia pendente de backfill</div>
-    <div style="font-size:10px;color:var(--text);line-height:1.5">Este dia tem resultado <strong style="color:${totalBRL>=0?'var(--green)':'var(--red)'}">R$ ${totalBRL>=0?'+':''}${Math.round(totalBRL).toLocaleString('pt-BR')}</strong> mas nenhuma operação registrada.<br>Registre as ops de memória agora para que este dia entre nas análises. Ao salvar com ops, a flag limpa automaticamente.</div>
+  const isReconstructing=isBackfill||(e.day_incomplete&&!hasOps);
+  box.innerHTML=`<div style="background:rgba(212,160,40,.12);border:2px solid rgba(212,160,40,.5);border-radius:9px;padding:12px 14px">
+    <div style="font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);margin-bottom:6px;font-weight:500">📝 Modo backfill — reconstrução de memória</div>
+    <div style="font-size:10px;color:var(--text);line-height:1.5;margin-bottom:9px">${totalBRL!==0?`Resultado registrado: <strong style="color:${totalBRL>=0?'var(--green)':'var(--red)'}">R$ ${totalBRL>=0?'+':''}${Math.round(totalBRL).toLocaleString('pt-BR')}</strong>. `:''}Ops registradas aqui viram marcadas com flag <code style="background:var(--s3);padding:1px 4px;border-radius:3px;font-size:9px">backfill</code> + confiança da lembrança.</div>
+    <div style="font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase;margin-bottom:5px">Confiança da lembrança para as ops registradas neste dia:</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:5px">
+      <button onclick="setBackfillConfidence('alta',this)" data-conf="alta" class="bf-btn" style="padding:8px;background:var(--s3);border:1px solid var(--b1);border-radius:6px;color:var(--dim);font-family:'Geist Mono',monospace;font-size:9px;cursor:pointer">Alta</button>
+      <button onclick="setBackfillConfidence('media',this)" data-conf="media" class="bf-btn" style="padding:8px;background:var(--s3);border:1px solid var(--b1);border-radius:6px;color:var(--dim);font-family:'Geist Mono',monospace;font-size:9px;cursor:pointer">Média</button>
+      <button onclick="setBackfillConfidence('baixa',this)" data-conf="baixa" class="bf-btn" style="padding:8px;background:var(--s3);border:1px solid var(--b1);border-radius:6px;color:var(--dim);font-family:'Geist Mono',monospace;font-size:9px;cursor:pointer">Baixa</button>
+    </div>
+    <div id="backfill-conf-lbl" style="font-size:8px;color:var(--dim);margin-top:6px;text-align:center">Nenhuma selecionada — a próxima op não será marcada com confiança.</div>
   </div>`;
+  // Reflete estado atual do window.backfillConfidence
+  if(window.backfillConfidence){
+    const btn=box.querySelector(`[data-conf="${window.backfillConfidence}"]`);
+    if(btn){btn.style.background='var(--gold)';btn.style.color='#000';}
+    const lbl=box.querySelector('#backfill-conf-lbl');
+    if(lbl) lbl.textContent=`Confiança: ${window.backfillConfidence.toUpperCase()} — próximas ops recebem essa flag.`;
+  }
+}
+
+function setBackfillConfidence(level,btn){
+  window.backfillConfidence=level;
+  document.querySelectorAll('.bf-btn').forEach(b=>{b.style.background='var(--s3)';b.style.color='var(--dim)';});
+  btn.style.background='var(--gold)';btn.style.color='#000';
+  const lbl=document.getElementById('backfill-conf-lbl');
+  if(lbl) lbl.textContent=`Confiança: ${level.toUpperCase()} — próximas ops recebem essa flag.`;
 }
 
 // ── ANÁLISE DE ONTEM no topo do Trade ────────
@@ -2224,41 +2255,194 @@ function addOp(){
   // Skip all hard blocks se estamos backfillando dia passado
   const isBackfill=tradeEditDate&&tradeEditDate!==todayISO();
 
-  // ── HARD BLOCK 1: Energia < 5 (item 2 da spec)
-  // Baseado no dado real: E≤4 = -R$2.947/dia médio
-  // Só bloqueia hoje ao vivo, não backfill, não edição
+  // ── HARD BLOCK 1: Energia < 5 (item 2 da spec) — mantido
   if(!isBackfill&&editingOpIdx===null){
     const eEl=document.getElementById('sl-e-pre');
     const energia=eEl?parseInt(eEl.value):5;
     if(energia<5){
       showCoachModal({
         title:'🛑 BLOQUEIO: Energia insuficiente para operar',
-        body:`Sua energia registrada: <strong style="color:var(--red)">${energia}/10</strong>.<br><br>Regra do seu modelo: <strong>energia &lt; 5 = não opera</strong>. Seu histórico prova: dias E≤4 rendem <strong style="color:var(--red)">−R$2.947 em média</strong>.<br><br>Sem override. Sem "vou tentar mesmo assim". Feche o Profit.<br><br>Se você acha que sua energia é maior que registrou, volte no pré-pregão e ajuste — mas com honestidade.`,
+        body:`Sua energia registrada: <strong style="color:var(--red)">${energia}/10</strong>.<br><br>Regra do seu modelo: <strong>energia &lt; 5 = não opera</strong>. Seu histórico prova: dias E≤4 rendem <strong style="color:var(--red)">−R$2.947 em média</strong>.<br><br>Sem override. Sem "vou tentar mesmo assim". Feche o Profit.`,
         accent:'var(--red)',
         buttons:[{label:'Vou fechar a plataforma',action:'callback',accent:'var(--red)',callback:()=>{
           clearNewOpForm();
           showToast('Sabedoria é lucro invisível.',false);
         }}]
       });
-      return; // BLOQUEIO ABSOLUTO — não segue
+      return;
     }
   }
 
-  // ── HARD BLOCK 2: 3ª operação (item 3 da spec) — sem override
+  // ── FILTRO 3-CAMADAS: 3ª+ operação após 2 stops (novo — substitui hard block absoluto)
+  // Contexto: hoje 02/08 3º trade validado por Cirilo, planejado, foi vencedor.
+  // Regra revisada: 3ª op permitida SOMENTE se passar por 3 camadas de filtro.
   if(!isBackfill&&editingOpIdx===null&&tradeOps.length>=2){
-    showCoachModal({
-      title:'🛑 BLOQUEIO ABSOLUTO: 3ª operação',
-      body:`Você já registrou <strong>${tradeOps.length} ops hoje</strong>. Seu modelo prevê <strong>máximo 2</strong>.<br><br>Sem override. Sem justificativa. Sem "essa é diferente".<br><br>Você conhece o dado: cada 3ª op sua na história custou dinheiro. Não é palpite — é sua planilha.<br><br>Feche o Profit. Volta amanhã.`,
-      accent:'var(--red)',
-      buttons:[{label:'Vou fechar a plataforma',action:'callback',accent:'var(--red)',callback:()=>{
-        clearNewOpForm();
-        showToast('Boa. Salvou o mês.',false);
-      }}]
-    });
-    return; // BLOQUEIO ABSOLUTO
+    const stopsCount=tradeOps.filter(o=>o.pts<0).length;
+    if(stopsCount>=2){
+      // Só ativa o filtro após 2 STOPS. Se as 2 primeiras foram positivas, cai no fluxo normal (que ainda tem hard block se ambas foram wins? Não — hoje é 3ª op OK se as 2 primeiras foram wins, filtro só ativa em 2 stops).
+      runThirdOpFilter(function(passed){
+        if(passed){
+          // marca esta próxima op com flag
+          window.pendingThirdOpAfterFilter=true;
+          addOpCore();
+        }
+      });
+      return;
+    } else {
+      // 2 ops mas não são 2 stops (ex: 1 win + 1 stop) → aviso amarelo mas segue
+      showCoachModal({
+        title:'⚠ 3ª op — reflita antes de puxar',
+        body:`Você já tem <strong>${tradeOps.length} ops</strong> (${stopsCount} stop${stopsCount!==1?'s':''}). Não bateu 2 stops, mas o padrão de "só mais uma" custa dinheiro.<br><br>Antes: convicção 5? Setup limpo? Ou está forçando?`,
+        accent:'var(--gold)',
+        buttons:[
+          {label:'Vou parar',action:'callback',accent:'var(--green)',callback:()=>{clearNewOpForm();showToast('Boa.',false);}},
+          {label:'Sigo com foco',action:'callback',accent:'var(--gold)',callback:()=>{addOpCore();}}
+        ]
+      });
+      return;
+    }
   }
 
   addOpCore();
+}
+
+// ═══════════════════════════════════════════════════════════════
+// FILTRO 3-CAMADAS PRÉ 3ª OP APÓS 2 STOPS
+// Camada 1: Financeira (auto)
+// Camada 2: Setup (verifica campos do form)
+// Camada 3: Estado (popup obrigatório 30s — MEDO, Exec, Revanche)
+// ═══════════════════════════════════════════════════════════════
+function runThirdOpFilter(finalCallback){
+  // ── CAMADA 1: FINANCEIRA (auto, sem override)
+  const dayFPA=tradeOps.reduce((a,o)=>a+(o.result_brl||0),0);
+  const dayPF=tradeOps.reduce((a,o)=>a+(o.result_brl_pf||0),0);
+  const worstAccount=Math.min(dayFPA,dayPF);
+  const worstAbs=Math.abs(worstAccount);
+  if(worstAccount<=-2500){
+    showCoachModal({
+      title:'🛑 CAMADA 1 (Financeira) — REPROVADA',
+      body:`Perda do dia atingiu <strong style="color:var(--red)">R$ ${Math.round(worstAbs).toLocaleString('pt-BR')}</strong> (limite R$2.500/conta).<br><br>Mesa fechada por regra. Sem override.`,
+      accent:'var(--red)',
+      buttons:[{label:'Vou fechar a plataforma',action:'callback',accent:'var(--red)',callback:()=>{clearNewOpForm();finalCallback(false);}}]
+    });
+    return;
+  }
+  // ── CAMADA 2: SETUP (verifica campos já preenchidos no form)
+  const hasValidTrigger=newOpStates.some(s=>VALID_TRIGGERS.includes(String(s).toLowerCase()));
+  const hasPlanEntry=newOpPlan.includes('plan_entry');
+  if(!hasValidTrigger||!hasPlanEntry){
+    const gaps=[];
+    if(!hasValidTrigger) gaps.push('Gatilho: Planejado, Leitura de região ou Cirilo (qualquer)');
+    if(!hasPlanEntry) gaps.push('Aderência: marcar "Dentro do plano"');
+    showCoachModal({
+      title:'🛑 CAMADA 2 (Setup) — REPROVADA',
+      body:`3ª op após 2 stops exige setup blindado.<br><br>Falta:<br><ul style="padding-left:18px;line-height:1.7;color:var(--red);margin:8px 0">${gaps.map(g=>'<li>'+g+'</li>').join('')}</ul>Volta ao form, corrige. Se não conseguir corrigir com honestidade, é porque não deve operar.`,
+      accent:'var(--red)',
+      buttons:[
+        {label:'Fecho — não opero',action:'callback',accent:'var(--green)',callback:()=>{clearNewOpForm();finalCallback(false);}},
+        {label:'Vou ao form corrigir',action:'callback',accent:'var(--gold)',callback:()=>{finalCallback(false);}}
+      ]
+    });
+    return;
+  }
+  // ── CAMADA 3: ESTADO (popup obrigatório com 3 campos)
+  showLayer3Modal(finalCallback);
+}
+
+function showLayer3Modal(finalCallback){
+  const old=document.getElementById('coach-modal');if(old) old.remove();
+  const modal=document.createElement('div');modal.id='coach-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .15s ease';
+  modal.innerHTML=`<div style="background:var(--s2);border:2px solid var(--gold);border-radius:12px;padding:18px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.7)">
+    <div style="font-size:12px;font-weight:500;color:var(--gold);margin-bottom:6px;letter-spacing:.5px">🛡 CAMADA 3 (Estado) — checklist obrigatório</div>
+    <div style="font-size:10px;color:var(--dim);margin-bottom:14px;line-height:1.5">Toque cada campo. Preencher com honestidade radical.</div>
+
+    <div style="margin-bottom:12px">
+      <div style="font-size:9px;color:var(--red);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">MEDO agora (1–10)</div>
+      <input type="range" min="1" max="10" value="5" id="l3-medo" oninput="document.getElementById('l3-medo-v').textContent=this.value;l3Touched.medo=true;l3UpdateBtn()" style="width:100%">
+      <div style="font-size:11px;color:var(--red);text-align:center;font-weight:500" id="l3-medo-v">—</div>
+      <div style="font-size:8px;color:var(--dim);text-align:center">≥7 = bloqueia</div>
+    </div>
+
+    <div style="margin-bottom:12px">
+      <div style="font-size:9px;color:var(--green);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Nota execução prevista (1–10)</div>
+      <input type="range" min="1" max="10" value="5" id="l3-exec" oninput="document.getElementById('l3-exec-v').textContent=this.value;l3Touched.exec=true;l3UpdateBtn()" style="width:100%">
+      <div style="font-size:11px;color:var(--green);text-align:center;font-weight:500" id="l3-exec-v">—</div>
+      <div style="font-size:8px;color:var(--dim);text-align:center">≤6 = bloqueia</div>
+    </div>
+
+    <div style="margin-bottom:14px">
+      <div style="font-size:9px;color:var(--red);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px">Sensação de revanche?</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
+        <button onclick="l3SetRevanche('sim',this)" id="l3-rev-sim" style="padding:9px;background:var(--s3);border:1px solid var(--b1);border-radius:7px;color:var(--dim);font-family:'Geist Mono',monospace;font-size:10px;cursor:pointer">SIM</button>
+        <button onclick="l3SetRevanche('nao',this)" id="l3-rev-nao" style="padding:9px;background:var(--s3);border:1px solid var(--b1);border-radius:7px;color:var(--dim);font-family:'Geist Mono',monospace;font-size:10px;cursor:pointer">NÃO</button>
+      </div>
+      <div style="font-size:8px;color:var(--dim);text-align:center;margin-top:4px">SIM = bloqueia</div>
+    </div>
+
+    <div style="display:flex;gap:6px">
+      <button onclick="l3Cancel()" style="flex:1;padding:11px;background:var(--red);border:none;border-radius:8px;color:#fff;font-family:'Geist Mono',monospace;font-size:10px;cursor:pointer;font-weight:500">Cancelar — não opero</button>
+      <button id="l3-confirm-btn" disabled onclick="l3Confirm()" style="flex:1;padding:11px;background:var(--dim);border:none;border-radius:8px;color:#fff;font-family:'Geist Mono',monospace;font-size:10px;cursor:not-allowed;opacity:.5;font-weight:500">Preencha os 3 campos</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  coachSound('warn');
+  // Reset state
+  window.l3Touched={medo:false,exec:false,rev:null};
+  window.l3FinalCallback=finalCallback;
+}
+
+window.l3Touched={medo:false,exec:false,rev:null};
+window.l3FinalCallback=null;
+function l3SetRevanche(v,btn){
+  document.getElementById('l3-rev-sim').style.background='var(--s3)';
+  document.getElementById('l3-rev-sim').style.color='var(--dim)';
+  document.getElementById('l3-rev-nao').style.background='var(--s3)';
+  document.getElementById('l3-rev-nao').style.color='var(--dim)';
+  btn.style.background=v==='sim'?'var(--red)':'var(--green)';
+  btn.style.color='#fff';
+  window.l3Touched.rev=v;
+  l3UpdateBtn();
+}
+function l3UpdateBtn(){
+  const btn=document.getElementById('l3-confirm-btn');if(!btn) return;
+  const ok=window.l3Touched.medo&&window.l3Touched.exec&&window.l3Touched.rev!==null;
+  if(ok){
+    btn.disabled=false;btn.style.background='var(--green)';btn.style.opacity=1;btn.style.cursor='pointer';
+    btn.textContent='Verificar e prosseguir';
+  }
+}
+function l3Cancel(){
+  const modal=document.getElementById('coach-modal');if(modal) modal.remove();
+  clearNewOpForm();
+  showToast('Boa decisão. Salvou o mês.',false);
+  if(window.l3FinalCallback) window.l3FinalCallback(false);
+}
+function l3Confirm(){
+  const medo=+document.getElementById('l3-medo').value;
+  const exec=+document.getElementById('l3-exec').value;
+  const rev=window.l3Touched.rev;
+  const modal=document.getElementById('coach-modal');if(modal) modal.remove();
+  const fails=[];
+  if(medo>=7) fails.push(`MEDO ${medo}/10 (≥7)`);
+  if(exec<=6) fails.push(`Exec previsto ${exec}/10 (≤6)`);
+  if(rev==='sim') fails.push('Sensação de revanche = SIM');
+  if(fails.length){
+    showCoachModal({
+      title:'🛑 CAMADA 3 (Estado) — REPROVADA',
+      body:`Estado não recomendado para operar após 2 stops:<br><br><ul style="padding-left:18px;line-height:1.7;color:var(--red);margin:8px 0">${fails.map(f=>'<li>'+f+'</li>').join('')}</ul>Mesa fechada. Volta amanhã.`,
+      accent:'var(--red)',
+      buttons:[{label:'Vou fechar a plataforma',action:'callback',accent:'var(--red)',callback:()=>{clearNewOpForm();if(window.l3FinalCallback) window.l3FinalCallback(false);}}]
+    });
+    return;
+  }
+  // PASSOU nas 3 camadas
+  showCoachModal({
+    title:'✓ 3 camadas passadas — pode operar',
+    body:`Estado: MEDO ${medo}, Exec previsto ${exec}, sem revanche.<br>Setup: gatilho válido + dentro do plano.<br>Financeiro: perda &lt; R$2.500/conta.<br><br>Esta op fica marcada como <strong>"3ª op filtrada"</strong> pra análise futura.`,
+    accent:'var(--green)',
+    buttons:[{label:'Sigo',action:'callback',accent:'var(--green)',callback:()=>{if(window.l3FinalCallback) window.l3FinalCallback(true);}}]
+  });
 }
 
 function addOpCore(){
@@ -2310,7 +2494,14 @@ function addOpCore(){
     stop: pts>-16,
     no_e3: e3Lots===0
   };
-  const opData={dir,pts,pts_pf:hasPf?ptsPf:null,lots:lots||null,e1_lots:e1Lots,e2_lots:e2Lots,e3_lots:e3Lots,e2_tipo:e2Tipo,estrutura,lots_pf:lotsPf,result_brl,result_brl_pf,mfe:mfeAbs,mae:maeAbs,mfe_ref:MFE_MAE_REFERENCE,capture_pct,risk_planned:riskAbs,r_multiple,conviction:newOpConv,plan_adherence:[...newOpPlan],error_tags:[...newOpErrors],note,time,entry_states:[...newOpStates],adh_items:autoAdh,adh_auto_overrides:{stop:pts<=-16,no_e3:e3Lots>0},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups],segs:[...newOpSegs],ifr:[...newOpIfr],ross_b:newOpRossB};
+  const opData={dir,pts,pts_pf:hasPf?ptsPf:null,lots:lots||null,e1_lots:e1Lots,e2_lots:e2Lots,e3_lots:e3Lots,e2_tipo:e2Tipo,estrutura,lots_pf:lotsPf,result_brl,result_brl_pf,mfe:mfeAbs,mae:maeAbs,mfe_ref:MFE_MAE_REFERENCE,capture_pct,risk_planned:riskAbs,r_multiple,conviction:newOpConv,plan_adherence:[...newOpPlan],error_tags:[...newOpErrors],note,time,entry_states:[...newOpStates],adh_items:autoAdh,adh_auto_overrides:{stop:pts<=-16,no_e3:e3Lots>0},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups],segs:[...newOpSegs],ifr:[...newOpIfr],ross_b:newOpRossB,third_op_after_filter:!!window.pendingThirdOpAfterFilter};
+  window.pendingThirdOpAfterFilter=false;
+  // Backfill flag: se está editando dia passado E confiança selecionada, marca
+  const isBackfill=tradeEditDate&&tradeEditDate!==todayISO();
+  if(isBackfill&&window.backfillConfidence){
+    opData.backfill=true;
+    opData.backfill_confidence=window.backfillConfidence;
+  }
   if(editingOpIdx!==null){
     // Edit mode: preserve corr from existing
     opData.corr=tradeOps[editingOpIdx]?.corr||'';
@@ -2498,6 +2689,8 @@ function renderOps(){
         ${exitReasons.map(r=>`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:${dangerExits.includes(r)?'var(--rd)':'var(--gd)'};color:${dangerExits.includes(r)?'var(--red)':'var(--green)'}">${r}</span>`).join('')}
         ${stateLabels.length?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--s3);color:var(--dim)">${stateLabels.join(' + ')}</span>`:''}
         ${op.ross_b?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:rgba(232,64,64,.15);color:var(--red);border:1px solid rgba(232,64,64,.4)">🚨 Ross-B</span>`:''}
+        ${op.backfill?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:rgba(212,160,40,.15);color:var(--gold);border:1px solid rgba(212,160,40,.4)">📝 backfill${op.backfill_confidence?' ·'+op.backfill_confidence:''}</span>`:''}
+        ${op.third_op_after_filter?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:rgba(78,124,248,.15);color:var(--blue);border:1px solid rgba(78,124,248,.4)">🛡 3ª filtrada</span>`:''}
       </div>
       ${coachLine}
       <div class="op-detail">
@@ -3009,10 +3202,16 @@ function computeScoreForDay(entry){
   else if(before9){cards.push({i:1,status:'pending',reason:`${preCount}/5 · faltam ${5-preCount} até as 09h`});}
   else{cards.push({i:1,status:'fail',reason:`Só ${preCount}/5 preenchidos`});}
 
-  // ── Card 2: Máx 2 ops
+  // ── Card 2: Máx 2 ops (ou 3ª filtrada — passa)
   if(ops.length===0){cards.push({i:2,status:'pending',reason:'0 ops registradas'});}
   else if(ops.length<=2){cards.push({i:2,status:'pass',reason:`${ops.length} op${ops.length>1?'s':''}`});}
-  else{cards.push({i:2,status:'fail',reason:`${ops.length} ops — excedeu limite de 2`});}
+  else {
+    // 3+ ops: só passa se todas as extras foram filtradas
+    const extras=ops.slice(2);
+    const allFiltered=extras.every(o=>o.third_op_after_filter===true);
+    if(allFiltered) cards.push({i:2,status:'pass',reason:`${ops.length} ops — extras via filtro 3-camadas`});
+    else cards.push({i:2,status:'fail',reason:`${ops.length} ops — extras sem filtro`});
+  }
 
   // ── Card 3: 100% das ops com gatilho VÁLIDO (planejado ou cirilo).
   // Neutro (oportunidade / medo_falha) não conta contra, mas exige outro gatilho válido para passar.
@@ -3141,27 +3340,37 @@ function coachSound(kind='warn'){
     if(audioCtx.state==='suspended') audioCtx.resume();
     const ctx=audioCtx;
     const now=ctx.currentTime;
-    const play=(freq,start,dur,vol=0.15)=>{
+    // Master gain 3× o anterior, square wave (mais penetrante que sine)
+    const play=(freq,start,dur,vol=0.55,wave='square')=>{
       const osc=ctx.createOscillator();
       const gain=ctx.createGain();
-      osc.type='sine';
+      osc.type=wave;
       osc.frequency.value=freq;
       gain.gain.setValueAtTime(0,now+start);
-      gain.gain.linearRampToValueAtTime(vol,now+start+0.02);
+      gain.gain.linearRampToValueAtTime(vol,now+start+0.015);
+      gain.gain.setValueAtTime(vol,now+start+dur*0.7);
       gain.gain.exponentialRampToValueAtTime(0.001,now+start+dur);
       osc.connect(gain).connect(ctx.destination);
       osc.start(now+start);
       osc.stop(now+start+dur+0.02);
     };
     if(kind==='critical'){
-      // Vermelho: 3 toques agudos e curtos, urgente
-      play(880,0,0.12,0.20);play(880,0.15,0.12,0.20);play(880,0.30,0.18,0.22);
+      // Vermelho: sirene de emergência — 4 pulsos duplos, alterna 900↔1200Hz, forte
+      const beat=0.18;
+      for(let i=0;i<4;i++){
+        const t=i*beat*2;
+        play(900,t,beat,0.65);
+        play(1200,t+beat,beat,0.65);
+      }
     } else if(kind==='warn'){
-      // Amarelo: 2 toques descendentes, aviso
-      play(660,0,0.14,0.15);play(440,0.18,0.20,0.15);
+      // Amarelo: 3 toques descendentes claros
+      play(880,0,0.20,0.50);
+      play(660,0.24,0.20,0.50);
+      play(440,0.48,0.28,0.50);
     } else if(kind==='ding'){
-      // Verde: 1 toque agradável, confirmação
-      play(880,0,0.12,0.10);play(1320,0.10,0.15,0.10);
+      // Verde: sino curto agradável
+      play(1320,0,0.14,0.35,'sine');
+      play(1760,0.10,0.20,0.35,'sine');
     }
   }catch(e){/* silencioso se áudio bloqueado */}
 }
@@ -3183,9 +3392,9 @@ function showCoachModal({title,body,accent='var(--red)',buttons,sound}){
   coachSound(autoSound);
   // Vibração no mobile
   if(navigator.vibrate){
-    if(autoSound==='critical') navigator.vibrate([80,60,80,60,120]);
-    else if(autoSound==='warn') navigator.vibrate([60,80,60]);
-    else navigator.vibrate(40);
+    if(autoSound==='critical') navigator.vibrate([200,80,200,80,200,80,300]);
+    else if(autoSound==='warn') navigator.vibrate([100,80,100,80,150]);
+    else navigator.vibrate(60);
   }
   modal.querySelectorAll('button[data-idx]').forEach(btn=>{
     btn.addEventListener('click',()=>{
@@ -3274,9 +3483,10 @@ function updateOpsCounterHeader(){
   if(n===0){el.textContent='Op 1/2 do dia';el.style.color='var(--green)';}
   else if(n===1){el.textContent='Op 2/2 — ÚLTIMA';el.style.color='var(--gold)';}
   else if(n>=2){el.textContent='🛑 MESA FECHADA';el.style.color='var(--red)';el.style.fontWeight='700';}
-  // Banner persistente MESA FECHADA quando ops≥2 e não é backfill nem edição
+  // Banner persistente MESA FECHADA quando ops≥2 e a próxima seria fora do filtro
   let banner=document.getElementById('mesa-fechada-banner');
-  const showBanner=(n>=2&&editingOpIdx===null&&!isBackfill);
+  const stopsToday=tradeOps.filter(o=>o.pts<0).length;
+  const showBanner=(n>=2&&stopsToday>=2&&editingOpIdx===null&&!isBackfill);
   if(showBanner){
     if(!banner){
       banner=document.createElement('div');banner.id='mesa-fechada-banner';
@@ -3286,7 +3496,7 @@ function updateOpsCounterHeader(){
       if(form) form.insertBefore(banner,document.querySelector('#op-list').nextSibling);
     }
     banner.style.display='block';
-    banner.innerHTML=`<div style="font-size:12px;font-weight:700;color:var(--red);letter-spacing:1.5px;margin-bottom:4px">🛑 MESA FECHADA</div><div style="font-size:9px;color:var(--red);line-height:1.5;opacity:.9">Você não deveria estar aqui. Feche o Profit.</div>`;
+    banner.innerHTML=`<div style="font-size:12px;font-weight:700;color:var(--red);letter-spacing:1.5px;margin-bottom:4px">🛑 2 STOPS — MESA FECHADA</div><div style="font-size:9px;color:var(--red);line-height:1.5;opacity:.9">3ª op só com filtro 3-camadas obrigatório.</div>`;
   } else if(banner) {
     banner.style.display='none';
   }
@@ -5068,7 +5278,7 @@ ${sorted.slice(-10).map(d=>{
   const opsStr=ops.length?ops.map(op=>{
     const legacyEmo=op.emo_intensity!=null?` MEDO:${op.emo_intensity}`:'';
     const legacyExec=op.exec_score!=null?` exec:${op.exec_score}`:'';
-    return `    [${op.time||'?'}] ${op.dir} ${op.pts>=0?'+':''}${op.pts}pts ${op.estrutura?'['+(ESTRUTURA_LABEL[op.estrutura]||op.estrutura)+(op.e1_lots?' '+op.e1_lots+(op.e2_lots?'+'+op.e2_lots:'')+(op.e3_lots?'+'+op.e3_lots:''):'')+'] ':''}${op.r_multiple!=null?(op.r_multiple>=0?'+':'')+op.r_multiple+'R ':''}conv:${n(op.conviction)} MFE:${n(op.mfe)} MAE:${n(op.mae)} captura:${op.mfe&&op.pts>0?Math.round(op.pts/op.mfe*100)+'%':'—'}${legacyEmo}${legacyExec} adh:${fmtN(calcAdhScore(op),0)}/10${op.ross_b?' 🚨ROSS-B':''}\n      exit:[${getExitReasons(op).join(',')||'—'}] erro:[${(op.error_tags||[]).filter(e=>e!=='sem_erro').join(',')||'—'}] plano:[${(op.plan_adherence||[]).join(',')||'—'}] seg:[${(op.segs||[]).join(',')||'—'}] ifr:[${(op.ifr||[]).join(',')||'—'}] setup:[${(op.setups||[]).join(',')||'—'}] gatilho:[${(op.entry_states||[op.entry_state]).filter(Boolean).join(',')||'—'}]`;
+    return `    [${op.time||'?'}] ${op.dir} ${op.pts>=0?'+':''}${op.pts}pts ${op.estrutura?'['+(ESTRUTURA_LABEL[op.estrutura]||op.estrutura)+(op.e1_lots?' '+op.e1_lots+(op.e2_lots?'+'+op.e2_lots:'')+(op.e3_lots?'+'+op.e3_lots:''):'')+'] ':''}${op.r_multiple!=null?(op.r_multiple>=0?'+':'')+op.r_multiple+'R ':''}conv:${n(op.conviction)} MFE:${n(op.mfe)} MAE:${n(op.mae)} captura:${op.mfe&&op.pts>0?Math.round(op.pts/op.mfe*100)+'%':'—'}${legacyEmo}${legacyExec} adh:${fmtN(calcAdhScore(op),0)}/10${op.ross_b?' 🚨ROSS-B':''}${op.third_op_after_filter?' 🛡3ªFILTRADA':''}${op.backfill?' 📝BACKFILL('+op.backfill_confidence+')':''}\n      exit:[${getExitReasons(op).join(',')||'—'}] erro:[${(op.error_tags||[]).filter(e=>e!=='sem_erro').join(',')||'—'}] plano:[${(op.plan_adherence||[]).join(',')||'—'}] seg:[${(op.segs||[]).join(',')||'—'}] ifr:[${(op.ifr||[]).join(',')||'—'}] setup:[${(op.setups||[]).join(',')||'—'}] gatilho:[${(op.entry_states||[op.entry_state]).filter(Boolean).join(',')||'—'}]`;
   }).join('\n'):'    sem ops registradas';
   return`[${d.date_label||d.date_iso}] pré:${d.mood_pre||d.mood||'—'}→pós:${d.mood_pos||'—'} E:${d.energia||'—'} sono:${d.sleep_quality||'—'} F+PA:R$${d.t_result_fpa!=null?Math.round(d.t_result_fpa).toLocaleString('pt-BR'):'—'} PF:R$${d.t_result_pf!=null?Math.round(d.t_result_pf).toLocaleString('pt-BR'):'—'} WR:${d.t_wr||'—'}% adh:${n(d.t_adh)}/10\n${opsStr}`;
 }).join('\n')}`;
