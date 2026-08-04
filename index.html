@@ -727,6 +727,16 @@ tr:hover td{background:var(--s2)}
               <button class="os-btn" data-v="ross" onclick="selNewOpState(this)">📐 Ross</button>
             </div>
 
+            <!-- Direção Probabilista — regime do mercado no momento da entrada -->
+            <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--teal);margin-bottom:5px">📊 Direção Probabilista *</div>
+            <div class="op-state-grid" id="new-op-regime-btns" style="margin-bottom:8px">
+              <button class="os-btn" data-v="direcional" onclick="selNewOpRegime(this)">↗ Direcional</button>
+              <button class="os-btn" data-v="pullback" onclick="selNewOpRegime(this)">↩ Pullback direção</button>
+              <button class="os-btn" data-v="lateral" onclick="selNewOpRegime(this)">↔ Lateral</button>
+              <button class="os-btn" data-v="exaustao" onclick="selNewOpRegime(this)">⤴ Exaustão</button>
+              <button class="os-btn" data-v="falha_reversao" onclick="selNewOpRegime(this)">✗ Falha/Reversão</button>
+            </div>
+
             <!-- Risco planejado -->
             <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:4px">Risco planejado (pts) *</div>
             <div style="display:grid;grid-template-columns:1fr 90px;gap:6px;margin-bottom:0">
@@ -809,6 +819,7 @@ tr:hover td{background:var(--s2)}
               <button class="os-btn" data-v="AlvoAb" onclick="selNewOpExit(this)">Alvo Ab</button>
               <button class="os-btn" data-v="AlvoFc" onclick="selNewOpExit(this)">Alvo Fc</button>
               <button class="os-btn" data-v="StPlanJ" onclick="selNewOpExit(this)">Stop Plan</button>
+              <button class="os-btn" data-v="StTec" onclick="selNewOpExit(this)">Stop Téc</button>
               <button class="os-btn" data-v="MEDO" onclick="selNewOpExit(this)">⚠️ Medo</button>
               <button class="os-btn" data-v="STOPMESA" onclick="selNewOpExit(this)">🛑 Stop Mesa</button>
               <button class="os-btn" data-v="AlvoFin" onclick="selNewOpExit(this)">💰 Alvo Fin</button>
@@ -879,6 +890,7 @@ tr:hover td{background:var(--s2)}
             <div class="op-state-grid" id="new-op-error-btns" style="margin-bottom:8px">
               <button class="os-btn" data-v="saiu_cedo" onclick="toggleOpError(this)">Saiu cedo</button>
               <button class="os-btn" data-v="saiu_tarde" onclick="toggleOpError(this)">Saiu tarde</button>
+              <button class="os-btn" data-v="adicionou_cedo" onclick="toggleOpError(this)">Adicionou cedo</button>
               <button class="os-btn" data-v="moveu_stop" onclick="toggleOpError(this)">Moveu stop</button>
               <button class="os-btn" data-v="tamanho_errado" onclick="toggleOpError(this)">Tamanho errado</button>
               <button class="os-btn" data-v="sem_erro" onclick="toggleOpError(this)">✓ Sem erro</button>
@@ -1265,7 +1277,7 @@ const ANCHOR_PHRASES=[
 ];
 const ALL_SETUPS=['Op1','Op2','MetN','DupPr','DivOc','Cont','Emotivo','DnçVw','FlCtVw','MOLEQUE','RtMeSg','D-1','News','Aj','Aj 0,5','Aj 0,75','Aj 1,0','Aj 1,25','Aj 1,5','Fec','Fec 0,5','Fec 0,75','Fec 1,00','Fec 1,25','Fec 1,50','Ab','DvR 2','DvR 10','DvR 210','DvI 2','DvI 5','DvI 10','DvI 210','DvRI 2','DvRI 10','DvRI 210','Bseg 2','Bseg 10','Bseg 210','FOMO','Marc','SlAg','Fluxo','Vwap 0','Vwap 0,20','Vwap 0,25','Vwap 0,40','Vwap 0,50','Vwap 0,60','Vwap 0,75','Vwap 1,00','50%','1delta','2deltas','1MDelta','MRc2','MRc10','MIr2','MIf5','RtM5','Rt50I2','Rt50I5','Cirilo','BarraG','8-17','8 mm','PA','St10'];
 const ENTRY_STATES={planejado:{label:'📋 Planejado',cls:'sel-plan'},leitura_regiao:{label:'🗺️ Leitura região',cls:'sel-plan'},atrasado:{label:'⏰ Atrasado',cls:'sel-gold'},emotivo:{label:'🔥 Emotivo',cls:'sel-danger'},medo_falha:{label:'😨 Medo falha',cls:'sel-danger'},oportunidade:{label:'💡 Oportunidade',cls:'sel-gold'},cirilo:{label:'🎯 Cirilo',cls:'sel-cirilo'},cirilo_valida:{label:'🎯 Cirilo valida plano',cls:'sel-cirilo'},cirilo_puro:{label:'🎯 Cirilo puro',cls:'sel-cirilo'},desfocado:{label:'🌀 Desfocado',cls:'sel-danger'},revanche:{label:'⚡ Revanche',cls:'sel-danger'},ross:{label:'📐 Ross',cls:'sel-plan'}};
-const ERROR_LABELS={entrou_cedo:'entrou cedo',entrou_tarde:'entrou tarde',saiu_cedo:'saiu cedo',saiu_tarde:'saiu tarde',nao_entrou:'não entrou',moveu_stop:'moveu stop',tamanho_errado:'tamanho errado',revanche:'revanche',sem_erro:'sem erro'};
+const ERROR_LABELS={entrou_cedo:'entrou cedo',entrou_tarde:'entrou tarde',saiu_cedo:'saiu cedo',saiu_tarde:'saiu tarde',adicionou_cedo:'adicionou cedo (E2/E3 perto do E1)',nao_entrou:'não entrou',moveu_stop:'moveu stop',tamanho_errado:'tamanho errado',revanche:'revanche',sem_erro:'sem erro'};
 // Gatilhos após refino da sessão 02/08/2026:
 //   VÁLIDOS (verde, no Score) — Planejado, Leitura de região, Cirilo valida plano, Cirilo puro
 //   NEUTROS (amarelo) — Oportunidade (impulso reativo puro)
@@ -1453,6 +1465,7 @@ function preEntryMissing(){
   if(!e1) missing.push('E1 lotes');
   if(newOpConv==null) missing.push('Convicção');
   if(!newOpPlan.length) missing.push('Aderência ao plano');
+  if(!newOpRegime) missing.push('Direção Probabilista');
   const risk=parseFloat(document.getElementById('op-risk')?.value)||0;
   if(!risk) missing.push('Risco planejado');
   return missing;
@@ -1622,6 +1635,15 @@ function toggleOpAdh(el,key){
 // ── ROSS-B — honestidade radical (item 5 da spec)
 // Se marcado: leitura veio do Ross. Cor vermelha em vez de verde (é violação, não conquista).
 let newOpRossB=false;
+let newOpRegime=null; // Direção Probabilista: direcional|pullback|lateral|exaustao|falha_reversao
+function selNewOpRegime(btn){
+  newOpRegime=btn.dataset.v;
+  document.querySelectorAll('#new-op-regime-btns .os-btn').forEach(b=>b.classList.remove('sel-plan','sel-gold','sel-danger'));
+  // Cor por classe: direcional/pullback = plan (verde); lateral = gold; exaustao/falha = gold/danger neutro
+  const cls=(newOpRegime==='direcional'||newOpRegime==='pullback')?'sel-plan':'sel-gold';
+  btn.classList.add(cls);
+  checkPreEntry();
+}
 function toggleRossB(el){
   const isYes=el.classList.contains('yes');
   el.classList.toggle('yes',!isYes);
@@ -2494,7 +2516,7 @@ function addOpCore(){
     stop: pts>-16,
     no_e3: e3Lots===0
   };
-  const opData={dir,pts,pts_pf:hasPf?ptsPf:null,lots:lots||null,e1_lots:e1Lots,e2_lots:e2Lots,e3_lots:e3Lots,e2_tipo:e2Tipo,estrutura,lots_pf:lotsPf,result_brl,result_brl_pf,mfe:mfeAbs,mae:maeAbs,mfe_ref:MFE_MAE_REFERENCE,capture_pct,risk_planned:riskAbs,r_multiple,conviction:newOpConv,plan_adherence:[...newOpPlan],error_tags:[...newOpErrors],note,time,entry_states:[...newOpStates],adh_items:autoAdh,adh_auto_overrides:{stop:pts<=-16,no_e3:e3Lots>0},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups],segs:[...newOpSegs],ifr:[...newOpIfr],ross_b:newOpRossB,third_op_after_filter:!!window.pendingThirdOpAfterFilter};
+  const opData={dir,pts,pts_pf:hasPf?ptsPf:null,lots:lots||null,e1_lots:e1Lots,e2_lots:e2Lots,e3_lots:e3Lots,e2_tipo:e2Tipo,estrutura,lots_pf:lotsPf,result_brl,result_brl_pf,mfe:mfeAbs,mae:maeAbs,mfe_ref:MFE_MAE_REFERENCE,capture_pct,risk_planned:riskAbs,r_multiple,conviction:newOpConv,plan_adherence:[...newOpPlan],error_tags:[...newOpErrors],note,time,entry_states:[...newOpStates],adh_items:autoAdh,adh_auto_overrides:{stop:pts<=-16,no_e3:e3Lots>0},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups],segs:[...newOpSegs],ifr:[...newOpIfr],ross_b:newOpRossB,regime:newOpRegime,third_op_after_filter:!!window.pendingThirdOpAfterFilter};
   window.pendingThirdOpAfterFilter=false;
   // Backfill flag: se está editando dia passado E confiança selecionada, marca
   const isBackfill=tradeEditDate&&tradeEditDate!==todayISO();
@@ -2582,6 +2604,15 @@ function editOp(idx){
     const dot=rossEl.querySelector('.adh-dot');if(dot) dot.style.background=newOpRossB?'var(--red)':'var(--b2)';
     const txt=rossEl.querySelector('.adh-text');if(txt) txt.style.color=newOpRossB?'var(--red)':'var(--dim)';
   }
+  // Regime (Direção Probabilista)
+  newOpRegime=op.regime||null;
+  document.querySelectorAll('#new-op-regime-btns .os-btn').forEach(b=>{
+    b.classList.remove('sel-plan','sel-gold','sel-danger');
+    if(newOpRegime&&b.dataset.v===newOpRegime){
+      const cls=(newOpRegime==='direcional'||newOpRegime==='pullback')?'sel-plan':'sel-gold';
+      b.classList.add(cls);
+    }
+  });
   calcOpResult();
   // Update button label
   const addBtn=document.querySelector('#new-op-adh-grid')?.parentElement?.querySelector('button[onclick="addOp()"]');
@@ -2615,6 +2646,9 @@ function clearNewOpForm(){
   newOpStates=[];newOpPartials=[];newOpExits=[];newOpSetups=[];newOpSegs=[];newOpIfr=[];
   newOpConv=null;newOpPlan=[];newOpErrors=[];
   newOpAdh={size:false};
+  // Reset regime (Direção Probabilista)
+  newOpRegime=null;
+  document.querySelectorAll('#new-op-regime-btns .os-btn').forEach(b=>b.classList.remove('sel-plan','sel-gold','sel-danger'));
   // Reset Ross-B
   newOpRossB=false;
   const rossEl=document.getElementById('ross-b-item');
@@ -2688,6 +2722,7 @@ function renderOps(){
         ${partialReasons.map(r=>`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:${r.includes('Medo')?'var(--rd)':'var(--td)'};color:${r.includes('Medo')?'var(--red)':'var(--teal)'}">${r}</span>`).join('')}
         ${exitReasons.map(r=>`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:${dangerExits.includes(r)?'var(--rd)':'var(--gd)'};color:${dangerExits.includes(r)?'var(--red)':'var(--green)'}">${r}</span>`).join('')}
         ${stateLabels.length?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:var(--s3);color:var(--dim)">${stateLabels.join(' + ')}</span>`:''}
+        ${op.regime?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:rgba(46,192,164,.12);color:var(--teal);border:1px solid rgba(46,192,164,.35)">${({direcional:'↗ direcional',pullback:'↩ pullback',lateral:'↔ lateral',exaustao:'⤴ exaustão',falha_reversao:'✗ falha/rev'})[op.regime]||op.regime}</span>`:''}
         ${op.ross_b?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:rgba(232,64,64,.15);color:var(--red);border:1px solid rgba(232,64,64,.4)">🚨 Ross-B</span>`:''}
         ${op.backfill?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:rgba(212,160,40,.15);color:var(--gold);border:1px solid rgba(212,160,40,.4)">📝 backfill${op.backfill_confidence?' ·'+op.backfill_confidence:''}</span>`:''}
         ${op.third_op_after_filter?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:rgba(78,124,248,.15);color:var(--blue);border:1px solid rgba(78,124,248,.4)">🛡 3ª filtrada</span>`:''}
@@ -2768,7 +2803,12 @@ function renderRiskAlarm(){
   let headerHtml='';
   if(tradeOps.length>0){
     const brlColor=dayBRL>=0?'var(--green)':dayBRL>-stopDiaTotal*0.5?'var(--gold)':'var(--red)';
-    const pctStop=stopPerAccount>0?Math.round(Math.min(Math.abs(dayFPA),Math.abs(dayPF))/stopPerAccount*100):0;
+    // % consumido = maior perda entre as contas / stop por conta.
+    // Se ambas contas positivas → 0% consumido.
+    const lossFPA=dayFPA<0?Math.abs(dayFPA):0;
+    const lossPF=dayPF<0?Math.abs(dayPF):0;
+    const worstLoss=Math.max(lossFPA,lossPF);
+    const pctStop=stopPerAccount>0?Math.round(worstLoss/stopPerAccount*100):0;
     headerHtml=`<div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:8px 11px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
       <div style="display:flex;gap:12px;flex-wrap:wrap">
         <div><div style="font-size:8px;color:var(--dim);letter-spacing:1px;text-transform:uppercase">Resultado do dia</div><div style="font-family:'Fraunces',serif;font-size:1.15rem;color:${brlColor}">R$ ${dayBRL>=0?'+':''}${Math.round(dayBRL).toLocaleString('pt-BR')}</div></div>
@@ -5278,7 +5318,7 @@ ${sorted.slice(-10).map(d=>{
   const opsStr=ops.length?ops.map(op=>{
     const legacyEmo=op.emo_intensity!=null?` MEDO:${op.emo_intensity}`:'';
     const legacyExec=op.exec_score!=null?` exec:${op.exec_score}`:'';
-    return `    [${op.time||'?'}] ${op.dir} ${op.pts>=0?'+':''}${op.pts}pts ${op.estrutura?'['+(ESTRUTURA_LABEL[op.estrutura]||op.estrutura)+(op.e1_lots?' '+op.e1_lots+(op.e2_lots?'+'+op.e2_lots:'')+(op.e3_lots?'+'+op.e3_lots:''):'')+'] ':''}${op.r_multiple!=null?(op.r_multiple>=0?'+':'')+op.r_multiple+'R ':''}conv:${n(op.conviction)} MFE:${n(op.mfe)} MAE:${n(op.mae)} captura:${op.mfe&&op.pts>0?Math.round(op.pts/op.mfe*100)+'%':'—'}${legacyEmo}${legacyExec} adh:${fmtN(calcAdhScore(op),0)}/10${op.ross_b?' 🚨ROSS-B':''}${op.third_op_after_filter?' 🛡3ªFILTRADA':''}${op.backfill?' 📝BACKFILL('+op.backfill_confidence+')':''}\n      exit:[${getExitReasons(op).join(',')||'—'}] erro:[${(op.error_tags||[]).filter(e=>e!=='sem_erro').join(',')||'—'}] plano:[${(op.plan_adherence||[]).join(',')||'—'}] seg:[${(op.segs||[]).join(',')||'—'}] ifr:[${(op.ifr||[]).join(',')||'—'}] setup:[${(op.setups||[]).join(',')||'—'}] gatilho:[${(op.entry_states||[op.entry_state]).filter(Boolean).join(',')||'—'}]`;
+    return `    [${op.time||'?'}] ${op.dir} ${op.pts>=0?'+':''}${op.pts}pts ${op.estrutura?'['+(ESTRUTURA_LABEL[op.estrutura]||op.estrutura)+(op.e1_lots?' '+op.e1_lots+(op.e2_lots?'+'+op.e2_lots:'')+(op.e3_lots?'+'+op.e3_lots:''):'')+'] ':''}${op.r_multiple!=null?(op.r_multiple>=0?'+':'')+op.r_multiple+'R ':''}conv:${n(op.conviction)} MFE:${n(op.mfe)} MAE:${n(op.mae)} captura:${op.mfe&&op.pts>0?Math.round(op.pts/op.mfe*100)+'%':'—'}${legacyEmo}${legacyExec} adh:${fmtN(calcAdhScore(op),0)}/10${op.ross_b?' 🚨ROSS-B':''}${op.third_op_after_filter?' 🛡3ªFILTRADA':''}${op.backfill?' 📝BACKFILL('+op.backfill_confidence+')':''}\n      exit:[${getExitReasons(op).join(',')||'—'}] erro:[${(op.error_tags||[]).filter(e=>e!=='sem_erro').join(',')||'—'}] plano:[${(op.plan_adherence||[]).join(',')||'—'}] seg:[${(op.segs||[]).join(',')||'—'}] ifr:[${(op.ifr||[]).join(',')||'—'}] setup:[${(op.setups||[]).join(',')||'—'}] gatilho:[${(op.entry_states||[op.entry_state]).filter(Boolean).join(',')||'—'}] regime:${op.regime||'—'}`;
   }).join('\n'):'    sem ops registradas';
   return`[${d.date_label||d.date_iso}] pré:${d.mood_pre||d.mood||'—'}→pós:${d.mood_pos||'—'} E:${d.energia||'—'} sono:${d.sleep_quality||'—'} F+PA:R$${d.t_result_fpa!=null?Math.round(d.t_result_fpa).toLocaleString('pt-BR'):'—'} PF:R$${d.t_result_pf!=null?Math.round(d.t_result_pf).toLocaleString('pt-BR'):'—'} WR:${d.t_wr||'—'}% adh:${n(d.t_adh)}/10\n${opsStr}`;
 }).join('\n')}`;
