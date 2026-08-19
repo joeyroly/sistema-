@@ -697,13 +697,14 @@ tr:hover td{background:var(--s2)}
 
             <!-- Convicção -->
             <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--purp);margin-bottom:5px">Convicção pré-clique *</div>
-            <div class="op-state-grid" id="new-op-conv-btns" style="margin-bottom:8px">
-              <button class="os-btn" data-v="1" onclick="selNewOpConv(this)">1 · fraca</button>
-              <button class="os-btn" data-v="2" onclick="selNewOpConv(this)">2</button>
-              <button class="os-btn" data-v="3" onclick="selNewOpConv(this)">3 · média</button>
-              <button class="os-btn" data-v="4" onclick="selNewOpConv(this)">4</button>
-              <button class="os-btn" data-v="5" onclick="selNewOpConv(this)">5 · máxima</button>
+            <div class="op-state-grid" id="new-op-conv-btns" style="margin-bottom:6px;display:grid;grid-template-columns:repeat(5,1fr);gap:4px">
+              <button class="os-btn conv-btn" data-v="1" onclick="selNewOpConv(this)" style="flex-direction:column;padding:8px 4px;line-height:1.2"><span style="font-size:13px;font-weight:600">1</span><span style="font-size:8px;opacity:.85">Fraca</span><span style="font-size:8px;color:var(--red);margin-top:1px">não opera</span></button>
+              <button class="os-btn conv-btn" data-v="2" onclick="selNewOpConv(this)" style="flex-direction:column;padding:8px 4px;line-height:1.2"><span style="font-size:13px;font-weight:600">2</span><span style="font-size:8px;opacity:.85">Fraca</span><span style="font-size:8px;color:var(--red);margin-top:1px">não opera</span></button>
+              <button class="os-btn conv-btn" data-v="3" onclick="selNewOpConv(this)" style="flex-direction:column;padding:8px 4px;line-height:1.2"><span style="font-size:13px;font-weight:600">3</span><span style="font-size:8px;opacity:.85">Média</span><span style="font-size:8px;color:var(--gold);margin-top:1px">máx 10 cts</span></button>
+              <button class="os-btn conv-btn" data-v="4" onclick="selNewOpConv(this)" style="flex-direction:column;padding:8px 4px;line-height:1.2"><span style="font-size:13px;font-weight:600">4</span><span style="font-size:8px;opacity:.85">Alta</span><span style="font-size:8px;color:var(--green);margin-top:1px">até 20 cts</span></button>
+              <button class="os-btn conv-btn" data-v="5" onclick="selNewOpConv(this)" style="flex-direction:column;padding:8px 4px;line-height:1.2"><span style="font-size:13px;font-weight:600">5</span><span style="font-size:8px;opacity:.85">Máxima</span><span style="font-size:8px;color:var(--green);margin-top:1px">até 20 cts</span></button>
             </div>
+            <div style="font-size:8px;color:var(--dim);margin-bottom:8px;line-height:1.4">Regra: conv 1-2 = bloqueio · conv 3 = máx 10 cts · conv 4-5 = até 20 cts. Sem override.</div>
 
             <!-- Aderência ao plano (simplificada — 2 opções) -->
             <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px">Aderência ao plano *</div>
@@ -1680,6 +1681,8 @@ function tick(){
   document.getElementById('top-date').textContent=s;
   document.getElementById('pg-pessoal-date').textContent=s;
   document.getElementById('pg-trade-date').textContent=s;
+  // Atualiza alertas de horário na aba Trade (contagem regressiva 12h40, 13h00, etc.)
+  if(typeof renderRiskAlarm==='function'&&document.getElementById('op-list')) renderRiskAlarm();
 }
 function checkOnline(){const b=document.getElementById('badge-online');b.textContent=navigator.onLine?'● online':'● offline';b.className='badge-online'+(navigator.onLine?'':' off');}
 function calcTotals(){
@@ -2277,6 +2280,40 @@ function addOp(){
   // Skip all hard blocks se estamos backfillando dia passado
   const isBackfill=tradeEditDate&&tradeEditDate!==todayISO();
 
+  // ── HARD BLOCK 0A: perda > R$2.000/conta em QUALQUER momento = mesa fechada imediata
+  // Regra 03/08/2026: dispara sem esperar horário. Trumps tudo.
+  if(!isBackfill&&editingOpIdx===null){
+    const dayFPA=tradeOps.reduce((a,o)=>a+(o.result_brl||0),0);
+    const dayPF=tradeOps.reduce((a,o)=>a+(o.result_brl_pf||0),0);
+    const worstLoss=Math.min(dayFPA,dayPF);
+    if(worstLoss<=-2000){
+      showCoachModal({
+        title:'🛑 BLOQUEIO: Perda ≥ R$2.000/conta — MESA FECHADA',
+        body:`Uma das contas está em <strong style="color:var(--red)">R$ ${Math.round(worstLoss).toLocaleString('pt-BR')}</strong>. Regra: perda ≥ R$2.000/conta = mesa fechada imediatamente, independente do horário.<br><br>Feche o Profit. Amanhã tem outro dia.`,
+        accent:'var(--red)',
+        buttons:[{label:'Vou fechar a plataforma',action:'callback',accent:'var(--red)',callback:()=>{clearNewOpForm();showToast('Preservou capital. Bem feito.',false);}}]
+      });
+      return;
+    }
+  }
+
+  // ── HARD BLOCK 0B: Nova op depois das 12h40 = bloqueio
+  // Regra 03/08/2026: janela operacional até 12h40. Depois disso, só fechamento (até 13h00).
+  if(!isBackfill&&editingOpIdx===null){
+    const now=new Date();
+    const minsNow=now.getHours()*60+now.getMinutes();
+    const CUTOFF=12*60+40; // 12h40
+    if(minsNow>=CUTOFF){
+      showCoachModal({
+        title:'🛑 BLOQUEIO: Janela operacional encerrada (12h40)',
+        body:`São <strong>${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}</strong>. Regra do modelo: nenhuma nova op depois das 12h40.<br><br>Se você tem posição aberta no Profit, feche até <strong>13h00 no máximo</strong>.<br><br>Depois disso é ruído — a estatística do seu histórico depois de 13h é ruim.`,
+        accent:'var(--red)',
+        buttons:[{label:'Vou fechar posições e sair',action:'callback',accent:'var(--red)',callback:()=>{clearNewOpForm();showToast('Fecha até 13h00. Amanhã mais.',false);}}]
+      });
+      return;
+    }
+  }
+
   // ── HARD BLOCK 1: Energia < 5 (item 2 da spec) — mantido
   if(!isBackfill&&editingOpIdx===null){
     const eEl=document.getElementById('sl-e-pre');
@@ -2492,16 +2529,40 @@ function addOpCore(){
   const hasPf=!isNaN(ptsPf);
   if(isNaN(pts)){showToast('Informe os pontos',true);return;}
   if(!e1Lots||e1Lots<=0){showToast('Informe os lotes do E1',true);return;}
-  // ── TRAVA DE SIZING POR CONVICÇÃO (Druckenmiller)
-  // Se conv ≤3 e lots >10: exige confirmação. Fricção deliberada no ponto do erro.
-  if(newOpConv!=null&&newOpConv<=3&&lots>10&&editingOpIdx===null){
-    // calcula WR real do usuário em convicção ≤3 se houver histórico
-    const histLowConv=[];
-    allData.forEach(d=>(d.t_ops_detail||[]).forEach(o=>{if(o.conviction!=null&&o.conviction<=3) histLowConv.push(o);}));
-    const wrLow=histLowConv.length?Math.round(histLowConv.filter(o=>o.pts>0).length/histLowConv.length*100):null;
-    const wrTxt=wrLow!=null?`Seu WR histórico em convicção ≤3 é ${wrLow}% (n=${histLowConv.length}).`:'Você ainda não tem histórico em convicção ≤3 — mas o padrão institucional é: baixa convicção = tamanho reduzido.';
-    const ok=confirm(`⚠️ TAMANHO NÃO AUTORIZADO PELO SEU DADO\n\nConvicção: ${newOpConv}/5 (baixa)\nLotes: ${lots}\n\n${wrTxt}\n\nDruckenmiller: "grande quando estou certo, pequeno quando não sei". Tem certeza que quer operar ${lots} lotes com essa convicção?`);
-    if(!ok){showToast('Operação abortada — reveja convicção ou reduza tamanho',true);return;}
+  // ── TRAVA DE SIZING POR CONVICÇÃO — bloqueio absoluto sem override
+  // Regra do modelo aprovado 03/08/2026:
+  //   conv 1-2 → NÃO OPERA
+  //   conv 3   → máx 10 cts
+  //   conv 4-5 → máx 20 cts
+  const isBackfillOp=tradeEditDate&&tradeEditDate!==todayISO();
+  if(!isBackfillOp&&editingOpIdx===null&&newOpConv!=null){
+    if(newOpConv<=2){
+      showCoachModal({
+        title:'🛑 BLOQUEIO: Convicção 1-2 = NÃO OPERA',
+        body:`Você marcou convicção <strong style="color:var(--red)">${newOpConv}/5</strong>. Regra do modelo: baixa convicção não opera. Ponto.<br><br>Se você não sabe se é bom, é porque não é. Aguarde setup convicção 4+.`,
+        accent:'var(--red)',
+        buttons:[{label:'Vou aguardar setup melhor',action:'callback',accent:'var(--red)',callback:()=>{clearNewOpForm();showToast('Certo. Espera vale mais que erro.',false);}}]
+      });
+      return;
+    }
+    if(newOpConv===3&&lots>10){
+      showCoachModal({
+        title:'🛑 BLOQUEIO: Convicção 3 = máx 10 cts',
+        body:`Você marcou convicção <strong style="color:var(--gold)">3/5</strong> com <strong style="color:var(--red)">${lots} lotes</strong>. Regra: convicção 3 opera no máximo 10 cts.<br><br>Reduza para 10 cts ou eleve a convicção — com honestidade — se o setup realmente merece.`,
+        accent:'var(--red)',
+        buttons:[{label:'Volto e ajusto',action:'close',accent:'var(--red)'}]
+      });
+      return;
+    }
+    if(newOpConv>=4&&lots>20){
+      showCoachModal({
+        title:'🛑 BLOQUEIO: Máximo 20 cts',
+        body:`Você marcou <strong style="color:var(--red)">${lots} lotes</strong>. Limite máximo do modelo aprovado: <strong>20 lotes</strong>, mesmo em convicção 5.<br><br>Além de 20, cada ponto na direção errada custa proporcionalmente mais e o custo já provou ser R$142k no histórico.`,
+        accent:'var(--red)',
+        buttons:[{label:'Volto e ajusto',action:'close',accent:'var(--red)'}]
+      });
+      return;
+    }
   }
   const result_brl=lots>0?pts*lots*10:null;
   const result_brl_pf=hasPf&&(lotsPf||lots)?ptsPf*(lotsPf||lots)*10:null;
@@ -2820,20 +2881,38 @@ function renderRiskAlarm(){
   }
   // ── ALERTAS
   const alerts=[];
-  // Circuit-breaker HARD (bloqueante)
+  // TRAVA DE HORÁRIO (12h40 = fim da janela; 13h00 = fechamento total)
+  const nowT=new Date();
+  const minsNow=nowT.getHours()*60+nowT.getMinutes();
+  const CUTOFF=12*60+40, CLOSE=13*60;
+  if(minsNow>=CLOSE){
+    alerts.push({lvl:'critical',txt:`🛑 PASSOU DAS 13h — janela de fechamento encerrada.<br>Toda posição aberta agora está fora do modelo. Encerre imediatamente.`});
+  } else if(minsNow>=CUTOFF){
+    const minsToClose=CLOSE-minsNow;
+    alerts.push({lvl:'critical',txt:`🛑 JANELA OPERACIONAL FECHADA (12h40)<br>Nenhuma op nova. Se tem posição aberta, feche em ${minsToClose}min (até 13h00).`});
+  } else if(minsNow>=CUTOFF-15){
+    const minsToCutoff=CUTOFF-minsNow;
+    alerts.push({lvl:'high',txt:`⏰ ${minsToCutoff}min para fechar janela operacional (12h40). Depois disso, sem nova entrada.`});
+  }
+  // TRAVA DE PERDA — R$2.000/conta
+  const worstAcc=Math.min(dayFPA,dayPF);
+  if(worstAcc<=-2000){
+    alerts.push({lvl:'critical',txt:`🛑 PERDA ≥ R$2.000/CONTA — MESA FECHADA imediata<br>Nenhuma nova op permitida hoje. Feche posições e saia.`});
+  }
+  // Circuit-breaker HARD (bloqueante) — mantém o legado
   if(mesaFechada){
     const worse=dayFPA<=dayPF?'F+PA':'PF';
     const worseVal=Math.abs(Math.min(dayFPA,dayPF));
-    alerts.push({lvl:'critical',txt:`🛑 MESA FECHADA — Circuit-breaker acionado<br>Conta ${worse} atingiu R$${Math.round(worseVal).toLocaleString('pt-BR')} de perda (limite R$${stopPerAccount.toLocaleString('pt-BR')}/conta).<br><strong>PARE AGORA. Nenhum trade justifica passar disso.</strong> Griffin corta risco em drawdown automaticamente. Você faz o mesmo.`});
+    alerts.push({lvl:'critical',txt:`🛑 MESA FECHADA — Circuit-breaker acionado<br>Conta ${worse} atingiu R$${Math.round(worseVal).toLocaleString('pt-BR')} de perda (limite R$${stopPerAccount.toLocaleString('pt-BR')}/conta).<br><strong>PARE AGORA. Nenhum trade justifica passar disso.</strong>`});
   } else if(Math.min(dayFPA,dayPF)<=-stopPerAccount*0.7) {
     const pct=Math.round(Math.abs(Math.min(dayFPA,dayPF))/stopPerAccount*100);
     alerts.push({lvl:'high',txt:`Você atingiu ${pct}% do stop de uma das contas. Reduza tamanho ou pare.`});
   }
   // Cooldown ativo
   if(cooldownRemMin!==null&&cooldownRemMin>0){
-    alerts.push({lvl:'high',txt:`⏸️ COOLDOWN ATIVO — ${consecLoss} stops seguidos. Aguarde ${cooldownRemMin}min antes de operar de novo. O padrão de espiral (09:10→13:35→16:00 do 08/07) começa aqui.`});
+    alerts.push({lvl:'high',txt:`⏸️ COOLDOWN ATIVO — ${consecLoss} stops seguidos. Aguarde ${cooldownRemMin}min antes de operar de novo.`});
   } else if(consecLoss>=2) {
-    alerts.push({lvl:'high',txt:`${consecLoss} stops seguidos. Padrão de revanche ativado — cooldown de 30min já expirou, mas reveja convicção antes do próximo trade.`});
+    alerts.push({lvl:'high',txt:`${consecLoss} stops seguidos. Reveja convicção antes do próximo trade.`});
   }
   if(dangerExitToday>=2) alerts.push({lvl:'high',txt:`${dangerExitToday} saídas por MEDO/Stop Mesa hoje. Padrão emocional confirmado.`});
   // Render
