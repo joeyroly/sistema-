@@ -279,6 +279,8 @@ tr:hover td{background:var(--s2)}
 .scb.neutral{background:rgba(212,160,40,.1);border-color:rgba(212,160,40,.35)}
 .scb.neutral .scb-n,.scb.neutral .scb-lbl{color:var(--gold)}
 .os-btn{padding:4px 9px;border-radius:12px;background:var(--s3);border:1px solid var(--b1);font-size:8px;color:var(--dim);cursor:pointer;font-family:'Geist Mono',monospace;transition:all .15s;white-space:nowrap}
+.conv-btn{white-space:normal !important;padding:6px 2px !important;overflow:hidden}
+.conv-btn>div{white-space:nowrap}
 .os-btn.sel-plan{border-color:var(--green);background:var(--gd);color:var(--green)}
 .os-btn.sel-danger{border-color:var(--red);background:var(--rd);color:var(--red)}
 .os-btn.sel-cirilo{border-color:var(--purp);background:var(--pd);color:var(--purp)}
@@ -697,14 +699,14 @@ tr:hover td{background:var(--s2)}
 
             <!-- Convicção -->
             <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--purp);margin-bottom:5px">Convicção pré-clique *</div>
-            <div class="op-state-grid" id="new-op-conv-btns" style="margin-bottom:6px;display:grid;grid-template-columns:repeat(5,1fr);gap:4px">
-              <button class="os-btn conv-btn" data-v="1" onclick="selNewOpConv(this)" style="flex-direction:column;padding:8px 4px;line-height:1.2"><span style="font-size:13px;font-weight:600">1</span><span style="font-size:8px;opacity:.85">Fraca</span><span style="font-size:8px;color:var(--red);margin-top:1px">não opera</span></button>
-              <button class="os-btn conv-btn" data-v="2" onclick="selNewOpConv(this)" style="flex-direction:column;padding:8px 4px;line-height:1.2"><span style="font-size:13px;font-weight:600">2</span><span style="font-size:8px;opacity:.85">Fraca</span><span style="font-size:8px;color:var(--red);margin-top:1px">não opera</span></button>
-              <button class="os-btn conv-btn" data-v="3" onclick="selNewOpConv(this)" style="flex-direction:column;padding:8px 4px;line-height:1.2"><span style="font-size:13px;font-weight:600">3</span><span style="font-size:8px;opacity:.85">Média</span><span style="font-size:8px;color:var(--gold);margin-top:1px">máx 10 cts</span></button>
-              <button class="os-btn conv-btn" data-v="4" onclick="selNewOpConv(this)" style="flex-direction:column;padding:8px 4px;line-height:1.2"><span style="font-size:13px;font-weight:600">4</span><span style="font-size:8px;opacity:.85">Alta</span><span style="font-size:8px;color:var(--green);margin-top:1px">até 20 cts</span></button>
-              <button class="os-btn conv-btn" data-v="5" onclick="selNewOpConv(this)" style="flex-direction:column;padding:8px 4px;line-height:1.2"><span style="font-size:13px;font-weight:600">5</span><span style="font-size:8px;opacity:.85">Máxima</span><span style="font-size:8px;color:var(--green);margin-top:1px">até 20 cts</span></button>
+            <div id="new-op-conv-btns" style="margin-bottom:6px;display:grid;grid-template-columns:repeat(5,1fr);gap:4px">
+              <button class="os-btn conv-btn" data-v="1" onclick="selNewOpConv(this)" style="display:flex !important;flex-direction:column;align-items:center;justify-content:center;padding:6px 2px;line-height:1.15;min-height:52px;text-align:center"><div style="font-size:14px;font-weight:700">1</div><div style="font-size:8px;opacity:.85;margin-top:1px">Fraca</div><div style="font-size:7px;color:var(--red);margin-top:2px;letter-spacing:.3px">não opera</div></button>
+              <button class="os-btn conv-btn" data-v="2" onclick="selNewOpConv(this)" style="display:flex !important;flex-direction:column;align-items:center;justify-content:center;padding:6px 2px;line-height:1.15;min-height:52px;text-align:center"><div style="font-size:14px;font-weight:700">2</div><div style="font-size:8px;opacity:.85;margin-top:1px">Fraca</div><div style="font-size:7px;color:var(--red);margin-top:2px;letter-spacing:.3px">não opera</div></button>
+              <button class="os-btn conv-btn" data-v="3" onclick="selNewOpConv(this)" style="display:flex !important;flex-direction:column;align-items:center;justify-content:center;padding:6px 2px;line-height:1.15;min-height:52px;text-align:center"><div style="font-size:14px;font-weight:700">3</div><div style="font-size:8px;opacity:.85;margin-top:1px">Média</div><div style="font-size:7px;color:var(--gold);margin-top:2px;letter-spacing:.3px">10 cts</div></button>
+              <button class="os-btn conv-btn" data-v="4" onclick="selNewOpConv(this)" style="display:flex !important;flex-direction:column;align-items:center;justify-content:center;padding:6px 2px;line-height:1.15;min-height:52px;text-align:center"><div style="font-size:14px;font-weight:700">4</div><div style="font-size:8px;opacity:.85;margin-top:1px">Alta</div><div style="font-size:7px;color:var(--green);margin-top:2px;letter-spacing:.3px">20 cts</div></button>
+              <button class="os-btn conv-btn" data-v="5" onclick="selNewOpConv(this)" style="display:flex !important;flex-direction:column;align-items:center;justify-content:center;padding:6px 2px;line-height:1.15;min-height:52px;text-align:center"><div style="font-size:14px;font-weight:700">5</div><div style="font-size:8px;opacity:.85;margin-top:1px">Máx</div><div style="font-size:7px;color:var(--green);margin-top:2px;letter-spacing:.3px">20 cts</div></button>
             </div>
-            <div style="font-size:8px;color:var(--dim);margin-bottom:8px;line-height:1.4">Regra: conv 1-2 = bloqueio · conv 3 = máx 10 cts · conv 4-5 = até 20 cts. Sem override.</div>
+            <div style="font-size:8px;color:var(--dim);margin-bottom:8px;line-height:1.4">Conv 1-2 = bloqueio · Conv 3 = máx 10 cts · Conv 4-5 = até 20 cts. Sem override.</div>
 
             <!-- Aderência ao plano (simplificada — 2 opções) -->
             <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px">Aderência ao plano *</div>
