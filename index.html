@@ -2536,6 +2536,25 @@ function l3Confirm(){
   });
 }
 
+// ═══════════════════════════════════════════════════════════════
+// REGISTRAR COMO VIOLAÇÃO DO MODELO
+// Dado real > teatro. Salva com flags de violação + justificativa obrigatória.
+// ═══════════════════════════════════════════════════════════════
+function registerAsViolation(autoReason){
+  const reason=prompt(`⚠️ VIOLAÇÃO DO MODELO\n\n${autoReason}\n\nPor que você operou fora das regras? (obrigatório — vai pro relatório)`);
+  if(!reason||reason.trim().length<5){
+    showToast('Justificativa obrigatória. Trade não salvo.',true);
+    return;
+  }
+  // Marca flags no window — addOpCore vai ler e anexar ao opData
+  window.pendingViolation={
+    flag:true,
+    auto_reason:autoReason,
+    justificativa:reason.trim()
+  };
+  addOpCore();
+}
+
 function addOpCore(){
   const dir=document.getElementById('op-dir').value;
   const pts=parseFloat(document.getElementById('op-pts').value);
@@ -2573,7 +2592,10 @@ function addOpCore(){
         title:'🛑 BLOQUEIO: Convicção 1-2 = NÃO OPERA',
         body:`Você marcou convicção <strong style="color:var(--red)">${newOpConv}/5</strong>. Regra do modelo: baixa convicção não opera. Ponto.<br><br>Se você não sabe se é bom, é porque não é. Aguarde setup convicção 4+.`,
         accent:'var(--red)',
-        buttons:[{label:'Vou aguardar setup melhor',action:'callback',accent:'var(--red)',callback:()=>{clearNewOpForm();showToast('Certo. Espera vale mais que erro.',false);}}]
+        buttons:[
+          {label:'Vou aguardar setup melhor',action:'callback',accent:'var(--red)',callback:()=>{clearNewOpForm();showToast('Certo. Espera vale mais que erro.',false);}},
+          {label:'Registrar como VIOLAÇÃO',action:'callback',accent:'var(--dim)',callback:()=>{registerAsViolation(`Conv ${newOpConv}/5 — operou com convicção abaixo do modelo`);}}
+        ]
       });
       return;
     }
@@ -2582,7 +2604,10 @@ function addOpCore(){
         title:'🛑 BLOQUEIO: Convicção 3 = máx 10 cts',
         body:`Você marcou convicção <strong style="color:var(--gold)">3/5</strong> com <strong style="color:var(--red)">${lots} lotes</strong>. Regra: convicção 3 opera no máximo 10 cts.<br><br>Reduza para 10 cts ou eleve a convicção — com honestidade — se o setup realmente merece.`,
         accent:'var(--red)',
-        buttons:[{label:'Volto e ajusto',action:'close',accent:'var(--red)'}]
+        buttons:[
+          {label:'Volto e ajusto',action:'close',accent:'var(--red)'},
+          {label:'Registrar como VIOLAÇÃO',action:'callback',accent:'var(--dim)',callback:()=>{registerAsViolation(`Conv ${newOpConv} com ${lots} lotes — excedeu limite de 10 cts`);}}
+        ]
       });
       return;
     }
@@ -2591,7 +2616,10 @@ function addOpCore(){
         title:'🛑 BLOQUEIO: Máximo 20 cts',
         body:`Você marcou <strong style="color:var(--red)">${lots} lotes</strong>. Limite máximo do modelo aprovado: <strong>20 lotes</strong>, mesmo em convicção 5.<br><br>Além de 20, cada ponto na direção errada custa proporcionalmente mais e o custo já provou ser R$142k no histórico.`,
         accent:'var(--red)',
-        buttons:[{label:'Volto e ajusto',action:'close',accent:'var(--red)'}]
+        buttons:[
+          {label:'Volto e ajusto',action:'close',accent:'var(--red)'},
+          {label:'Registrar como VIOLAÇÃO',action:'callback',accent:'var(--dim)',callback:()=>{registerAsViolation(`Conv ${newOpConv} com ${lots} lotes — excedeu limite máx 20 cts`);}}
+        ]
       });
       return;
     }
@@ -2609,8 +2637,19 @@ function addOpCore(){
     stop: pts>-16,
     no_e3: e3Lots===0
   };
+  // Violação do modelo: se pendingViolation está ativo, zera size na adesão
+  if(window.pendingViolation&&window.pendingViolation.flag){
+    autoAdh.size=false; // tamanho fora do modelo = size automaticamente reprovado
+  }
   const opData={dir,pts,pts_pf:hasPf?ptsPf:null,lots:lots||null,e1_lots:e1Lots,e2_lots:e2Lots,e3_lots:e3Lots,e2_tipo:e2Tipo,estrutura,lots_pf:lotsPf,result_brl,result_brl_pf,mfe:mfeAbs,mae:maeAbs,mfe_ref:MFE_MAE_REFERENCE,capture_pct,risk_planned:riskAbs,r_multiple,conviction:newOpConv,plan_adherence:[...newOpPlan],error_tags:[...newOpErrors],note,time,entry_states:[...newOpStates],adh_items:autoAdh,adh_auto_overrides:{stop:pts<=-16,no_e3:e3Lots>0},partial_reasons:[...newOpPartials],exit_reasons:[...newOpExits],setups:[...newOpSetups],segs:[...newOpSegs],ifr:[...newOpIfr],ross_b:newOpRossB,regime:newOpRegime,third_op_after_filter:!!window.pendingThirdOpAfterFilter};
   window.pendingThirdOpAfterFilter=false;
+  // Violação do modelo: anexa flag + justificativa
+  if(window.pendingViolation&&window.pendingViolation.flag){
+    opData.violacao_modelo=true;
+    opData.violacao_auto_reason=window.pendingViolation.auto_reason;
+    opData.violacao_justificativa=window.pendingViolation.justificativa;
+    window.pendingViolation=null;
+  }
   // Backfill flag: se está editando dia passado E confiança selecionada, marca
   const isBackfill=tradeEditDate&&tradeEditDate!==todayISO();
   if(isBackfill&&window.backfillConfidence){
@@ -2819,6 +2858,7 @@ function renderOps(){
         ${op.ross_b?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:rgba(232,64,64,.15);color:var(--red);border:1px solid rgba(232,64,64,.4)">🚨 Ross-B</span>`:''}
         ${op.backfill?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:rgba(212,160,40,.15);color:var(--gold);border:1px solid rgba(212,160,40,.4)">📝 backfill${op.backfill_confidence?' ·'+op.backfill_confidence:''}</span>`:''}
         ${op.third_op_after_filter?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:rgba(78,124,248,.15);color:var(--blue);border:1px solid rgba(78,124,248,.4)">🛡 3ª filtrada</span>`:''}
+        ${op.violacao_modelo?`<span style="font-size:8px;padding:1px 7px;border-radius:10px;background:rgba(232,64,64,.2);color:var(--red);border:1px solid rgba(232,64,64,.5);font-weight:500">⛔ VIOLAÇÃO</span>`:''}
       </div>
       ${coachLine}
       <div class="op-detail">
@@ -3381,20 +3421,26 @@ function computeScoreForDay(entry){
   }
 
   // ── Card 4: Registro completo — todas as ops com conv, MFE, MAE, motivo saída
+  // Violação do modelo derruba Card 4 automaticamente (não é registro "completo do modelo")
   if(ops.length===0){cards.push({i:4,status:'pending',reason:'sem ops'});}
   else {
-    let missing=[];
-    for(const op of ops){
-      const gaps=[];
-      if(op.conviction==null) gaps.push('conv');
-      if(op.mfe==null) gaps.push('máx a favor');
-      if(op.mae==null) gaps.push('máx contra');
-      const exits=op.exit_reasons||(op.exit_reason?[op.exit_reason]:[]);
-      if(!exits.length) gaps.push('motivo saída');
-      if(gaps.length){missing=gaps;break;}
+    const hasViolation=ops.some(o=>o.violacao_modelo===true);
+    if(hasViolation){
+      cards.push({i:4,status:'fail',reason:'op com violação do modelo registrada'});
+    } else {
+      let missing=[];
+      for(const op of ops){
+        const gaps=[];
+        if(op.conviction==null) gaps.push('conv');
+        if(op.mfe==null) gaps.push('máx a favor');
+        if(op.mae==null) gaps.push('máx contra');
+        const exits=op.exit_reasons||(op.exit_reason?[op.exit_reason]:[]);
+        if(!exits.length) gaps.push('motivo saída');
+        if(gaps.length){missing=gaps;break;}
+      }
+      if(!missing.length) cards.push({i:4,status:'pass',reason:'registro completo'});
+      else cards.push({i:4,status:'fail',reason:`falta: ${missing.join(', ')}`});
     }
-    if(!missing.length) cards.push({i:4,status:'pass',reason:'registro completo'});
-    else cards.push({i:4,status:'fail',reason:`falta: ${missing.join(', ')}`});
   }
 
   // ── Card 5: Sem gatilho banido em NENHUMA op (inclui ross_b explícito)
@@ -5429,7 +5475,7 @@ ${sorted.slice(-10).map(d=>{
   const opsStr=ops.length?ops.map(op=>{
     const legacyEmo=op.emo_intensity!=null?` MEDO:${op.emo_intensity}`:'';
     const legacyExec=op.exec_score!=null?` exec:${op.exec_score}`:'';
-    return `    [${op.time||'?'}] ${op.dir} ${op.pts>=0?'+':''}${op.pts}pts ${op.estrutura?'['+(ESTRUTURA_LABEL[op.estrutura]||op.estrutura)+(op.e1_lots?' '+op.e1_lots+(op.e2_lots?'+'+op.e2_lots:'')+(op.e3_lots?'+'+op.e3_lots:''):'')+'] ':''}${op.r_multiple!=null?(op.r_multiple>=0?'+':'')+op.r_multiple+'R ':''}conv:${n(op.conviction)} MFE:${n(op.mfe)} MAE:${n(op.mae)} captura:${op.mfe&&op.pts>0?Math.round(op.pts/op.mfe*100)+'%':'—'}${legacyEmo}${legacyExec} adh:${fmtN(calcAdhScore(op),0)}/10${op.ross_b?' 🚨ROSS-B':''}${op.third_op_after_filter?' 🛡3ªFILTRADA':''}${op.backfill?' 📝BACKFILL('+op.backfill_confidence+')':''}\n      exit:[${getExitReasons(op).join(',')||'—'}] erro:[${(op.error_tags||[]).filter(e=>e!=='sem_erro').join(',')||'—'}] plano:[${(op.plan_adherence||[]).join(',')||'—'}] seg:[${(op.segs||[]).join(',')||'—'}] ifr:[${(op.ifr||[]).join(',')||'—'}] setup:[${(op.setups||[]).join(',')||'—'}] gatilho:[${(op.entry_states||[op.entry_state]).filter(Boolean).join(',')||'—'}] regime:${op.regime||'—'}`;
+    return `    [${op.time||'?'}] ${op.dir} ${op.pts>=0?'+':''}${op.pts}pts ${op.estrutura?'['+(ESTRUTURA_LABEL[op.estrutura]||op.estrutura)+(op.e1_lots?' '+op.e1_lots+(op.e2_lots?'+'+op.e2_lots:'')+(op.e3_lots?'+'+op.e3_lots:''):'')+'] ':''}${op.r_multiple!=null?(op.r_multiple>=0?'+':'')+op.r_multiple+'R ':''}conv:${n(op.conviction)} MFE:${n(op.mfe)} MAE:${n(op.mae)} captura:${op.mfe&&op.pts>0?Math.round(op.pts/op.mfe*100)+'%':'—'}${legacyEmo}${legacyExec} adh:${fmtN(calcAdhScore(op),0)}/10${op.ross_b?' 🚨ROSS-B':''}${op.third_op_after_filter?' 🛡3ªFILTRADA':''}${op.backfill?' 📝BACKFILL('+op.backfill_confidence+')':''}${op.violacao_modelo?' ⛔VIOLAÇÃO':''}\n      exit:[${getExitReasons(op).join(',')||'—'}] erro:[${(op.error_tags||[]).filter(e=>e!=='sem_erro').join(',')||'—'}] plano:[${(op.plan_adherence||[]).join(',')||'—'}] seg:[${(op.segs||[]).join(',')||'—'}] ifr:[${(op.ifr||[]).join(',')||'—'}] setup:[${(op.setups||[]).join(',')||'—'}] gatilho:[${(op.entry_states||[op.entry_state]).filter(Boolean).join(',')||'—'}] regime:${op.regime||'—'}${op.violacao_modelo?'\n      ⛔VIOLAÇÃO: '+op.violacao_auto_reason+' — JUSTIFICATIVA: '+op.violacao_justificativa:''}`;
   }).join('\n'):'    sem ops registradas';
   return`[${d.date_label||d.date_iso}] pré:${d.mood_pre||d.mood||'—'}→pós:${d.mood_pos||'—'} E:${d.energia||'—'} sono:${d.sleep_quality||'—'} F+PA:R$${d.t_result_fpa!=null?Math.round(d.t_result_fpa).toLocaleString('pt-BR'):'—'} PF:R$${d.t_result_pf!=null?Math.round(d.t_result_pf).toLocaleString('pt-BR'):'—'} WR:${d.t_wr||'—'}% adh:${n(d.t_adh)}/10\n${opsStr}`;
 }).join('\n')}`;
