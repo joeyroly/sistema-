@@ -69,7 +69,8 @@ body{background:var(--bg);color:var(--text);font-family:'Geist Mono',monospace;f
 .nb-lbl{font-size:7.5px;letter-spacing:1.5px;text-transform:uppercase}
 
 /* PAGES */
-.page{display:none;padding:16px 16px 80px;animation:fadeUp .22s ease}
+.page{display:none;padding:16px 16px 80px;animation:fadeUp .22s ease;overflow-x:hidden;max-width:100vw;box-sizing:border-box}
+.page *{max-width:100%;box-sizing:border-box}
 .page.active{display:block}
 @keyframes fadeUp{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 
@@ -188,9 +189,9 @@ tr:hover td{background:var(--s2)}
 .briefing-row{display:flex;gap:10px;align-items:flex-start;margin-bottom:8px}
 .briefing-row:last-child{margin-bottom:0}
 .briefing-icon{font-size:14px;flex-shrink:0;margin-top:1px}
-.briefing-content{flex:1}
-.briefing-lbl{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:2px}
-.briefing-text{font-size:12px;color:var(--hi);line-height:1.5}
+.briefing-content{flex:1;min-width:0;overflow-wrap:break-word;word-wrap:break-word}
+.briefing-lbl{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:2px;overflow-wrap:break-word}
+.briefing-text{font-size:12px;color:var(--hi);line-height:1.5;overflow-wrap:break-word;word-wrap:break-word}
 .briefing-empty{font-size:11px;color:var(--dim);text-align:center;padding:8px 0}
 .agenda-list{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
 .agenda-row{display:flex;align-items:center;gap:8px;background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:8px 10px}
@@ -200,7 +201,8 @@ tr:hover td{background:var(--s2)}
 .atype-trade{background:var(--td);color:var(--teal)}.atype-pessoal{background:var(--bd);color:var(--blue)}.atype-saude{background:var(--gd);color:var(--green)}.atype-familia{background:#1a0a28;color:#c090ff}.atype-trabalho{background:var(--od);color:var(--gold)}
 .agenda-del{background:none;border:none;color:var(--dim);cursor:pointer;font-size:14px}
 .agenda-del:hover{color:var(--red)}
-.agenda-add-row{display:grid;grid-template-columns:60px 1fr auto auto;gap:6px;align-items:center}
+.agenda-add-row{display:grid;grid-template-columns:50px 1fr minmax(0,64px) auto;gap:4px;align-items:center;width:100%}
+.agenda-add-row>*{min-width:0}
 .time-inp{background:var(--s2);border:1px solid var(--blue);border-radius:7px;padding:8px 8px;font-family:'Geist Mono',monospace;font-size:11px;color:var(--blue);outline:none;text-align:center;width:100%;font-weight:500}
 .time-inp:focus{border-color:var(--blue);background:var(--bd)}
 .type-sel{background:var(--s2);border:1px solid var(--b1);border-radius:7px;padding:8px 6px;font-family:'Geist Mono',monospace;font-size:10px;color:var(--text);outline:none;cursor:pointer}
@@ -2291,9 +2293,12 @@ function addOp(){
     if(worstLoss<=-2000){
       showCoachModal({
         title:'🛑 BLOQUEIO: Perda ≥ R$2.000/conta — MESA FECHADA',
-        body:`Uma das contas está em <strong style="color:var(--red)">R$ ${Math.round(worstLoss).toLocaleString('pt-BR')}</strong>. Regra: perda ≥ R$2.000/conta = mesa fechada imediatamente, independente do horário.<br><br>Feche o Profit. Amanhã tem outro dia.`,
+        body:`Uma das contas já está em <strong style="color:var(--red)">R$ ${Math.round(worstLoss).toLocaleString('pt-BR')}</strong>. Regra: perda ≥ R$2.000/conta = mesa fechada. Nenhuma op nova hoje.<br><br>Se essa op aconteceu ANTES da perda atingir R$2.000 (você está registrando com atraso), registre mesmo assim — vou marcar como retroativa.`,
         accent:'var(--red)',
-        buttons:[{label:'Vou fechar a plataforma',action:'callback',accent:'var(--red)',callback:()=>{clearNewOpForm();showToast('Preservou capital. Bem feito.',false);}}]
+        buttons:[
+          {label:'Cancelar — não vou operar mais',action:'close',accent:'var(--red)'},
+          {label:'É retroativa — aconteceu antes',action:'callback',accent:'var(--gold)',callback:()=>{addOpCore();showToast('Registrada.',false);}}
+        ]
       });
       return;
     }
@@ -2301,16 +2306,41 @@ function addOp(){
 
   // ── HARD BLOCK 0B: Nova op depois das 12h40 = bloqueio
   // Regra 03/08/2026: janela operacional até 12h40. Depois disso, só fechamento (até 13h00).
+  // FIX 04/08/2026: checa horário DA OPERAÇÃO (campo op-time), não relógio atual.
+  // Registrar um trade após 12h40 é permitido se o trade ACONTECEU antes de 12h40.
   if(!isBackfill&&editingOpIdx===null){
-    const now=new Date();
-    const minsNow=now.getHours()*60+now.getMinutes();
+    const timeEl=document.getElementById('op-time');
+    const opTimeStr=timeEl&&timeEl.value?timeEl.value:null;
+    let opMins=null;
+    if(opTimeStr){
+      const [oh,om]=opTimeStr.split(':').map(Number);
+      opMins=oh*60+om;
+    }
     const CUTOFF=12*60+40; // 12h40
-    if(minsNow>=CUTOFF){
+    // Bloqueia SOMENTE se: (a) tempo da op preenchido E >= 12h40, ou (b) tempo vazio E relógio atual >= 12h40
+    let shouldBlock=false;let contextMsg='';
+    if(opMins!=null){
+      if(opMins>=CUTOFF){
+        shouldBlock=true;
+        contextMsg=`Horário da operação: <strong style="color:var(--red)">${opTimeStr}</strong>. Regra: entrada nova depois de 12h40 está fora do modelo.`;
+      }
+    } else {
+      const now=new Date();
+      const minsNow=now.getHours()*60+now.getMinutes();
+      if(minsNow>=CUTOFF){
+        shouldBlock=true;
+        contextMsg=`Horário da operação em branco. Relógio agora: <strong style="color:var(--red)">${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}</strong>. Preencha o horário real da entrada — se foi antes das 12h40, salva normalmente.`;
+      }
+    }
+    if(shouldBlock){
       showCoachModal({
-        title:'🛑 BLOQUEIO: Janela operacional encerrada (12h40)',
-        body:`São <strong>${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}</strong>. Regra do modelo: nenhuma nova op depois das 12h40.<br><br>Se você tem posição aberta no Profit, feche até <strong>13h00 no máximo</strong>.<br><br>Depois disso é ruído — a estatística do seu histórico depois de 13h é ruim.`,
+        title:'🛑 Nova op após 12h40 — fora do modelo',
+        body:`${contextMsg}<br><br>Se essa entrada realmente aconteceu depois de 12h40, ela viola o modelo. Se aconteceu antes, corrija o campo <strong>Horário</strong> na parte de cima do formulário.`,
         accent:'var(--red)',
-        buttons:[{label:'Vou fechar posições e sair',action:'callback',accent:'var(--red)',callback:()=>{clearNewOpForm();showToast('Fecha até 13h00. Amanhã mais.',false);}}]
+        buttons:[
+          {label:'Corrigir horário',action:'close',accent:'var(--gold)'},
+          {label:'Aconteceu depois — vou registrar mesmo assim',action:'callback',accent:'var(--red)',callback:()=>{addOpCore();showToast('Registrado. Falha no Score do dia.',false);}}
+        ]
       });
       return;
     }
