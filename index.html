@@ -2609,8 +2609,10 @@ function addOpCore(){
   //   conv 1-2 → NÃO OPERA
   //   conv 3   → máx 10 cts
   //   conv 4-5 → máx 20 cts
+  // SKIP se pendingViolation ativo — violação já reconhecida, não loopa
   const isBackfillOp=tradeEditDate&&tradeEditDate!==todayISO();
-  if(!isBackfillOp&&editingOpIdx===null&&newOpConv!=null){
+  const hasViolationPending=window.pendingViolation&&window.pendingViolation.flag;
+  if(!isBackfillOp&&editingOpIdx===null&&newOpConv!=null&&!hasViolationPending){
     if(newOpConv<=2){
       showCoachModal({
         title:'🛑 BLOQUEIO: Convicção 1-2 = NÃO OPERA',
