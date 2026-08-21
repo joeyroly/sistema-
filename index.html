@@ -2541,17 +2541,41 @@ function l3Confirm(){
 // Dado real > teatro. Salva com flags de violação + justificativa obrigatória.
 // ═══════════════════════════════════════════════════════════════
 function registerAsViolation(autoReason){
-  const reason=prompt(`⚠️ VIOLAÇÃO DO MODELO\n\n${autoReason}\n\nPor que você operou fora das regras? (obrigatório — vai pro relatório)`);
-  if(!reason||reason.trim().length<5){
-    showToast('Justificativa obrigatória. Trade não salvo.',true);
+  // Custom modal em vez de prompt() — prompt() falha silenciosamente no Safari PWA
+  const old=document.getElementById('coach-modal');if(old) old.remove();
+  const modal=document.createElement('div');modal.id='coach-modal';
+  modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeIn .15s ease';
+  modal.innerHTML=`<div style="background:var(--s2);border:2px solid var(--gold);border-radius:12px;padding:18px;max-width:380px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.7)">
+    <div style="font-size:12px;font-weight:500;color:var(--gold);margin-bottom:6px;letter-spacing:.5px">⚠️ VIOLAÇÃO DO MODELO</div>
+    <div style="font-size:10px;color:var(--dim);margin-bottom:10px;line-height:1.5">${autoReason}</div>
+    <div style="font-size:9px;color:var(--text);margin-bottom:8px">Por que você operou fora das regras? (obrigatório — vai pro relatório)</div>
+    <textarea id="violation-reason-input" style="width:100%;min-height:60px;padding:10px;background:var(--s3);border:1px solid var(--b1);border-radius:8px;color:var(--hi);font-family:'Geist Mono',monospace;font-size:11px;resize:vertical;box-sizing:border-box" placeholder="Escreva aqui..."></textarea>
+    <div style="display:flex;gap:6px;margin-top:10px">
+      <button onclick="document.getElementById('coach-modal').remove()" style="flex:1;padding:11px;background:var(--s3);border:none;border-radius:8px;color:var(--dim);font-family:'Geist Mono',monospace;font-size:10px;cursor:pointer">Cancelar</button>
+      <button onclick="confirmViolation()" style="flex:1;padding:11px;background:var(--gold);border:none;border-radius:8px;color:#000;font-family:'Geist Mono',monospace;font-size:10px;cursor:pointer;font-weight:600">Salvar como violação</button>
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  // Foco no textarea
+  setTimeout(()=>{const ta=document.getElementById('violation-reason-input');if(ta) ta.focus();},100);
+  // Guarda autoReason pra usar no confirm
+  window._violAutoReason=autoReason;
+}
+
+function confirmViolation(){
+  const ta=document.getElementById('violation-reason-input');
+  const reason=ta?ta.value.trim():'';
+  if(reason.length<5){
+    showToast('Justificativa muito curta. Mínimo 5 caracteres.',true);
     return;
   }
-  // Marca flags no window — addOpCore vai ler e anexar ao opData
+  const modal=document.getElementById('coach-modal');if(modal) modal.remove();
   window.pendingViolation={
     flag:true,
-    auto_reason:autoReason,
-    justificativa:reason.trim()
+    auto_reason:window._violAutoReason||'',
+    justificativa:reason
   };
+  window._violAutoReason=null;
   addOpCore();
 }
 
