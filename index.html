@@ -1946,12 +1946,55 @@ function renderYesterdayReview(){
 }
 
 // ── SETUP POR TRADE ───────────────────────────
+function buildSetupStats(){
+  // Constrói contagem real de uso + data de último uso a partir de allData (não localStorage)
+  const stats={}; // {setup: {count, lastDate}}
+  const cutoff40d=new Date(Date.now()-40*86400000).toISOString().slice(0,10);
+  allData.forEach(d=>{
+    (d.t_ops_detail||[]).forEach(op=>{
+      (op.setups||[]).forEach(s=>{
+        if(!stats[s]) stats[s]={count:0,lastDate:''};
+        stats[s].count++;
+        if(d.date_iso>stats[s].lastDate) stats[s].lastDate=d.date_iso;
+      });
+    });
+  });
+  return {stats,cutoff40d};
+}
+
 function renderOpSetupTags(filter){
   const grid=document.getElementById('op-setup-tags');if(!grid) return;
   const f=(filter||'').toLowerCase();
-  const sorted=[...ALL_SETUPS].sort((a,b)=>{const ca=setupUsage[a]||0,cb=setupUsage[b]||0;if(cb!==ca) return cb-ca;return a.localeCompare(b);});
-  const filtered=f?sorted.filter(s=>s.toLowerCase().includes(f)):sorted;
-  grid.innerHTML=filtered.map(s=>{const c=setupUsage[s]||0,isSel=newOpSetups.includes(s);return`<button class="setup-tag${isSel?' sel':''}" onclick="toggleOpSetup('${s}')">${esc(s)}${c>0?`<span class="stag-count">${c}</span>`:''}</button>`;}).join('');
+  const {stats,cutoff40d}=buildSetupStats();
+  // Sync setupUsage com dados reais (pra outros usos se precisar)
+  setupUsage={};Object.entries(stats).forEach(([s,v])=>{setupUsage[s]=v.count;});
+  // Ordena por frequência real (mais usados primeiro), depois alfabético
+  const sorted=[...ALL_SETUPS].sort((a,b)=>{
+    const ca=(stats[a]||{count:0}).count,cb=(stats[b]||{count:0}).count;
+    if(cb!==ca) return cb-ca;
+    return a.localeCompare(b);
+  });
+  // Filtra: se tem busca → mostra tudo que bate. Se não → esconde os sem uso há 40+ dias.
+  const filtered=sorted.filter(s=>{
+    if(f) return s.toLowerCase().includes(f);
+    // Se está selecionado no form atual, sempre mostra
+    if(newOpSetups.includes(s)) return true;
+    // Se nunca usado ou último uso > 40 dias → esconde
+    const st=stats[s];
+    if(!st||!st.lastDate) return false; // nunca usado → esconde
+    if(st.lastDate<cutoff40d) return false; // último uso > 40d → esconde
+    return true;
+  });
+  grid.innerHTML=filtered.map(s=>{
+    const c=(stats[s]||{count:0}).count;
+    const isSel=newOpSetups.includes(s);
+    return`<button class="setup-tag${isSel?' sel':''}" onclick="toggleOpSetup('${s}')">${esc(s)}${c>0?`<span class="stag-count">${c}</span>`:''}</button>`;
+  }).join('');
+  // Info de quantos estão ocultos
+  const hidden=sorted.length-filtered.length;
+  let infoEl=document.getElementById('setup-hidden-info');
+  if(!infoEl){infoEl=document.createElement('div');infoEl.id='setup-hidden-info';infoEl.style.cssText='font-size:8px;color:var(--dim);margin-top:4px';grid.parentElement?.appendChild(infoEl);}
+  infoEl.textContent=hidden>0&&!f?`${hidden} setups ocultos (sem uso há 40+ dias · digite pra buscar)`:'';
 }
 function filterOpSetups(v){renderOpSetupTags(v);}
 function toggleOpSetup(name){const idx=newOpSetups.indexOf(name);if(idx>=0) newOpSetups.splice(idx,1);else newOpSetups.push(name);renderOpSetupTags(document.getElementById('op-setup-search').value);const info=document.getElementById('op-setup-sel-info'),names=document.getElementById('op-setup-sel-names');if(names) names.textContent=newOpSetups.length?newOpSetups.join(', '):'—';if(info) info.style.display=newOpSetups.length?'block':'none';}
@@ -2260,13 +2303,21 @@ function loadPilares(data){
   PILAR_KEYS.forEach(k=>{if(Array.isArray(data[k])) pilares[k]=data[k];renderPilar(k);});
 }
 
-// ── SETUP TÉCNICO ─────────────────────────────
+// ── SETUP TÉCNICO (hesitações) ─────────────────────────────
 function renderSetupTags(filter){
   const grid=document.getElementById('setup-tags');if(!grid) return;
   const f=filter.toLowerCase();
-  const sorted=[...ALL_SETUPS].sort((a,b)=>{const ca=setupUsage[a]||0,cb=setupUsage[b]||0;if(cb!==ca) return cb-ca;return a.localeCompare(b);});
-  const filtered=f?sorted.filter(s=>s.toLowerCase().includes(f)):sorted;
-  grid.innerHTML=filtered.map(s=>{const c=setupUsage[s]||0,isSel=selectedSetups.includes(s);return`<button class="setup-tag${isSel?' sel':''}" onclick="toggleSetup('${s}')">${esc(s)}${c>0?`<span class="stag-count">${c}</span>`:''}</button>`;}).join('');
+  const {stats,cutoff40d}=buildSetupStats();
+  const sorted=[...ALL_SETUPS].sort((a,b)=>{const ca=(stats[a]||{count:0}).count,cb=(stats[b]||{count:0}).count;if(cb!==ca) return cb-ca;return a.localeCompare(b);});
+  const filtered=sorted.filter(s=>{
+    if(f) return s.toLowerCase().includes(f);
+    if(selectedSetups.includes(s)) return true;
+    const st=stats[s];
+    if(!st||!st.lastDate) return false;
+    if(st.lastDate<cutoff40d) return false;
+    return true;
+  });
+  grid.innerHTML=filtered.map(s=>{const c=(stats[s]||{count:0}).count,isSel=selectedSetups.includes(s);return`<button class="setup-tag${isSel?' sel':''}" onclick="toggleSetup('${s}')">${esc(s)}${c>0?`<span class="stag-count">${c}</span>`:''}</button>`;}).join('');
 }
 function filterSetups(v){renderSetupTags(v);}
 function toggleSetup(name){const idx=selectedSetups.indexOf(name);if(idx>=0) selectedSetups.splice(idx,1);else selectedSetups.push(name);renderSetupTags(document.getElementById('setup-search').value);updateSetupInfo();}
@@ -3230,6 +3281,7 @@ function bootApp(){
   ['hes-time'].forEach(id=>{const el=document.getElementById(id);if(el&&!el.value) el.value=hm;});
   const opT=document.getElementById('op-time');if(opT&&!opT.value) opT.value='09:00';
   renderHesSetupTags('');
+  renderOpSetupTags(''); // Re-render com dados reais carregados
   loadTodayForms();renderBriefing();renderAnchorPhrase();renderVisitEvolution();renderYesterdayReview();initNotifications();startNotifScheduler();
   // Set trade date selector default
   const tradeSel=document.getElementById('trade-date-sel');if(tradeSel) tradeSel.value=todayISO();
