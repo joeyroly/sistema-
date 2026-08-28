@@ -4217,6 +4217,7 @@ function setFaseMode(mode,btn){
   if(a) a.classList.toggle('active',mode==='atual');
   if(c) c.classList.toggle('active',mode==='consolidado');
   renderDash();
+  renderLog(); // re-render log com novo filtro de fase
 }
 
 function updateDiasReset(){
@@ -5187,34 +5188,55 @@ function renderLog(){
     }else{ctx.fillStyle='#424a6a';ctx.font='10px Geist Mono';ctx.fillText('Sem dados de trade ainda',10,55);}}
   const cd=document.getElementById('c-day');if(cd){const ctx=cd.getContext('2d');const W=cd.parentElement.offsetWidth-30;cd.width=W*2;cd.height=100*2;ctx.scale(2,2);const w=W,h=100;ctx.clearRect(0,0,w,h);const byDay=Array(7).fill(null).map(()=>({s:0,n:0}));allData.forEach(d=>{byDay[d.day_of_week].s+=d.energia;byDay[d.day_of_week].n++;});const avgs=byDay.map(d=>d.n?d.s/d.n:0);const pad={t:8,r:8,b:20,l:8};const bw=(w-pad.l-pad.r)/7-4,ch=h-pad.t-pad.b;avgs.forEach((v,i)=>{const x=pad.l+i*(bw+4),bh=(v/10)*ch,y=pad.t+ch-bh;const isMax=v===Math.max(...avgs)&&v>0;ctx.fillStyle=isMax?'#4e7cf8':'#1a2038';ctx.fillRect(x,y,bw,bh);ctx.fillStyle=isMax?'#4e7cf8':'#424a6a';ctx.font='8px Geist Mono';ctx.fillText(DAYS[i].slice(0,3),x,h-4);if(v>0){ctx.fillStyle='#b0b8d8';ctx.font='7px Geist Mono';ctx.fillText(v.toFixed(1),x+bw/2-8,y-3);}});}
   const tbody=document.getElementById('log-body');if(!allData.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:24px;color:#424a6a">Nenhuma entrada ainda</td></tr>';return;}
+  // Aplica filtro de fase ao log
+  const logData=filterByFase([...allData],dashFaseMode).sort((a,b)=>b.date_iso.localeCompare(a.date_iso));
   // Calculate totals
-  const allWithFPA=allData.filter(d=>d.t_result_fpa!=null||d.t_result!=null);
-  const allWithPF=allData.filter(d=>d.t_result_pf!=null);
+  const allWithFPA=logData.filter(d=>d.t_result_fpa!=null||d.t_result!=null);
+  const allWithPF=logData.filter(d=>d.t_result_pf!=null);
   const totalFPA=allWithFPA.reduce((a,d)=>a+(d.t_result_fpa!=null?d.t_result_fpa:d.t_result||0),0);
   const totalPF=allWithPF.reduce((a,d)=>a+(d.t_result_pf||0),0);
-  const totalWR=allData.filter(d=>d.t_wr).length?Math.round(allData.filter(d=>d.t_wr).reduce((a,d)=>a+(d.t_wr||0),0)/allData.filter(d=>d.t_wr).length):null;
-  tbody.innerHTML=[...allData].sort((a,b)=>b.date_iso.localeCompare(a.date_iso)).slice(0,60).map(d=>{
+  // WR calculado das ops reais (não do campo t_wr que pode estar vazio)
+  const calcWrFromOps=(d)=>{
+    const ops=d.t_ops_detail||[];
+    if(!ops.length) return null;
+    const withPts=ops.filter(o=>o.pts!=null);
+    if(!withPts.length) return null;
+    return Math.round(withPts.filter(o=>o.pts>0).length/withPts.length*100);
+  };
+  const allWrs=logData.map(d=>calcWrFromOps(d)).filter(w=>w!=null);
+  const totalWR=allWrs.length?Math.round(allWrs.reduce((a,w)=>a+w,0)/allWrs.length):null;
+  tbody.innerHTML=logData.slice(0,80).map(d=>{
     const m=MOODS[d.mood_pre||d.mood]||MOODS.calmo;
     const resFPA=d.t_result_fpa!=null?d.t_result_fpa:d.t_result;
     const resPF=d.t_result_pf;
-    const fpaStr=resFPA!=null?`<span style="color:${resFPA>=0?'var(--green)':'var(--red)'}">F+PA ${resFPA>=0?'+':''}${Math.round(resFPA).toLocaleString('pt-BR')}</span>`:'';
+    const fpaStr=resFPA!=null&&resFPA!==0?`<span style="color:${resFPA>=0?'var(--green)':'var(--red)'}">F+PA ${resFPA>=0?'+':''}${Math.round(resFPA).toLocaleString('pt-BR')}</span>`:(resFPA===0?`<span style="color:var(--dim)">F+PA +0</span>`:'');
     const pfStr=resPF!=null?`<span style="color:${resPF>=0?'var(--green)':'var(--red)'}"> · PF ${resPF>=0?'+':''}${Math.round(resPF).toLocaleString('pt-BR')}</span>`:'';
     const resStr=(fpaStr||pfStr)?fpaStr+pfStr:'—';
-    const wr=d.t_wr;const wrStr=wr?`<span style="color:${wr>=65?'var(--green)':wr>=50?'var(--gold)':'var(--red)'}">${wr}%</span>`:'—';
-    return`<tr><td style="color:#424a6a;white-space:nowrap;font-size:10px">${(d.date_label||d.date_iso).slice(0,8)}</td><td><span class="mc" style="background:${m.bg};color:${m.c}">${m.e}</span></td><td style="color:var(--blue);font-weight:500">${d.energia||'—'}</td><td style="font-size:9px">${resStr}</td><td>${wrStr}</td></tr>`;
+    // WR: calcula das ops reais, fallback para t_wr
+    const wr=calcWrFromOps(d)||(d.t_wr||null);
+    const wrStr=wr!=null?`<span style="color:${wr>=65?'var(--green)':wr>=50?'var(--gold)':'var(--red)'}">${wr}%</span>`:'—';
+    // Marcação visual: pré-reset fica translúcido
+    const isPre=d.date_iso<=FPA_REPROVA_DATE;
+    const isReset=d.date_iso===FPA_REPROVA_DATE;
+    const rowStyle=isPre&&dashFaseMode==='consolidado'?'opacity:.45;':'';
+    const faseTag=isPre&&dashFaseMode==='consolidado'?'<span style="font-size:7px;color:var(--dim);margin-left:3px">PRÉ</span>':'';
+    const resetRow=isReset&&dashFaseMode==='consolidado'?'<tr><td colspan="5" style="text-align:center;padding:4px;font-size:8px;color:var(--gold);border-top:1px dashed var(--gold);border-bottom:1px dashed var(--gold);letter-spacing:2px">── RESET F+PA ──</td></tr>':'';
+    return`${resetRow}<tr style="${rowStyle}"><td style="color:#424a6a;white-space:nowrap;font-size:10px">${(d.date_label||d.date_iso).slice(0,8)}${faseTag}</td><td><span class="mc" style="background:${m.bg};color:${m.c}">${m.e}</span></td><td style="color:var(--blue);font-weight:500">${d.energia||'—'}</td><td style="font-size:9px">${resStr}</td><td>${wrStr}</td></tr>`;
   }).join('');
   // Totals footer
   const tfoot=document.getElementById('log-foot');
   if(tfoot){
     const fpaColor=totalFPA>=0?'var(--green)':'var(--red)';
     const pfColor=totalPF>=0?'var(--green)':'var(--red)';
+    const modeLabel=dashFaseMode==='atual'?'TESTE ATUAL':'CONSOLIDADO';
+    const daysCount=logData.length;
     tfoot.innerHTML=`<tr style="border-top:2px solid var(--b1);background:var(--s2)">
-      <td style="font-size:9px;color:var(--dim);font-weight:500;padding:10px" colspan="3">TOTAL (${allData.length} dias)</td>
+      <td style="font-size:9px;color:var(--dim);font-weight:500;padding:10px" colspan="3">${modeLabel} (${daysCount} dias)</td>
       <td style="font-size:9px;padding:10px">
         ${allWithFPA.length?`<span style="color:${fpaColor};font-weight:500">F+PA ${totalFPA>=0?'+':''}${Math.round(totalFPA).toLocaleString('pt-BR')}</span>`:''}
         ${allWithPF.length?`<span style="color:${pfColor}"> · PF ${totalPF>=0?'+':''}${Math.round(totalPF).toLocaleString('pt-BR')}</span>`:''}
       </td>
-      <td style="font-size:9px;padding:10px">${totalWR?`<span style="color:${totalWR>=65?'var(--green)':totalWR>=50?'var(--gold)':'var(--red)'}">${totalWR}%</span>`:'—'}</td>
+      <td style="font-size:9px;padding:10px">${totalWR!=null?`<span style="color:${totalWR>=65?'var(--green)':totalWR>=50?'var(--gold)':'var(--red)'}">${totalWR}%</span>`:'—'}</td>
     </tr>`;
   }
 }
