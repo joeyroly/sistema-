@@ -1143,7 +1143,7 @@ tr:hover td{background:var(--s2)}
       <div class="chart-card">
         <div class="ct">Resultado R$ acumulado</div>
         <div class="cs">Curva de capital</div>
-        <canvas id="c-equity" height="140"></canvas>
+        <canvas id="c-equity" height="180"></canvas>
       </div>
       <div class="chart-card">
         <div class="ct">Energia por dia da semana</div>
@@ -5138,13 +5138,15 @@ function renderLog(){
   document.getElementById('log-sub').textContent=allData.length+' entradas registradas';
   const sorted=[...allData].sort((a,b)=>a.date_iso.localeCompare(b.date_iso));
   const c=document.getElementById('c-equity');
-  if(c){const ctx=c.getContext('2d');const W=c.parentElement.offsetWidth-30;c.width=W*2;c.height=140*2;ctx.scale(2,2);const w=W,h=140;ctx.clearRect(0,0,w,h);
+  if(c){const ctx=c.getContext('2d');const W=c.parentElement.offsetWidth-30;c.width=W*2;c.height=180*2;ctx.scale(2,2);const w=W,h=180;ctx.clearRect(0,0,w,h);
     const isAtual=dashFaseMode==='atual';
-    // Filter days based on mode
+    // Curva pós-reset pra F/PA; PF sempre começa do reset mas mostra total all-time no label
     let td=sorted.filter(d=>d.t_felling!=null||d.t_pa!=null||d.t_result_fpa!=null||d.t_result_pf!=null||d.t_result!=null);
+    // PF all-time total (acumulado de TODOS os tempos, não só pós-reset)
+    const pfAllTime=allData.reduce((a,d)=>a+(d.t_result_pf||0),0);
     if(isAtual) td=td.filter(d=>d.date_iso>=FPA_RESET_DATE);
-    if(td.length>1){
-      // Build 3 cumulative series: Felling, PA, PF
+    if(td.length>=1){
+      // Build 3 cumulative series (do período filtrado)
       let cumF=0,cumPA=0,cumPF=0;
       const serF=[],serPA=[],serPF=[];
       td.forEach(d=>{
@@ -5154,61 +5156,79 @@ function renderLog(){
       });
       const allVals=[...serF,...serPA,...serPF];
       const mn=Math.min(...allVals,0),mx=Math.max(...allVals,0);
-      const pad={t:12,r:8,b:20,l:48};const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+      const pad={t:38,r:12,b:28,l:12};const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
       const yOf=v=>pad.t+ch-((v-mn)/(mx-mn||1))*ch;
-      const xOf=i=>pad.l+(i/(td.length-1))*cw;
+      const xOf=i=>td.length>1?pad.l+(i/(td.length-1))*cw:pad.l+cw/2;
+      // Background gradient
+      const grad=ctx.createLinearGradient(0,pad.t,0,h);
+      grad.addColorStop(0,'rgba(14,18,32,.0)');grad.addColorStop(1,'rgba(14,18,32,.0)');
       // Zero line
       const y0=yOf(0);
       ctx.beginPath();ctx.moveTo(pad.l,y0);ctx.lineTo(pad.l+cw,y0);
-      ctx.strokeStyle='rgba(100,110,140,.25)';ctx.lineWidth=0.8;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
-      // Draw series
-      const drawLine=(ser,color,lw=1.5)=>{
+      ctx.strokeStyle='rgba(100,110,140,.2)';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
+      ctx.fillStyle='rgba(100,110,140,.3)';ctx.font='8px Geist Mono';ctx.fillText('R$ 0',pad.l,y0-4);
+      // Draw line with glow effect
+      const drawLine=(ser,color,lw=2.5)=>{
+        if(ser.length<2) return;
+        // Glow
         ctx.beginPath();
         ser.forEach((v,i)=>{const x=xOf(i),y=yOf(v);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
-        ctx.strokeStyle=color;ctx.lineWidth=lw;ctx.stroke();
+        ctx.strokeStyle=color.replace(')',',0.2)').replace('rgb','rgba');ctx.lineWidth=lw+4;ctx.stroke();
+        // Main line
+        ctx.beginPath();
+        ser.forEach((v,i)=>{const x=xOf(i),y=yOf(v);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+        ctx.strokeStyle=color;ctx.lineWidth=lw;ctx.lineCap='round';ctx.lineJoin='round';ctx.stroke();
+        // Dot on last point
+        const lx=xOf(ser.length-1),ly=yOf(ser[ser.length-1]);
+        ctx.beginPath();ctx.arc(lx,ly,3.5,0,Math.PI*2);ctx.fillStyle=color;ctx.fill();
+        ctx.beginPath();ctx.arc(lx,ly,1.8,0,Math.PI*2);ctx.fillStyle='#0a0e1a';ctx.fill();
       };
-      // Consolidated mode: pre-reset in grey
+      // Consolidated: pre-reset grey
       if(!isAtual){
         const resetIdx=td.findIndex(d=>d.date_iso>=FPA_RESET_DATE);
         if(resetIdx>0){
-          // Grey pre-reset for F+PA combined
-          let cumPre=0;const prePts=[];
-          for(let i=0;i<resetIdx;i++){cumPre+=(td[i].t_felling||0)+(td[i].t_pa||0);prePts.push(cumPre);}
+          let cumPre=0;
           ctx.beginPath();
-          prePts.forEach((v,i)=>{const x=xOf(i),y=yOf(v);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
-          ctx.strokeStyle='rgba(120,130,160,.35)';ctx.lineWidth=1.2;ctx.stroke();
-          // Reset vertical line
+          for(let i=0;i<resetIdx;i++){cumPre+=(td[i].t_felling||0)+(td[i].t_pa||0);const x=xOf(i),y=yOf(cumPre);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+          ctx.strokeStyle='rgba(120,130,160,.3)';ctx.lineWidth=2;ctx.stroke();
           const rx=xOf(resetIdx);
           ctx.beginPath();ctx.moveTo(rx,pad.t);ctx.lineTo(rx,pad.t+ch);
-          ctx.strokeStyle='rgba(212,160,40,.5)';ctx.lineWidth=1;ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);
-          ctx.fillStyle='rgba(212,160,40,.7)';ctx.font='7px Geist Mono';ctx.fillText('RESET',rx+3,pad.t+10);
+          ctx.strokeStyle='rgba(212,160,40,.4)';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);ctx.stroke();ctx.setLineDash([]);
+          ctx.fillStyle='rgba(212,160,40,.7)';ctx.font='bold 9px Geist Mono';ctx.fillText('RESET',rx+4,pad.t+14);
         }
       }
-      // Draw 3 lines
-      drawLine(serF,'#4e7cf8',1.6);  // Felling = azul
-      drawLine(serPA,'#a855f7',1.4);  // PA = roxo
-      drawLine(serPF,'#2ec4a0',1.2);  // PF = teal
-      // Labels no final de cada linha
-      const lastX=xOf(td.length-1);
-      const lbls=[
-        {v:cumF,c:'#4e7cf8',n:'F'},
-        {v:cumPA,c:'#a855f7',n:'PA'},
-        {v:cumPF,c:'#2ec4a0',n:'PF'}
-      ].sort((a,b)=>b.v-a.v);
-      lbls.forEach((l,i)=>{
-        ctx.fillStyle=l.c;ctx.font='7px Geist Mono';
-        const yLbl=yOf(l.v)-3+i*10;
-        ctx.fillText(`${l.n}: R$${l.v>=0?'+':''}${Math.round(l.v).toLocaleString('pt-BR')}`,lastX-80,Math.max(pad.t+8,Math.min(yLbl,h-pad.b-2)));
-      });
-      // Title: total combinado
+      // Draw 3 lines — order: PF behind, then PA, then Felling on top
+      drawLine(serPF,'rgb(46,196,160)',2);
+      drawLine(serPA,'rgb(168,85,247)',2.5);
+      drawLine(serF,'rgb(78,124,248)',3);
+      // ── CARDS DE RESULTADO no topo ──
       const totalFPA=cumF+cumPA;
-      ctx.fillStyle='#424a6a';ctx.font='8px Geist Mono';
-      ctx.fillText(`${isAtual?'Teste':'Total'}: F+PA R$${totalFPA>=0?'+':''}${Math.round(totalFPA).toLocaleString('pt-BR')} · PF R$${cumPF>=0?'+':''}${Math.round(cumPF).toLocaleString('pt-BR')}`,pad.l,pad.t+6);
-      // Legend
-      ctx.fillStyle='#4e7cf8';ctx.fillRect(pad.l,h-12,6,6);ctx.fillStyle='#424a6a';ctx.font='7px Geist Mono';ctx.fillText('Felling',pad.l+8,h-7);
-      ctx.fillStyle='#a855f7';ctx.fillRect(pad.l+48,h-12,6,6);ctx.fillText('PA',pad.l+56,h-7);
-      ctx.fillStyle='#2ec4a0';ctx.fillRect(pad.l+78,h-12,6,6);ctx.fillText('PF',pad.l+86,h-7);
-    }else{ctx.fillStyle='#424a6a';ctx.font='10px Geist Mono';ctx.fillText('Sem dados de trade ainda',10,55);}}
+      const cards=[
+        {n:'Felling',v:cumF,c:'#4e7cf8'},
+        {n:'PA',v:cumPA,c:'#a855f7'},
+        {n:'PF (total)',v:isAtual?pfAllTime:cumPF,c:'#2ec4a0'}
+      ];
+      const cardW=Math.min(90,(cw-16)/3);
+      cards.forEach((cd,i)=>{
+        const cx=pad.l+i*(cardW+8);
+        // Card background
+        ctx.fillStyle='rgba(10,14,26,.7)';
+        ctx.beginPath();ctx.roundRect(cx,4,cardW,28,4);ctx.fill();
+        ctx.strokeStyle=cd.c+'40';ctx.lineWidth=1;ctx.beginPath();ctx.roundRect(cx,4,cardW,28,4);ctx.stroke();
+        // Label
+        ctx.fillStyle=cd.c+'99';ctx.font='7px Geist Mono';ctx.fillText(cd.n,cx+6,15);
+        // Value
+        ctx.fillStyle=cd.v>=0?'#30c478':'#e84040';ctx.font='bold 10px Geist Mono';
+        ctx.fillText(`${cd.v>=0?'+':''}${Math.round(cd.v/1000)}k`,cx+6,27);
+      });
+      // Legend bottom
+      const legY=h-8;
+      [{c:'#4e7cf8',n:'Felling'},{c:'#a855f7',n:'PA'},{c:'#2ec4a0',n:'PF'}].forEach((l,i)=>{
+        const lx=pad.l+i*60;
+        ctx.fillStyle=l.c;ctx.beginPath();ctx.arc(lx+4,legY-2,3,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#6a7090';ctx.font='8px Geist Mono';ctx.fillText(l.n,lx+10,legY);
+      });
+    }else{ctx.fillStyle='#424a6a';ctx.font='11px Geist Mono';ctx.fillText('Sem dados de trade ainda',w/2-60,h/2);}}
   const cd=document.getElementById('c-day');if(cd){const ctx=cd.getContext('2d');const W=cd.parentElement.offsetWidth-30;cd.width=W*2;cd.height=100*2;ctx.scale(2,2);const w=W,h=100;ctx.clearRect(0,0,w,h);const byDay=Array(7).fill(null).map(()=>({s:0,n:0}));allData.forEach(d=>{byDay[d.day_of_week].s+=d.energia;byDay[d.day_of_week].n++;});const avgs=byDay.map(d=>d.n?d.s/d.n:0);const pad={t:8,r:8,b:20,l:8};const bw=(w-pad.l-pad.r)/7-4,ch=h-pad.t-pad.b;avgs.forEach((v,i)=>{const x=pad.l+i*(bw+4),bh=(v/10)*ch,y=pad.t+ch-bh;const isMax=v===Math.max(...avgs)&&v>0;ctx.fillStyle=isMax?'#4e7cf8':'#1a2038';ctx.fillRect(x,y,bw,bh);ctx.fillStyle=isMax?'#4e7cf8':'#424a6a';ctx.font='8px Geist Mono';ctx.fillText(DAYS[i].slice(0,3),x,h-4);if(v>0){ctx.fillStyle='#b0b8d8';ctx.font='7px Geist Mono';ctx.fillText(v.toFixed(1),x+bw/2-8,y-3);}});}
   const tbody=document.getElementById('log-body');if(!allData.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:24px;color:#424a6a">Nenhuma entrada ainda</td></tr>';return;}
   // Aplica filtro de fase ao log
