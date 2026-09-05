@@ -1143,7 +1143,7 @@ tr:hover td{background:var(--s2)}
       <div class="chart-card">
         <div class="ct">Resultado R$ acumulado</div>
         <div class="cs">Curva de capital</div>
-        <canvas id="c-equity" height="110"></canvas>
+        <canvas id="c-equity" height="140"></canvas>
       </div>
       <div class="chart-card">
         <div class="ct">Energia por dia da semana</div>
@@ -5138,53 +5138,76 @@ function renderLog(){
   document.getElementById('log-sub').textContent=allData.length+' entradas registradas';
   const sorted=[...allData].sort((a,b)=>a.date_iso.localeCompare(b.date_iso));
   const c=document.getElementById('c-equity');
-  if(c){const ctx=c.getContext('2d');const W=c.parentElement.offsetWidth-30;c.width=W*2;c.height=110*2;ctx.scale(2,2);const w=W,h=110;ctx.clearRect(0,0,w,h);
-    const td=sorted.filter(d=>d.t_result_fpa!=null||d.t_result!=null);
+  if(c){const ctx=c.getContext('2d');const W=c.parentElement.offsetWidth-30;c.width=W*2;c.height=140*2;ctx.scale(2,2);const w=W,h=140;ctx.clearRect(0,0,w,h);
+    const isAtual=dashFaseMode==='atual';
+    // Filter days based on mode
+    let td=sorted.filter(d=>d.t_felling!=null||d.t_pa!=null||d.t_result_fpa!=null||d.t_result_pf!=null||d.t_result!=null);
+    if(isAtual) td=td.filter(d=>d.date_iso>=FPA_RESET_DATE);
     if(td.length>1){
-      let cum=0;
-      const pts=td.map(d=>{cum+=(d.t_result_fpa!=null?d.t_result_fpa:d.t_result||0);return cum;});
-      const mn=Math.min(...pts),mx=Math.max(...pts);
-      const pad={t:10,r:8,b:18,l:42};const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
-      // Find reset index
-      const resetIdx=td.findIndex(d=>d.date_iso>=FPA_RESET_DATE);
-      const isConsolidado=dashFaseMode==='consolidado';
-      // Draw pre-reset in grey (if consolidated mode)
-      if(isConsolidado&&resetIdx>0){
+      // Build 3 cumulative series: Felling, PA, PF
+      let cumF=0,cumPA=0,cumPF=0;
+      const serF=[],serPA=[],serPF=[];
+      td.forEach(d=>{
+        cumF+=(d.t_felling||0);serF.push(cumF);
+        cumPA+=(d.t_pa||0);serPA.push(cumPA);
+        cumPF+=(d.t_result_pf||0);serPF.push(cumPF);
+      });
+      const allVals=[...serF,...serPA,...serPF];
+      const mn=Math.min(...allVals,0),mx=Math.max(...allVals,0);
+      const pad={t:12,r:8,b:20,l:48};const cw=w-pad.l-pad.r,ch=h-pad.t-pad.b;
+      const yOf=v=>pad.t+ch-((v-mn)/(mx-mn||1))*ch;
+      const xOf=i=>pad.l+(i/(td.length-1))*cw;
+      // Zero line
+      const y0=yOf(0);
+      ctx.beginPath();ctx.moveTo(pad.l,y0);ctx.lineTo(pad.l+cw,y0);
+      ctx.strokeStyle='rgba(100,110,140,.25)';ctx.lineWidth=0.8;ctx.setLineDash([3,3]);ctx.stroke();ctx.setLineDash([]);
+      // Draw series
+      const drawLine=(ser,color,lw=1.5)=>{
         ctx.beginPath();
-        for(let i=0;i<resetIdx;i++){
-          const x=pad.l+(i/(pts.length-1))*cw;
-          const y=pad.t+ch-((pts[i]-mn)/(mx-mn||1))*ch;
-          i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+        ser.forEach((v,i)=>{const x=xOf(i),y=yOf(v);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+        ctx.strokeStyle=color;ctx.lineWidth=lw;ctx.stroke();
+      };
+      // Consolidated mode: pre-reset in grey
+      if(!isAtual){
+        const resetIdx=td.findIndex(d=>d.date_iso>=FPA_RESET_DATE);
+        if(resetIdx>0){
+          // Grey pre-reset for F+PA combined
+          let cumPre=0;const prePts=[];
+          for(let i=0;i<resetIdx;i++){cumPre+=(td[i].t_felling||0)+(td[i].t_pa||0);prePts.push(cumPre);}
+          ctx.beginPath();
+          prePts.forEach((v,i)=>{const x=xOf(i),y=yOf(v);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+          ctx.strokeStyle='rgba(120,130,160,.35)';ctx.lineWidth=1.2;ctx.stroke();
+          // Reset vertical line
+          const rx=xOf(resetIdx);
+          ctx.beginPath();ctx.moveTo(rx,pad.t);ctx.lineTo(rx,pad.t+ch);
+          ctx.strokeStyle='rgba(212,160,40,.5)';ctx.lineWidth=1;ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);
+          ctx.fillStyle='rgba(212,160,40,.7)';ctx.font='7px Geist Mono';ctx.fillText('RESET',rx+3,pad.t+10);
         }
-        ctx.strokeStyle='rgba(120,130,160,.4)';ctx.lineWidth=1.5;ctx.stroke();
-        // Reset vertical line
-        const rx=pad.l+((resetIdx-1)/(pts.length-1))*cw;
-        ctx.beginPath();ctx.moveTo(rx,pad.t);ctx.lineTo(rx,pad.t+ch);
-        ctx.strokeStyle='rgba(212,160,40,.6)';ctx.lineWidth=1;ctx.setLineDash([4,3]);ctx.stroke();ctx.setLineDash([]);
-        ctx.fillStyle='rgba(212,160,40,.8)';ctx.font='7px Geist Mono';ctx.fillText('RESET',rx+3,pad.t+10);
       }
-      // Draw post-reset (or full line if not consolidated) in solid color
-      const startDraw=isConsolidado&&resetIdx>0?Math.max(0,resetIdx-1):0;
-      ctx.beginPath();
-      for(let i=startDraw;i<pts.length;i++){
-        const x=pad.l+(i/(pts.length-1))*cw;
-        const y=pad.t+ch-((pts[i]-mn)/(mx-mn||1))*ch;
-        i===startDraw?ctx.moveTo(x,y):ctx.lineTo(x,y);
-      }
-      ctx.strokeStyle=cum>=0?'#30c478':'#e84040';ctx.lineWidth=1.8;ctx.stroke();
-      // Fill area under post-reset curve
-      ctx.lineTo(pad.l+((pts.length-1)/(pts.length-1))*cw,pad.t+ch);
-      ctx.lineTo(pad.l+(startDraw/(pts.length-1))*cw,pad.t+ch);
-      ctx.closePath();ctx.fillStyle=(cum>=0?'#30c47818':'#e8404018');ctx.fill();
+      // Draw 3 lines
+      drawLine(serF,'#4e7cf8',1.6);  // Felling = azul
+      drawLine(serPA,'#a855f7',1.4);  // PA = roxo
+      drawLine(serPF,'#2ec4a0',1.2);  // PF = teal
+      // Labels no final de cada linha
+      const lastX=xOf(td.length-1);
+      const lbls=[
+        {v:cumF,c:'#4e7cf8',n:'F'},
+        {v:cumPA,c:'#a855f7',n:'PA'},
+        {v:cumPF,c:'#2ec4a0',n:'PF'}
+      ].sort((a,b)=>b.v-a.v);
+      lbls.forEach((l,i)=>{
+        ctx.fillStyle=l.c;ctx.font='7px Geist Mono';
+        const yLbl=yOf(l.v)-3+i*10;
+        ctx.fillText(`${l.n}: R$${l.v>=0?'+':''}${Math.round(l.v).toLocaleString('pt-BR')}`,lastX-80,Math.max(pad.t+8,Math.min(yLbl,h-pad.b-2)));
+      });
+      // Title: total combinado
+      const totalFPA=cumF+cumPA;
       ctx.fillStyle='#424a6a';ctx.font='8px Geist Mono';
-      ctx.fillText('R$ '+Math.round(pts[pts.length-1]).toLocaleString('pt-BR'),pad.l,pad.t+8);
-      // If in 'atual' mode, also show post-reset total separately
-      if(dashFaseMode==='atual'&&resetIdx>=0){
-        const postOnly=pts.slice(resetIdx);
-        const postTotal=postOnly.length?postOnly[postOnly.length-1]-(resetIdx>0?pts[resetIdx-1]:0):0;
-        ctx.fillStyle=postTotal>=0?'#30c478':'#e84040';ctx.font='8px Geist Mono';
-        ctx.fillText('Teste: R$ '+Math.round(postTotal).toLocaleString('pt-BR'),pad.l+cw/2,pad.t+8);
-      }
+      ctx.fillText(`${isAtual?'Teste':'Total'}: F+PA R$${totalFPA>=0?'+':''}${Math.round(totalFPA).toLocaleString('pt-BR')} · PF R$${cumPF>=0?'+':''}${Math.round(cumPF).toLocaleString('pt-BR')}`,pad.l,pad.t+6);
+      // Legend
+      ctx.fillStyle='#4e7cf8';ctx.fillRect(pad.l,h-12,6,6);ctx.fillStyle='#424a6a';ctx.font='7px Geist Mono';ctx.fillText('Felling',pad.l+8,h-7);
+      ctx.fillStyle='#a855f7';ctx.fillRect(pad.l+48,h-12,6,6);ctx.fillText('PA',pad.l+56,h-7);
+      ctx.fillStyle='#2ec4a0';ctx.fillRect(pad.l+78,h-12,6,6);ctx.fillText('PF',pad.l+86,h-7);
     }else{ctx.fillStyle='#424a6a';ctx.font='10px Geist Mono';ctx.fillText('Sem dados de trade ainda',10,55);}}
   const cd=document.getElementById('c-day');if(cd){const ctx=cd.getContext('2d');const W=cd.parentElement.offsetWidth-30;cd.width=W*2;cd.height=100*2;ctx.scale(2,2);const w=W,h=100;ctx.clearRect(0,0,w,h);const byDay=Array(7).fill(null).map(()=>({s:0,n:0}));allData.forEach(d=>{byDay[d.day_of_week].s+=d.energia;byDay[d.day_of_week].n++;});const avgs=byDay.map(d=>d.n?d.s/d.n:0);const pad={t:8,r:8,b:20,l:8};const bw=(w-pad.l-pad.r)/7-4,ch=h-pad.t-pad.b;avgs.forEach((v,i)=>{const x=pad.l+i*(bw+4),bh=(v/10)*ch,y=pad.t+ch-bh;const isMax=v===Math.max(...avgs)&&v>0;ctx.fillStyle=isMax?'#4e7cf8':'#1a2038';ctx.fillRect(x,y,bw,bh);ctx.fillStyle=isMax?'#4e7cf8':'#424a6a';ctx.font='8px Geist Mono';ctx.fillText(DAYS[i].slice(0,3),x,h-4);if(v>0){ctx.fillStyle='#b0b8d8';ctx.font='7px Geist Mono';ctx.fillText(v.toFixed(1),x+bw/2-8,y-3);}});}
   const tbody=document.getElementById('log-body');if(!allData.length){tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:24px;color:#424a6a">Nenhuma entrada ainda</td></tr>';return;}
@@ -5207,11 +5230,13 @@ function renderLog(){
   const totalWR=allWrs.length?Math.round(allWrs.reduce((a,w)=>a+w,0)/allWrs.length):null;
   tbody.innerHTML=logData.slice(0,80).map(d=>{
     const m=MOODS[d.mood_pre||d.mood]||MOODS.calmo;
-    const resFPA=d.t_result_fpa!=null?d.t_result_fpa:d.t_result;
+    const resF=d.t_felling||null;
+    const resPA=d.t_pa||null;
     const resPF=d.t_result_pf;
-    const fpaStr=resFPA!=null&&resFPA!==0?`<span style="color:${resFPA>=0?'var(--green)':'var(--red)'}">F+PA ${resFPA>=0?'+':''}${Math.round(resFPA).toLocaleString('pt-BR')}</span>`:(resFPA===0?`<span style="color:var(--dim)">F+PA +0</span>`:'');
-    const pfStr=resPF!=null?`<span style="color:${resPF>=0?'var(--green)':'var(--red)'}"> · PF ${resPF>=0?'+':''}${Math.round(resPF).toLocaleString('pt-BR')}</span>`:'';
-    const resStr=(fpaStr||pfStr)?fpaStr+pfStr:'—';
+    // Mostra F, PA, PF separados com cores por valor
+    const brl=(v,lbl)=>v!=null?`<span style="color:${v>=0?'var(--green)':'var(--red)'}${Math.abs(v)<1?';opacity:.5':''}">${lbl}${v>=0?'+':''}${Math.round(v).toLocaleString('pt-BR')}</span>`:null;
+    const parts=[brl(resF,'F '),brl(resPA,'PA '),brl(resPF,'PF ')].filter(Boolean);
+    const resStr=parts.length?parts.join('<span style="color:var(--b1)"> · </span>'):'—';
     // WR: calcula das ops reais, fallback para t_wr
     const wr=calcWrFromOps(d)||(d.t_wr||null);
     const wrStr=wr!=null?`<span style="color:${wr>=65?'var(--green)':wr>=50?'var(--gold)':'var(--red)'}">${wr}%</span>`:'—';
@@ -5223,18 +5248,22 @@ function renderLog(){
     const resetRow=isReset&&dashFaseMode==='consolidado'?'<tr><td colspan="5" style="text-align:center;padding:4px;font-size:8px;color:var(--gold);border-top:1px dashed var(--gold);border-bottom:1px dashed var(--gold);letter-spacing:2px">── RESET F+PA ──</td></tr>':'';
     return`${resetRow}<tr style="${rowStyle}"><td style="color:#424a6a;white-space:nowrap;font-size:10px">${(d.date_label||d.date_iso).slice(0,8)}${faseTag}</td><td><span class="mc" style="background:${m.bg};color:${m.c}">${m.e}</span></td><td style="color:var(--blue);font-weight:500">${d.energia||'—'}</td><td style="font-size:9px">${resStr}</td><td>${wrStr}</td></tr>`;
   }).join('');
-  // Totals footer
+  // Totals footer — 3 mesas separadas
   const tfoot=document.getElementById('log-foot');
   if(tfoot){
-    const fpaColor=totalFPA>=0?'var(--green)':'var(--red)';
-    const pfColor=totalPF>=0?'var(--green)':'var(--red)';
+    const totalF=logData.reduce((a,d)=>a+(d.t_felling||0),0);
+    const totalPA=logData.reduce((a,d)=>a+(d.t_pa||0),0);
+    const totalPF=logData.reduce((a,d)=>a+(d.t_result_pf||0),0);
     const modeLabel=dashFaseMode==='atual'?'TESTE ATUAL':'CONSOLIDADO';
     const daysCount=logData.length;
+    const c=v=>v>=0?'var(--green)':'var(--red)';
+    const f=v=>(v>=0?'+':'')+Math.round(v).toLocaleString('pt-BR');
     tfoot.innerHTML=`<tr style="border-top:2px solid var(--b1);background:var(--s2)">
       <td style="font-size:9px;color:var(--dim);font-weight:500;padding:10px" colspan="3">${modeLabel} (${daysCount} dias)</td>
-      <td style="font-size:9px;padding:10px">
-        ${allWithFPA.length?`<span style="color:${fpaColor};font-weight:500">F+PA ${totalFPA>=0?'+':''}${Math.round(totalFPA).toLocaleString('pt-BR')}</span>`:''}
-        ${allWithPF.length?`<span style="color:${pfColor}"> · PF ${totalPF>=0?'+':''}${Math.round(totalPF).toLocaleString('pt-BR')}</span>`:''}
+      <td style="font-size:8px;padding:10px;line-height:1.6">
+        <span style="color:${c(totalF)};font-weight:500">F ${f(totalF)}</span><span style="color:var(--b1)"> · </span>
+        <span style="color:${c(totalPA)}">PA ${f(totalPA)}</span><span style="color:var(--b1)"> · </span>
+        <span style="color:${c(totalPF)}">PF ${f(totalPF)}</span>
       </td>
       <td style="font-size:9px;padding:10px">${totalWR!=null?`<span style="color:${totalWR>=65?'var(--green)':totalWR>=50?'var(--gold)':'var(--red)'}">${totalWR}%</span>`:'—'}</td>
     </tr>`;
