@@ -5219,7 +5219,7 @@ function renderLog(){
         ctx.fillStyle=cd.c+'99';ctx.font='7px Geist Mono';ctx.fillText(cd.n,cx+6,15);
         // Value
         ctx.fillStyle=cd.v>=0?'#30c478':'#e84040';ctx.font='bold 10px Geist Mono';
-        ctx.fillText(`${cd.v>=0?'+':''}${Math.round(cd.v/1000)}k`,cx+6,27);
+        ctx.fillText(`R$${cd.v>=0?'+':''}${(Math.round(cd.v/100)*100).toLocaleString('pt-BR')}`,cx+6,27);
       });
       // Legend bottom
       const legY=h-8;
