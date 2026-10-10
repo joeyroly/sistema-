@@ -596,6 +596,19 @@ tr:hover td{background:var(--s2)}
       </div>
       <div style="font-size:9px;color:var(--dim);margin-bottom:14px;line-height:1.4" id="trade-date-notice" style="display:none"></div>
 
+      <!-- MODO MÍNIMO toggle -->
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:7px 10px;background:var(--s2);border:1px solid var(--b1);border-radius:8px">
+        <label style="font-size:9px;color:var(--dim);flex:1;cursor:pointer" for="tempo-restrito-toggle" title="Tempo curto? Ativa modo mínimo: só gatilho, convicção, violação, regime e erro">⏱ Modo mínimo (tempo restrito)</label>
+        <input type="checkbox" id="tempo-restrito-toggle" onchange="toggleTempoRestrito()" style="cursor:pointer;accent-color:var(--teal)">
+      </div>
+
+      <!-- IMPORTAR OPS — botão one-shot -->
+      <div id="import-ops-card" style="display:none;margin-bottom:10px;padding:9px 12px;background:linear-gradient(135deg,rgba(46,196,160,.08),rgba(78,124,248,.06));border:1px solid rgba(46,196,160,.25);border-radius:9px">
+        <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--teal);margin-bottom:5px">📥 Importação de dados</div>
+        <div style="font-size:9px;color:var(--dim);margin-bottom:7px;line-height:1.4">91 operações factuais (27/08–09/10) sem registro qualitativo. Serão adicionadas sem substituir dados existentes.</div>
+        <button id="btn-import-ops" onclick="runImportOps()" style="width:100%;padding:9px;background:var(--teal);color:#fff;border:none;border-radius:7px;font-family:'Geist Mono',monospace;font-size:10px;cursor:pointer;font-weight:600">Importar 91 ops (R$ +12.285 bruto)</button>
+      </div>
+
       <!-- ANÁLISE DE ONTEM — aparece acima do pré-pregão como lembrete -->
       <div id="yesterday-trade-review" style="display:none"></div>
 
@@ -711,10 +724,12 @@ tr:hover td{background:var(--s2)}
             <div style="font-size:8px;color:var(--dim);margin-bottom:8px;line-height:1.4">Conv 1-2 = bloqueio · Conv 3 = máx 10 cts · Conv 4-5 = até 20 cts. Sem override.</div>
 
             <!-- Aderência ao plano (simplificada — 2 opções) -->
+            <div data-minimo-hide>
             <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px">Aderência ao plano *</div>
             <div class="op-state-grid" id="new-op-plan-btns" style="margin-bottom:8px">
               <button class="os-btn" data-v="plan_entry" onclick="toggleOpPlan(this)">✓ Dentro do plano</button>
               <button class="os-btn" data-v="off_plan" onclick="toggleOpPlan(this)">✗ Fora do plano</button>
+            </div>
             </div>
 
             <!-- Gatilho psicológico (mantido pré-clique) -->
@@ -743,10 +758,12 @@ tr:hover td{background:var(--s2)}
             </div>
 
             <!-- Risco planejado -->
+            <div data-minimo-hide>
             <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:4px">Risco planejado (pts) *</div>
             <div style="display:grid;grid-template-columns:1fr 90px;gap:6px;margin-bottom:0">
               <input class="add-inp" id="op-risk" type="number" min="0" placeholder="Stop absoluto (ex: 15)" style="width:100%" oninput="calcOpResult();checkPreEntry()">
               <div class="add-inp" id="op-rmult" style="width:100%;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:11px;background:var(--s3)">R: —</div>
+            </div>
             </div>
           </div>
 
@@ -769,10 +786,12 @@ tr:hover td{background:var(--s2)}
             <div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:10px;margin-bottom:8px">
               <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Saída (Felling/PA)</div>
               <input class="add-inp" id="op-pts" type="number" placeholder="Pts (negativo se stop, ex: -10)" style="width:100%;margin-bottom:6px" oninput="calcOpResult()">
+              <div data-minimo-hide>
               <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:4px">Saída PF (opcional — só se entrou nas 2 contas)</div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
                 <input class="add-inp" id="op-pts-pf" type="number" step="0.5" placeholder="Pts PF" style="width:100%" oninput="calcOpResult()">
                 <input class="add-inp" id="op-lots-pf" type="number" placeholder="Lotes PF" min="1" step="1" style="width:100%" oninput="calcOpResult()">
+              </div>
               </div>
               <div id="op-calc-result" style="font-size:10px;color:var(--dim);margin-top:8px;padding:6px 9px;background:var(--s3);border-radius:6px;display:none">
                 Resultado: <span id="op-calc-val" style="color:var(--hi);font-weight:500">—</span>
@@ -780,7 +799,7 @@ tr:hover td{background:var(--s2)}
             </div>
 
             <!-- E2/E3 (só faz sentido pós — você só sabe depois se aconteceu) -->
-            <div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:10px;margin-bottom:8px">
+            <div data-minimo-hide style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:10px;margin-bottom:8px">
               <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:5px">
                 <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--teal)">🏗️ Adições no trade (E2/E3)</div>
                 <div style="font-size:8px;color:var(--dim)">Total: <span id="op-total-lots" style="color:var(--hi)">—</span></div>
@@ -801,6 +820,8 @@ tr:hover td{background:var(--s2)}
             <!-- lote total derivado -->
             <input type="hidden" id="op-lots">
 
+            <!-- Campos ocultáveis no modo mínimo -->
+            <div data-minimo-hide>
             <!-- MFE / MAE -->
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
               <div>
@@ -889,6 +910,16 @@ tr:hover td{background:var(--s2)}
               <div class="adh-item" onclick="toggleRossB(this)" data-k="ross_b" id="ross-b-item"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">A leitura desta entrada veio do Ross</div></div>
               <div style="font-size:8px;color:var(--dim);line-height:1.5;margin-top:6px">Marque APENAS se a leitura veio dele. Se você já tinha o setup e ele entrou junto, NÃO marque. Ross é gatilho banido — marcar aqui = falha no Score do dia.</div>
             </div>
+            </div><!-- fim data-minimo-hide -->
+
+            <!-- VIOLAÇÃO — campo manual para modo mínimo -->
+            <div style="background:rgba(232,64,64,.06);border:1px solid rgba(232,64,64,.2);border-radius:8px;padding:10px;margin-bottom:8px">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+                <input type="checkbox" id="op-violacao-check" onchange="document.getElementById('op-violacao-just').style.display=this.checked?'block':'none'" style="width:16px;height:16px;accent-color:var(--red)">
+                <div style="font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--red);font-weight:500">Violei regra do modelo?</div>
+              </div>
+              <textarea id="op-violacao-just" class="op-note-inp" placeholder="Qual regra? O que aconteceu?" style="width:100%;min-height:30px;display:none;font-size:10px" oninput="autoResizeTA(this)"></textarea>
+            </div>
 
             <!-- ISSUE LOG — apenas erros que não são medidos por outro campo -->
             <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--red);margin-bottom:6px">📓 Erro de execução (se houve)</div>
@@ -902,7 +933,9 @@ tr:hover td{background:var(--s2)}
             </div>
 
             <!-- Narrativa -->
+            <div data-minimo-hide>
             <textarea class="op-note-inp" id="new-op-note" placeholder="Narrativa: o que pensava, corpo, contexto, correção…" style="width:100%;min-height:40px;margin-top:6px" oninput="autoResizeTA(this)"></textarea>
+            </div>
           </div>
           <!-- fim post-block -->
 
@@ -1073,6 +1106,11 @@ tr:hover td{background:var(--s2)}
           <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim)">Dia do teste</div>
           <div style="font-family:'Fraunces',serif;font-size:1.1rem;color:var(--teal)" id="dias-pos-reset">—</div>
         </div>
+      </div>
+      <!-- TOGGLE INCLUIR IMPORTADOS -->
+      <div style="display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--s2);border:1px solid var(--b1);border-radius:8px;margin-bottom:10px">
+        <input type="checkbox" id="dash-include-imported" onchange="dashIncludeImported=this.checked;renderDash();renderLog();" style="width:14px;height:14px;accent-color:var(--dim)">
+        <label for="dash-include-imported" style="font-size:9px;color:var(--dim);letter-spacing:.5px;cursor:pointer">Incluir ops importadas (sem registro qualitativo) nas métricas</label>
       </div>
       <div class="chart-card" style="text-align:center">
         <div class="ct">Score unificado do período</div>
@@ -1361,6 +1399,12 @@ function getFaseFPA(dateISO){
 // Filtra allData por fase para métricas F+PA. PF sempre inclui tudo.
 // mode: 'atual' (só pos_reset F+PA) ou 'consolidado' (tudo)
 let dashFaseMode='atual';
+let dashIncludeImported=false;
+// Filtra ops de um dia: remove importadas (sem registro qualitativo) quando toggle desligado
+function filterOpsQualitative(ops){
+  if(dashIncludeImported) return ops;
+  return (ops||[]).filter(o=>o.fase_detalhe!=='sem_registro_qualitativo');
+}
 function filterByFase(data,mode){
   if(mode==='consolidado') return data;
   // modo atual: filtra dias F+PA para só pos_reset
@@ -1372,6 +1416,135 @@ function filterByFase(data,mode){
         t_ops_detail:(d.t_ops_detail||[]).map(op=>({...op,_fase_excluded_fpa:true}))};
     }
     return d;
+  });
+}
+
+// ── IMPORTAÇÃO DE 91 OPS FACTUAIS (pós-reset 27/08–09/10) ──────
+// Mapeamento: 70537644 → Felling, 70571813 → PA-Price (fonte de verdade é conta_num)
+const IMPORT_ACCT_MAP={'70537644':'felling','70571813':'pa'};
+const IMPORT_OPS_RAW=[{"cn":"70537644","d":"2026-08-27","ha":"09:25:07","hf":"09:55:23","to":"30min16s","l":"V","q":20,"pc":5161.0,"pv":5151.75,"r":-1850.0,"rp":-9.25,"nb":1},{"cn":"70571813","d":"2026-08-27","ha":"09:25:09","hf":"09:55:23","to":"30min14s","l":"V","q":20,"pc":5161.0,"pv":5151.75,"r":-1850.0,"rp":-9.25,"nb":1},{"cn":"70537644","d":"2026-08-27","ha":"09:56:30","hf":"10:28:35","to":"32min5s","l":"C","q":20,"pc":5160.5,"pv":5150.5,"r":-2000.0,"rp":-10.0,"nb":2},{"cn":"70571813","d":"2026-08-27","ha":"09:56:56","hf":"10:28:35","to":"31min38s","l":"C","q":20,"pc":5160.75,"pv":5150.5,"r":-2050.0,"rp":-10.25,"nb":2},{"cn":"70537644","d":"2026-08-28","ha":"09:48:31","hf":"10:23:17","to":"34min45s","l":"C","q":10,"pc":5167.0,"pv":5189.0,"r":2200.0,"rp":22.0,"nb":3},{"cn":"70571813","d":"2026-08-28","ha":"09:48:53","hf":"10:23:30","to":"34min36s","l":"C","q":10,"pc":5166.5,"pv":5189.0,"r":2250.0,"rp":22.5,"nb":3},{"cn":"70537644","d":"2026-08-28","ha":"11:02:22","hf":"11:18:39","to":"16min17s","l":"C","q":20,"pc":5193.5,"pv":5198.5,"r":1000.0,"rp":5.0,"nb":4},{"cn":"70571813","d":"2026-08-28","ha":"11:02:38","hf":"11:18:44","to":"16min5s","l":"C","q":20,"pc":5193.75,"pv":5199.0,"r":1050.0,"rp":5.25,"nb":4},{"cn":"70537644","d":"2026-08-31","ha":"09:00:57","hf":"09:12:22","to":"11min24s","l":"C","q":30,"pc":5215.17,"pv":5202.0,"r":-3950.0,"rp":-13.17,"nb":5},{"cn":"70571813","d":"2026-08-31","ha":"09:00:57","hf":"09:12:22","to":"11min24s","l":"C","q":30,"pc":5214.83,"pv":5201.5,"r":-4000.0,"rp":-13.33,"nb":5},{"cn":"70537644","d":"2026-09-01","ha":"09:22:57","hf":"10:16:19","to":"53min21s","l":"C","q":20,"pc":5221.5,"pv":5209.5,"r":-2400.0,"rp":-12.0,"nb":6},{"cn":"70571813","d":"2026-09-01","ha":"09:22:57","hf":"10:16:19","to":"53min21s","l":"C","q":20,"pc":5221.5,"pv":5209.5,"r":-2400.0,"rp":-12.0,"nb":6},{"cn":"70537644","d":"2026-09-01","ha":"10:19:45","hf":"10:23:26","to":"3min40s","l":"C","q":20,"pc":5210.0,"pv":5207.0,"r":-600.0,"rp":-3.0,"nb":7},{"cn":"70571813","d":"2026-09-01","ha":"10:19:45","hf":"10:23:46","to":"4min","l":"C","q":20,"pc":5210.0,"pv":5207.0,"r":-600.0,"rp":-3.0,"nb":7},{"cn":"70537644","d":"2026-09-01","ha":"11:34:52","hf":"11:44:55","to":"10min3s","l":"V","q":30,"pc":5175.0,"pv":5178.67,"r":1100.0,"rp":3.67,"nb":8},{"cn":"70571813","d":"2026-09-01","ha":"11:34:58","hf":"11:44:59","to":"10min","l":"V","q":30,"pc":5175.0,"pv":5178.5,"r":1050.0,"rp":3.5,"nb":8},{"cn":"70571813","d":"2026-09-02","ha":"09:17:03","hf":"09:27:49","to":"10min46s","l":"V","q":10,"pc":5188.5,"pv":5188.5,"r":0.0,"rp":0.0,"nb":9},{"cn":"70537644","d":"2026-09-02","ha":"09:19:40","hf":"09:31:10","to":"11min29s","l":"V","q":10,"pc":5190.0,"pv":5190.0,"r":0.0,"rp":0.0,"nb":9},{"cn":"70537644","d":"2026-09-02","ha":"10:20:10","hf":"10:26:31","to":"6min21s","l":"C","q":10,"pc":5190.0,"pv":5175.0,"r":-1500.0,"rp":-15.0,"nb":10},{"cn":"70571813","d":"2026-09-02","ha":"10:20:10","hf":"10:26:31","to":"6min21s","l":"C","q":10,"pc":5190.0,"pv":5175.0,"r":-1500.0,"rp":-15.0,"nb":10},{"cn":"70537644","d":"2026-09-02","ha":"10:26:52","hf":"10:52:28","to":"25min36s","l":"V","q":30,"pc":5164.0,"pv":5172.83,"r":2650.0,"rp":8.83,"nb":11},{"cn":"70571813","d":"2026-09-02","ha":"10:26:55","hf":"10:52:17","to":"25min22s","l":"V","q":30,"pc":5164.5,"pv":5172.5,"r":2400.0,"rp":8.0,"nb":11},{"cn":"70537644","d":"2026-09-03","ha":"09:03:12","hf":"09:14:12","to":"10min59s","l":"C","q":30,"pc":5107.33,"pv":5108.83,"r":450.0,"rp":1.5,"nb":12},{"cn":"70571813","d":"2026-09-03","ha":"09:03:16","hf":"09:14:25","to":"11min9s","l":"C","q":20,"pc":5107.75,"pv":5112.5,"r":950.0,"rp":4.75,"nb":12},{"cn":"70537644","d":"2026-09-03","ha":"10:21:50","hf":"11:06:55","to":"45min5s","l":"V","q":10,"pc":5132.0,"pv":5132.0,"r":0.0,"rp":0.0,"nb":13},{"cn":"70571813","d":"2026-09-03","ha":"10:21:56","hf":"11:06:55","to":"44min58s","l":"V","q":10,"pc":5132.0,"pv":5132.0,"r":0.0,"rp":0.0,"nb":13},{"cn":"70537644","d":"2026-09-04","ha":"09:30:01","hf":"09:53:39","to":"23min38s","l":"C","q":10,"pc":5148.5,"pv":5148.5,"r":0.0,"rp":0.0,"nb":14},{"cn":"70571813","d":"2026-09-04","ha":"09:51:27","hf":"09:53:53","to":"2min26s","l":"C","q":10,"pc":5154.0,"pv":5148.0,"r":-600.0,"rp":-6.0,"nb":14},{"cn":"70537644","d":"2026-09-04","ha":"09:55:27","hf":"10:11:20","to":"15min52s","l":"C","q":20,"pc":5154.0,"pv":5164.5,"r":2100.0,"rp":10.5,"nb":15},{"cn":"70571813","d":"2026-09-04","ha":"09:55:35","hf":"10:10:23","to":"14min47s","l":"C","q":20,"pc":5154.0,"pv":5164.0,"r":2000.0,"rp":10.0,"nb":15},{"cn":"70537644","d":"2026-09-08","ha":"09:14:56","hf":"09:49:15","to":"34min19s","l":"V","q":10,"pc":5131.0,"pv":5152.0,"r":2100.0,"rp":21.0,"nb":16},{"cn":"70571813","d":"2026-09-08","ha":"09:15:04","hf":"09:49:15","to":"34min11s","l":"V","q":10,"pc":5131.0,"pv":5153.5,"r":2250.0,"rp":22.5,"nb":16},{"cn":"70537644","d":"2026-09-09","ha":"10:04:55","hf":"10:32:15","to":"27min20s","l":"C","q":10,"pc":5116.0,"pv":5116.0,"r":0.0,"rp":0.0,"nb":17},{"cn":"70571813","d":"2026-09-09","ha":"10:05:48","hf":"10:31:33","to":"25min45s","l":"C","q":10,"pc":5117.0,"pv":5117.0,"r":0.0,"rp":0.0,"nb":17},{"cn":"70537644","d":"2026-09-10","ha":"09:17:22","hf":"09:31:16","to":"13min54s","l":"V","q":10,"pc":5155.0,"pv":5155.0,"r":0.0,"rp":0.0,"nb":18},{"cn":"70571813","d":"2026-09-10","ha":"09:17:23","hf":"09:31:19","to":"13min56s","l":"V","q":10,"pc":5155.0,"pv":5155.0,"r":0.0,"rp":0.0,"nb":18},{"cn":"70537644","d":"2026-09-10","ha":"09:36:52","hf":"09:48:30","to":"11min37s","l":"V","q":20,"pc":5152.5,"pv":5157.52,"r":1005.0,"rp":5.02,"nb":19},{"cn":"70571813","d":"2026-09-10","ha":"09:37:03","hf":"09:48:33","to":"11min29s","l":"V","q":20,"pc":5152.0,"pv":5157.5,"r":1100.0,"rp":5.5,"nb":19},{"cn":"70537644","d":"2026-09-11","ha":"09:30:03","hf":"09:40:38","to":"10min35s","l":"C","q":30,"pc":5128.83,"pv":5115.5,"r":-4000.0,"rp":-13.33,"nb":20},{"cn":"70571813","d":"2026-09-11","ha":"09:30:03","hf":"09:40:42","to":"10min39s","l":"C","q":30,"pc":5128.67,"pv":5115.0,"r":-4100.0,"rp":-13.67,"nb":20},{"cn":"70537644","d":"2026-09-14","ha":"09:08:58","hf":"09:30:00","to":"21min1s","l":"V","q":10,"pc":5180.0,"pv":5180.0,"r":0.0,"rp":0.0,"nb":21},{"cn":"70571813","d":"2026-09-14","ha":"09:09:04","hf":"09:30:00","to":"20min55s","l":"V","q":10,"pc":5180.0,"pv":5180.0,"r":0.0,"rp":0.0,"nb":21},{"cn":"70537644","d":"2026-09-14","ha":"10:08:41","hf":"10:17:36","to":"8min54s","l":"V","q":20,"pc":5183.0,"pv":5193.0,"r":2000.0,"rp":10.0,"nb":22},{"cn":"70571813","d":"2026-09-14","ha":"10:08:46","hf":"10:17:50","to":"9min4s","l":"V","q":20,"pc":5183.0,"pv":5193.0,"r":2000.0,"rp":10.0,"nb":22},{"cn":"70537644","d":"2026-09-15","ha":"11:19:07","hf":"11:33:22","to":"14min14s","l":"C","q":10,"pc":5167.0,"pv":5167.0,"r":0.0,"rp":0.0,"nb":23},{"cn":"70571813","d":"2026-09-15","ha":"11:19:07","hf":"11:33:22","to":"14min14s","l":"C","q":10,"pc":5167.0,"pv":5167.0,"r":0.0,"rp":0.0,"nb":23},{"cn":"70537644","d":"2026-09-15","ha":"11:35:20","hf":"12:02:15","to":"26min55s","l":"C","q":20,"pc":5169.0,"pv":5179.0,"r":2000.0,"rp":10.0,"nb":24},{"cn":"70571813","d":"2026-09-15","ha":"11:35:20","hf":"12:02:16","to":"26min55s","l":"C","q":20,"pc":5169.0,"pv":5179.0,"r":2000.0,"rp":10.0,"nb":24},{"cn":"70537644","d":"2026-09-17","ha":"09:05:20","hf":"10:30:01","to":"1h24min40s","l":"C","q":10,"pc":5146.0,"pv":5161.0,"r":1500.0,"rp":15.0,"nb":25},{"cn":"70571813","d":"2026-09-17","ha":"09:05:25","hf":"10:30:04","to":"1h24min38s","l":"C","q":10,"pc":5146.0,"pv":5161.0,"r":1500.0,"rp":15.0,"nb":25},{"cn":"70537644","d":"2026-09-21","ha":"10:15:00","hf":"11:26:33","to":"1h11min32s","l":"C","q":20,"pc":5120.5,"pv":5128.0,"r":1500.0,"rp":7.5,"nb":26},{"cn":"70571813","d":"2026-09-21","ha":"10:15:00","hf":"11:26:35","to":"1h11min34s","l":"C","q":10,"pc":5118.0,"pv":5128.0,"r":1000.0,"rp":10.0,"nb":26},{"cn":"70537644","d":"2026-09-22","ha":"09:21:44","hf":"10:05:48","to":"44min3s","l":"V","q":20,"pc":5132.95,"pv":5142.75,"r":1960.0,"rp":9.8,"nb":27},{"cn":"70571813","d":"2026-09-22","ha":"09:22:53","hf":"10:05:10","to":"42min17s","l":"V","q":20,"pc":5132.5,"pv":5142.75,"r":2050.0,"rp":10.25,"nb":27},{"cn":"70537644","d":"2026-09-24","ha":"12:17:48","hf":"12:22:04","to":"4min15s","l":"V","q":10,"pc":5197.5,"pv":5197.5,"r":0.0,"rp":0.0,"nb":28},{"cn":"70571813","d":"2026-09-24","ha":"12:17:48","hf":"12:22:28","to":"4min39s","l":"V","q":10,"pc":5197.5,"pv":5197.5,"r":0.0,"rp":0.0,"nb":28},{"cn":"70537644","d":"2026-09-24","ha":"13:16:17","hf":"13:21:25","to":"5min8s","l":"V","q":10,"pc":5191.5,"pv":5194.0,"r":250.0,"rp":2.5,"nb":29},{"cn":"70571813","d":"2026-09-24","ha":"13:16:30","hf":"13:21:33","to":"5min2s","l":"V","q":10,"pc":5191.5,"pv":5193.5,"r":200.0,"rp":2.0,"nb":29},{"cn":"70537644","d":"2026-09-25","ha":"10:26:46","hf":"10:43:48","to":"17min2s","l":"V","q":10,"pc":5203.0,"pv":5203.0,"r":0.0,"rp":0.0,"nb":30},{"cn":"70571813","d":"2026-09-25","ha":"10:26:55","hf":"10:43:48","to":"16min53s","l":"V","q":10,"pc":5203.0,"pv":5202.5,"r":-50.0,"rp":-0.5,"nb":30},{"cn":"70537644","d":"2026-09-25","ha":"10:50:09","hf":"10:54:16","to":"4min7s","l":"V","q":10,"pc":5198.5,"pv":5197.5,"r":-100.0,"rp":-1.0,"nb":31},{"cn":"70571813","d":"2026-09-25","ha":"10:50:14","hf":"10:54:21","to":"4min7s","l":"V","q":10,"pc":5198.5,"pv":5197.5,"r":-100.0,"rp":-1.0,"nb":31},{"cn":"70537644","d":"2026-09-28","ha":"09:59:19","hf":"10:22:08","to":"22min48s","l":"C","q":10,"pc":5206.0,"pv":5223.5,"r":1750.0,"rp":17.5,"nb":32},{"cn":"70571813","d":"2026-09-28","ha":"09:59:24","hf":"10:22:08","to":"22min44s","l":"C","q":10,"pc":5206.0,"pv":5223.5,"r":1750.0,"rp":17.5,"nb":32},{"cn":"70537644","d":"2026-10-01","ha":"10:19:33","hf":"10:27:02","to":"7min29s","l":"V","q":10,"pc":5225.0,"pv":5222.0,"r":-300.0,"rp":-3.0,"nb":33},{"cn":"70571813","d":"2026-10-01","ha":"10:19:36","hf":"10:27:04","to":"7min28s","l":"V","q":10,"pc":5225.0,"pv":5222.0,"r":-300.0,"rp":-3.0,"nb":33},{"cn":"70537644","d":"2026-10-01","ha":"10:58:14","hf":"11:02:24","to":"4min10s","l":"V","q":20,"pc":5227.0,"pv":5221.5,"r":-1100.0,"rp":-5.5,"nb":34},{"cn":"70571813","d":"2026-10-01","ha":"10:58:24","hf":"11:02:26","to":"4min1s","l":"V","q":20,"pc":5227.0,"pv":5222.0,"r":-1000.0,"rp":-5.0,"nb":34},{"cn":"70571813","d":"2026-10-01","ha":"11:03:09","hf":"11:05:00","to":"1min51s","l":"V","q":10,"pc":5226.0,"pv":5225.0,"r":-100.0,"rp":-1.0,"nb":35},{"cn":"70537644","d":"2026-10-01","ha":"11:03:11","hf":"11:05:06","to":"1min55s","l":"V","q":10,"pc":5225.5,"pv":5225.5,"r":0.0,"rp":0.0,"nb":35},{"cn":"70537644","d":"2026-10-01","ha":"12:00:25","hf":"12:34:23","to":"33min58s","l":"V","q":20,"pc":5260.0,"pv":5248.0,"r":-2400.0,"rp":-12.0,"nb":36},{"cn":"70571813","d":"2026-10-01","ha":"12:00:31","hf":"12:34:28","to":"33min57s","l":"V","q":20,"pc":5261.0,"pv":5248.5,"r":-2500.0,"rp":-12.5,"nb":36},{"cn":"70537644","d":"2026-10-02","ha":"09:01:00","hf":"09:09:18","to":"8min17s","l":"V","q":20,"pc":5249.0,"pv":5254.25,"r":1050.0,"rp":5.25,"nb":37},{"cn":"70571813","d":"2026-10-02","ha":"09:01:06","hf":"09:09:18","to":"8min11s","l":"V","q":20,"pc":5249.0,"pv":5254.25,"r":1050.0,"rp":5.25,"nb":37},{"cn":"70537644","d":"2026-10-02","ha":"09:42:14","hf":"10:43:28","to":"1h1min13s","l":"V","q":30,"pc":5255.5,"pv":5250.17,"r":-1600.0,"rp":-5.33,"nb":38},{"cn":"70571813","d":"2026-10-02","ha":"09:42:14","hf":"10:43:42","to":"1h1min27s","l":"V","q":30,"pc":5257.0,"pv":5250.5,"r":-1950.0,"rp":-6.5,"nb":38},{"cn":"70537644","d":"2026-10-02","ha":"10:49:55","hf":"10:53:29","to":"3min34s","l":"V","q":20,"pc":5260.5,"pv":5256.75,"r":-750.0,"rp":-3.75,"nb":39},{"cn":"70571813","d":"2026-10-02","ha":"10:50:04","hf":"10:53:39","to":"3min35s","l":"V","q":20,"pc":5260.5,"pv":5256.25,"r":-850.0,"rp":-4.25,"nb":39},{"cn":"70537644","d":"2026-10-02","ha":"10:57:57","hf":"11:00:53","to":"2min56s","l":"V","q":30,"pc":5253.45,"pv":5255.17,"r":515.0,"rp":1.72,"nb":40},{"cn":"70571813","d":"2026-10-02","ha":"10:58:06","hf":"11:00:55","to":"2min49s","l":"V","q":30,"pc":5253.5,"pv":5254.5,"r":300.0,"rp":1.0,"nb":40},{"cn":"70537644","d":"2026-10-02","ha":"11:05:30","hf":"11:07:49","to":"2min18s","l":"V","q":20,"pc":5252.5,"pv":5253.25,"r":150.0,"rp":0.75,"nb":41},{"cn":"70571813","d":"2026-10-02","ha":"11:05:37","hf":"11:08:10","to":"2min33s","l":"V","q":20,"pc":5252.5,"pv":5253.25,"r":150.0,"rp":0.75,"nb":41},{"cn":"70537644","d":"2026-10-02","ha":"16:17:16","hf":"18:00:47","to":"1h43min31s","l":"V","q":30,"pc":5237.0,"pv":5241.67,"r":1400.0,"rp":4.67,"nb":42},{"cn":"70571813","d":"2026-10-02","ha":"16:17:35","hf":"18:00:54","to":"1h43min18s","l":"V","q":30,"pc":5237.32,"pv":5241.5,"r":1255.0,"rp":4.18,"nb":42},{"cn":"70537644","d":"2026-10-06","ha":"09:53:23","hf":"10:32:38","to":"39min15s","l":"C","q":20,"pc":4977.25,"pv":4982.0,"r":950.0,"rp":4.75,"nb":43},{"cn":"70571813","d":"2026-10-06","ha":"09:53:23","hf":"10:32:38","to":"39min15s","l":"C","q":20,"pc":4977.0,"pv":4982.0,"r":1000.0,"rp":5.0,"nb":43},{"cn":"70537644","d":"2026-10-07","ha":"09:31:29","hf":"10:32:47","to":"1h1min17s","l":"C","q":20,"pc":5009.75,"pv":5014.5,"r":950.0,"rp":4.75,"nb":44},{"cn":"70571813","d":"2026-10-07","ha":"09:31:29","hf":"10:32:46","to":"1h1min16s","l":"C","q":20,"pc":5010.0,"pv":5014.5,"r":900.0,"rp":4.5,"nb":44},{"cn":"70537644","d":"2026-10-08","ha":"09:30:57","hf":"09:45:50","to":"14min53s","l":"V","q":6,"pc":5046.0,"pv":5046.0,"r":0.0,"rp":0.0,"nb":45},{"cn":"70537644","d":"2026-10-09","ha":"09:01:17","hf":"09:10:44","to":"9min26s","l":"C","q":10,"pc":5015.0,"pv":5025.0,"r":1000.0,"rp":10.0,"nb":46},{"cn":"70571813","d":"2026-10-09","ha":"09:01:20","hf":"09:10:44","to":"9min24s","l":"C","q":10,"pc":5015.0,"pv":5025.0,"r":1000.0,"rp":10.0,"nb":45}];
+const IMPORT_FIRST_DATE='2026-08-27';
+const IMPORT_LAST_DATE='2026-10-09';
+let importDone=false; // flag: import already ran in this session
+
+// Converte op compacta → formato interno t_ops_detail
+function importOpToInternal(raw){
+  const acct=IMPORT_ACCT_MAP[raw.cn]||'unknown';
+  const pts=raw.rp; // resultado_pct = pontos
+  const dir=raw.l==='C'?'long':'short';
+  return {
+    time:raw.ha.slice(0,5),
+    time_close:raw.hf.slice(0,5),
+    tempo_operacao:raw.to,
+    dir,
+    pts,
+    lots:raw.q,
+    e1_lots:raw.q,e2_lots:0,e3_lots:0,
+    result_brl:raw.r,
+    preco_compra:raw.pc,
+    preco_venda:raw.pv,
+    conta_num:raw.cn,
+    conta_nome:acct,
+    numero_op_broker:raw.nb,
+    // Campos qualitativos explicitamente NULL
+    mfe:null,mae:null,risk_planned:null,capture_pct:null,r_multiple:null,
+    conviction:null,plan_adherence:null,error_tags:null,note:null,
+    entry_states:null,adh_items:null,partial_reasons:null,exit_reasons:null,
+    setups:null,segs:null,ifr:null,ross_b:null,regime:null,
+    // Marcação de importação
+    fase:'pos_reset',
+    fase_detalhe:'sem_registro_qualitativo',
+    fonte_importacao:'extrato_nelogica',
+    importado:true,
+    importado_em:'2026-10-10'
+  };
+}
+
+// Executa importação: agrupa por data, merge em allData, salva cada dia
+async function runImportOps(){
+  if(importDone){showToast('Importação já executada nesta sessão',true);return;}
+  const btn=document.getElementById('btn-import-ops');
+  if(btn){btn.disabled=true;btn.textContent='Importando…';}
+  try{
+    // Agrupa por data
+    const byDate={};
+    IMPORT_OPS_RAW.forEach(raw=>{
+      byDate[raw.d]=byDate[raw.d]||[];
+      byDate[raw.d].push(raw);
+    });
+    let imported=0,skipped=0;
+    for(const dateISO of Object.keys(byDate).sort()){
+      const rawOps=byDate[dateISO];
+      const existing=allData.find(d=>d.date_iso===dateISO)||{};
+      const existingOps=existing.t_ops_detail||[];
+      // Chave de dedup: conta_num + data + hora_abertura + numero_op_broker
+      const existingKeys=new Set(existingOps.map(o=>
+        `${o.conta_num||''}_${o.time||''}_${o.numero_op_broker||''}`
+      ));
+      const newOps=[];
+      rawOps.forEach(raw=>{
+        const key=`${raw.cn}_${raw.ha.slice(0,5)}_${raw.nb}`;
+        if(existingKeys.has(key)){skipped++;return;}
+        newOps.push(importOpToInternal(raw));
+        imported++;
+      });
+      if(!newOps.length) continue;
+      // Merge ops
+      const mergedOps=[...existingOps,...newOps];
+      // Compute t_felling, t_pa from ALL ops (existing + new) for this day
+      let tFelling=existing.t_felling||0, tPA=existing.t_pa||0;
+      newOps.forEach(op=>{
+        if(op.conta_nome==='felling') tFelling+=op.result_brl;
+        else if(op.conta_nome==='pa') tPA+=op.result_brl;
+      });
+      const d=new Date(dateISO+'T12:00:00');
+      const entry={
+        ...existing,
+        date_iso:dateISO,
+        date_label:existing.date_label||d.toLocaleDateString('pt-BR'),
+        day_of_week:existing.day_of_week!=null?existing.day_of_week:d.getDay(),
+        t_felling:tFelling,
+        t_pa:tPA,
+        t_result_fpa:tFelling+tPA,
+        t_ops_detail:mergedOps,
+        t_ops:mergedOps.length,
+        t_wins_ops:mergedOps.filter(o=>(o.pts||0)>0).length,
+        has_imported_ops:true,
+        fase_import:'pos_reset'
+      };
+      await saveToDB(entry);
+    }
+    importDone=true;
+    showToast(`✓ Importadas ${imported} ops (${skipped} duplicadas ignoradas)`);
+    if(btn){btn.textContent='✓ Importação concluída';btn.style.background='var(--green)';}
+    // Reload dashboard
+    renderDash();renderLog();
+  }catch(e){
+    showToast('Erro na importação: '+e.message,true);
+    if(btn){btn.disabled=false;btn.textContent='Importar 91 ops';}
+  }
+}
+
+// ── MODO MÍNIMO (tempo_restrito) ──────────────────────────
+let tempoRestritoHoje=false;
+function loadTempoRestrito(){
+  const saved=localStorage.getItem('sj_tempo_restrito_'+todayISO());
+  tempoRestritoHoje=saved==='1';
+}
+function toggleTempoRestrito(){
+  tempoRestritoHoje=!tempoRestritoHoje;
+  localStorage.setItem('sj_tempo_restrito_'+todayISO(),tempoRestritoHoje?'1':'0');
+  applyTempoRestrito();
+  showToast(tempoRestritoHoje?'Modo mínimo ativado — só campos essenciais':'Modo mínimo desativado — formulário completo');
+}
+function applyTempoRestrito(){
+  const toggle=document.getElementById('tempo-restrito-toggle');
+  if(toggle) toggle.checked=tempoRestritoHoje;
+  // Em modo mínimo: oculta bloco pré-clique "Aderência ao plano" e todo o bloco pós-trade
+  // Mantém visível: Convicção, Gatilho psicológico, Direção Probabilista (regime), horário/direção/E1
+  // No bloco pós (quando aberto): mantém Erros e oculta o resto
+  document.querySelectorAll('[data-minimo-hide]').forEach(el=>{
+    el.style.display=tempoRestritoHoje?'none':'';
   });
 }
 
@@ -1712,6 +1885,8 @@ window.addEventListener('DOMContentLoaded',()=>{
   setupUsage=JSON.parse(localStorage.getItem('setup_usage')||'{}');
   renderOpSetupTags('');
   loadTiredMode();
+  loadTempoRestrito();
+  applyTempoRestrito();
   installPWA();
   const SB_URL='https://oovjuojqolysfonqmqgh.supabase.co';
   const SB_KEY='sb_publishable_6nW470GtFjLDjH2GbZ2iug_JtOIQ-Nn';
@@ -2770,6 +2945,18 @@ function addOpCore(){
   }
   // Backfill flag: se está editando dia passado E confiança selecionada, marca
   const isBackfill=tradeEditDate&&tradeEditDate!==todayISO();
+  // Violação manual (campo do formulário — diferente do pendingViolation do coach)
+  const violacaoCheck=document.getElementById('op-violacao-check');
+  if(violacaoCheck&&violacaoCheck.checked){
+    const justEl=document.getElementById('op-violacao-just');
+    opData.violacao_modelo=true;
+    opData.violacao_manual=true;
+    opData.violacao_justificativa=justEl?justEl.value.trim():'';
+  }
+  // Modo mínimo: marca fase_detalhe
+  if(tempoRestritoHoje){
+    opData.fase_detalhe='modo_minimo';
+  }
   if(isBackfill&&window.backfillConfidence){
     opData.backfill=true;
     opData.backfill_confidence=window.backfillConfidence;
@@ -2914,6 +3101,9 @@ function clearNewOpForm(){
   const opT=document.getElementById('op-time');if(opT) opT.value='09:00';
   const addBtn=document.querySelector('button[onclick="addOp()"]');
   if(addBtn){addBtn.textContent='+ Registrar operação';addBtn.style.background='';}
+  // Reset violação manual
+  const vCheck=document.getElementById('op-violacao-check');if(vCheck){vCheck.checked=false;}
+  const vJust=document.getElementById('op-violacao-just');if(vJust){vJust.value='';vJust.style.display='none';}
   // Colapsa bloco pós-trade
   const post=document.getElementById('op-post-block');if(post) post.style.display='none';
   const closeBtn=document.getElementById('op-close-btn');if(closeBtn){closeBtn.style.display='block';closeBtn.textContent='▼ FECHEI O TRADE — PREENCHER DIAGNÓSTICO';}
@@ -3275,8 +3465,31 @@ async function connectSB(url,key){
   }catch(err){
     SB=null;
     document.getElementById('loader').style.display='none';
-    document.getElementById('setup').style.display='flex';
-    alert('Erro ao conectar: '+err.message);
+    const isTimeout=err instanceof TypeError||err.message?.includes('fetch')||err.message?.includes('network')||err.message?.includes('Failed to fetch')||err.message?.includes('timeout')||err.message?.includes('CORS');
+    if(isTimeout){
+      // Supabase provavelmente pausado por inatividade (plano free pausa após 7 dias sem queries)
+      const pauseDiv=document.createElement('div');
+      pauseDiv.style.cssText='position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center';
+      pauseDiv.innerHTML=`
+        <div style="font-size:40px;margin-bottom:16px">⏸️</div>
+        <div style="font-family:'Fraunces',serif;font-size:1.4rem;color:var(--hi);margin-bottom:12px">Banco de dados pausado</div>
+        <div style="font-size:11px;color:var(--dim);line-height:1.7;max-width:320px;margin-bottom:20px">
+          O Supabase (plano gratuito) pausa projetos inativos após 7 dias sem queries.<br><br>
+          <strong style="color:var(--gold)">Para reativar:</strong><br>
+          1. Acesse <a href="https://supabase.com/dashboard" target="_blank" style="color:var(--blue);text-decoration:underline">supabase.com/dashboard</a><br>
+          2. Selecione o projeto <strong>sistema-joey</strong><br>
+          3. Clique em <strong>"Restore project"</strong><br>
+          4. Aguarde ~2 min e recarregue esta página<br><br>
+          <span style="font-size:10px;color:var(--dim)">Erro: ${err.message||'TypeError (fetch failed)'}</span>
+        </div>
+        <button onclick="location.reload()" style="padding:10px 24px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-family:'Geist Mono',monospace;font-size:11px;cursor:pointer">🔄 Tentar novamente</button>
+        <button onclick="this.parentElement.remove();startOffline();" style="margin-top:8px;padding:8px 20px;background:var(--s2);color:var(--dim);border:1px solid var(--b1);border-radius:8px;font-family:'Geist Mono',monospace;font-size:10px;cursor:pointer">Continuar offline</button>
+      `;
+      document.body.appendChild(pauseDiv);
+    } else {
+      document.getElementById('setup').style.display='flex';
+      alert('Erro ao conectar: '+err.message);
+    }
   }
 }
 async function loadFromSB(){
@@ -3326,6 +3539,26 @@ function bootApp(){
   loadTodayForms();renderBriefing();renderAnchorPhrase();renderVisitEvolution();renderYesterdayReview();initNotifications();startNotifScheduler();
   // Set trade date selector default
   const tradeSel=document.getElementById('trade-date-sel');if(tradeSel) tradeSel.value=todayISO();
+  // Mostrar card de importação se há ops não importadas
+  checkShowImportCard();
+}
+function checkShowImportCard(){
+  const card=document.getElementById('import-ops-card');if(!card) return;
+  if(typeof IMPORT_OPS_RAW==='undefined'||!IMPORT_OPS_RAW.length){card.style.display='none';return;}
+  // Verifica se todas as ops já foram importadas
+  const existingOps=new Set();
+  allData.forEach(d=>(d.t_ops_detail||[]).forEach(o=>{
+    if(o.conta_num&&o.numero_op_broker) existingOps.add(`${o.conta_num}_${o.time||''}_${o.numero_op_broker}`);
+  }));
+  const pending=IMPORT_OPS_RAW.filter(raw=>{
+    const key=`${raw.cn}_${raw.ha.slice(0,5)}_${raw.nb}`;
+    return !existingOps.has(key);
+  });
+  card.style.display=pending.length>0?'block':'none';
+  const btn=document.getElementById('btn-import-ops');
+  if(btn&&pending.length<IMPORT_OPS_RAW.length){
+    btn.textContent=`Importar ${pending.length} ops restantes (${IMPORT_OPS_RAW.length-pending.length} já importadas)`;
+  }
 }
 function todayISO(){
   const n=new Date();
@@ -4229,7 +4462,10 @@ function updateDiasReset(){
   // Conta apenas dias úteis (seg-sex) com ops registradas pós-reset
   const tradeDays=allData.filter(d=>d.date_iso>=FPA_RESET_DATE&&(d.t_ops_detail||[]).length>0).length;
   el.textContent=tradeDays>0?tradeDays:'0';
-  el.title=`${diff} dias corridos desde ${FPA_RESET_DATE} · ${tradeDays} dias com ops`;
+  el.title=`Dia ${tradeDays} do teste pós-reset (F+PA) · ${diff} dias corridos desde ${FPA_RESET_DATE}`;
+  // Atualiza label
+  const lbl=el.parentElement?.querySelector('div:first-child');
+  if(lbl) lbl.textContent=`Dia do teste (F+PA)`;
 }
 function getFiltered(){if(currentPeriod==='all') return[...allData];const cut=new Date(),days={week:7,month:30,quarter:90}[currentPeriod];cut.setDate(cut.getDate()-days);return allData.filter(d=>new Date(d.date_iso)>=cut);}
 
@@ -4748,7 +4984,7 @@ function renderMoodDeltaPanel(){
 
 function renderSetupEfficiency(){
   const el=document.getElementById('kpi-setups');if(!el) return;
-  const allOps=[];allData.forEach(d=>(d.t_ops_detail||[]).forEach(op=>{if(op.setups&&op.setups.length) allOps.push(op);}));
+  const allOps=[];allData.forEach(d=>filterOpsQualitative(d.t_ops_detail).forEach(op=>{if(op.setups&&op.setups.length) allOps.push(op);}));
   const bySetup={};
   allOps.forEach(op=>(op.setups||[]).forEach(s=>{
     if(!bySetup[s]) bySetup[s]={pts:0,brl:0,n:0,w:0,nBrl:0};
@@ -4797,8 +5033,8 @@ function renderBehavKPIs(data){
   let totalItems=0,doneItems=0;
   pilarData.forEach(d=>{PILAR_KEYS.forEach(k=>{const arr=d.pilares[k]||[];totalItems+=arr.length;doneItems+=arr.filter(i=>i.done).length;});});
   const pilarRate=totalItems>0?Math.round(doneItems/totalItems*100):null;
-  // Entry state distribution
-  const allOps=[];data.forEach(d=>(d.t_ops_detail||[]).forEach(op=>allOps.push(op)));
+  // Entry state distribution (exclui importadas por padrão)
+  const allOps=[];data.forEach(d=>filterOpsQualitative(d.t_ops_detail).forEach(op=>allOps.push(op)));
   const plannedOps=allOps.filter(op=>op.entry_state==='planejado');
   const dangerOps=allOps.filter(op=>['emotivo','medo_falha','desfocado','revanche'].includes(op.entry_state));
   const plannedWR=plannedOps.length?Math.round(plannedOps.filter(o=>o.pts>0).length/plannedOps.length*100):null;
@@ -4826,11 +5062,11 @@ function renderKPIBlock(data){
   const totalFPA=tdFPA.reduce((a,d)=>a+(d.t_result_fpa||0),0);
   const totalPF=tdPF.reduce((a,d)=>a+(d.t_result_pf||0),0);
   const avgWR=data.filter(d=>d.t_wr).length?avg(data.filter(d=>d.t_wr),'t_wr'):null;
-  // Adesão: média dos exec_score/adh_items das ops individuais
-  const allOps=[];data.forEach(d=>(d.t_ops_detail||[]).forEach(op=>allOps.push(op)));
-  const adhScores=allOps.filter(o=>o.adh_items).map(o=>{const v=Object.values(o.adh_items);return v.length?v.filter(Boolean).length/v.length*10:5;});
+  // Adesão: média dos exec_score/adh_items das ops individuais (exclui importadas)
+  const allOpsQ=[];data.forEach(d=>filterOpsQualitative(d.t_ops_detail).forEach(op=>allOpsQ.push(op)));
+  const adhScores=allOpsQ.filter(o=>o.adh_items).map(o=>{const v=Object.values(o.adh_items);return v.length?v.filter(Boolean).length/v.length*10:5;});
   const avgAdhOp=adhScores.length?adhScores.reduce((a,v)=>a+v,0)/adhScores.length:null;
-  const execScores=allOps.filter(o=>o.exec_score).map(o=>o.exec_score);
+  const execScores=allOpsQ.filter(o=>o.exec_score).map(o=>o.exec_score);
   const avgExec=execScores.length?execScores.reduce((a,v)=>a+v,0)/execScores.length:null;
   // Tendência energia: últimos 5 vs anteriores
   const sorted5=data.slice(-5),sorted5p=data.slice(-10,-5);
@@ -4868,7 +5104,7 @@ function renderInsightsBlock(data){
   if(avgE>=7) strengths.push('energia alta');if(avgD>=7) strengths.push('disciplina forte');if(avgAdh>=7) strengths.push('adesão ao sistema');if(streak>=7) strengths.push('consistência');
   if(avgE<5) gaps.push('energia baixa');if(avgD<5) gaps.push('disciplina');if(avgAdh<5) gaps.push('adesão');if(streak<3) gaps.push('consistência do hábito');
   // Entry state insight
-  const allOps=[];data.forEach(d=>(d.t_ops_detail||[]).forEach(op=>allOps.push({...op,date:d.date_iso})));
+  const allOps=[];data.forEach(d=>filterOpsQualitative(d.t_ops_detail).forEach(op=>allOps.push({...op,date:d.date_iso})));
   const byState={};allOps.filter(op=>op.entry_state).forEach(op=>{if(!byState[op.entry_state]) byState[op.entry_state]={pts:0,n:0};byState[op.entry_state].pts+=op.pts;byState[op.entry_state].n++;});
   const stateEntries=Object.entries(byState).map(([s,v])=>({state:s,avg:v.pts/v.n,n:v.n})).sort((a,b)=>b.avg-a.avg);
   const bestState=stateEntries[0],worstState=stateEntries[stateEntries.length-1];
@@ -4891,7 +5127,7 @@ function renderStateResChart(data){
   const c=document.getElementById('c-state-res');if(!c)return;
   const ctx=c.getContext('2d');const W=c.parentElement.offsetWidth-30;
   c.width=W*2;c.height=110*2;ctx.scale(2,2);const w=W,h=110;ctx.clearRect(0,0,w,h);
-  const allOps=[];data.forEach(d=>(d.t_ops_detail||[]).forEach(op=>{if(op.entry_state) allOps.push(op);}));
+  const allOps=[];data.forEach(d=>filterOpsQualitative(d.t_ops_detail).forEach(op=>{if(op.entry_state) allOps.push(op);}));
   const fallback=document.getElementById('state-res-fallback');
   if(!allOps.length){
     c.style.display='none';
@@ -5032,7 +5268,7 @@ function renderSequenciaPanel(data){
 function renderStatsPanel(){
   const el=document.getElementById('panel-stats');if(!el) return;
   const allOps=[];
-  allData.forEach(d=>(d.t_ops_detail||[]).forEach(op=>allOps.push({...op,date:d.date_iso})));
+  allData.forEach(d=>filterOpsQualitative(d.t_ops_detail).forEach(op=>allOps.push({...op,date:d.date_iso})));
   if(allOps.length<5){
     el.innerHTML='<div style="font-size:10px;color:var(--dim);text-align:center;padding:8px;background:var(--s1);border:1px solid var(--b1);border-radius:var(--r)">Mín. 5 operações para análise estatística. Registre MFE em cada op para análise de captura.</div>';
     return;
@@ -5167,6 +5403,23 @@ function renderLog(){
       ctx.beginPath();ctx.moveTo(pad.l,y0);ctx.lineTo(pad.l+cw,y0);
       ctx.strokeStyle='rgba(100,110,140,.2)';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.stroke();ctx.setLineDash([]);
       ctx.fillStyle='rgba(100,110,140,.3)';ctx.font='8px Geist Mono';ctx.fillText('R$ 0',pad.l,y0-4);
+      // ── FAIXA CINZA: período importado (sem registro qualitativo) ──
+      if(typeof IMPORT_FIRST_DATE!=='undefined'&&typeof IMPORT_LAST_DATE!=='undefined'){
+        const iStart=td.findIndex(d=>d.date_iso>=IMPORT_FIRST_DATE);
+        let iEnd=td.length-1;for(let k=td.length-1;k>=0;k--){if(td[k].date_iso<=IMPORT_LAST_DATE){iEnd=k;break;}}
+        if(iStart>=0&&iEnd>=iStart){
+          const x1=xOf(Math.max(0,iStart-0.4)),x2=xOf(Math.min(td.length-1,iEnd+0.4));
+          ctx.fillStyle='rgba(100,110,140,.08)';
+          ctx.fillRect(x1,pad.t,x2-x1,ch);
+          // Bordas tracejadas
+          ctx.strokeStyle='rgba(100,110,140,.15)';ctx.lineWidth=1;ctx.setLineDash([3,3]);
+          ctx.beginPath();ctx.moveTo(x1,pad.t);ctx.lineTo(x1,pad.t+ch);ctx.stroke();
+          ctx.beginPath();ctx.moveTo(x2,pad.t);ctx.lineTo(x2,pad.t+ch);ctx.stroke();
+          ctx.setLineDash([]);
+          // Label
+          ctx.fillStyle='rgba(100,110,140,.4)';ctx.font='7px Geist Mono';ctx.fillText('importado',x1+3,pad.t+ch-4);
+        }
+      }
       // Draw line with glow effect
       const drawLine=(ser,color,lw=2.5)=>{
         if(ser.length<2) return;
