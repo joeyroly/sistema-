@@ -1491,11 +1491,11 @@ async function runImportOps(){
       if(!newOps.length) continue;
       // Merge ops
       const mergedOps=[...existingOps,...newOps];
-      // Compute t_felling, t_pa from ALL ops (existing + new) for this day
-      let tFelling=existing.t_felling||0, tPA=existing.t_pa||0;
-      newOps.forEach(op=>{
-        if(op.conta_nome==='felling') tFelling+=op.result_brl;
-        else if(op.conta_nome==='pa') tPA+=op.result_brl;
+      // Recalcula t_felling, t_pa de TODAS as ops (evita double-counting se dia já tinha valor manual)
+      let tFelling=0, tPA=0;
+      mergedOps.forEach(op=>{
+        if(op.conta_nome==='felling') tFelling+=(op.result_brl||0);
+        else if(op.conta_nome==='pa') tPA+=(op.result_brl||0);
       });
       const d=new Date(dateISO+'T12:00:00');
       const entry={
