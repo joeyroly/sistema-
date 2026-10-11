@@ -1508,9 +1508,7 @@ async function runImportOps(){
         t_result_fpa:tFelling+tPA,
         t_ops_detail:mergedOps,
         t_ops:mergedOps.length,
-        t_wins_ops:mergedOps.filter(o=>(o.pts||0)>0).length,
-        has_imported_ops:true,
-        fase_import:'pos_reset'
+        t_wins_ops:mergedOps.filter(o=>(o.pts||0)>0).length
       };
       await saveToDB(entry);
     }
