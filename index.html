@@ -694,12 +694,8 @@ tr:hover td{background:var(--s2)}
           ═══════════════════════════════════════════════════════════ -->
           <div style="background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid rgba(140,100,240,.25);border-radius:10px;padding:12px;margin-bottom:11px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
-              <div style="display:flex;align-items:center;gap:0">
-                <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--purp);font-weight:500">📍 Antes de entrar</div>
-                <span style="color:var(--b1);margin:0 7px;font-size:10px">·</span>
-                <button id="btn-modo-simpl" onclick="toggleTempoRestrito()" title="Modo simplificado: só campos essenciais" style="background:none;border:none;padding:0;font-family:'Geist Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);cursor:pointer;transition:all .3s ease;opacity:.45;display:flex;align-items:center;gap:5px"><span id="simpl-dot" style="width:5px;height:5px;border-radius:50%;background:var(--dim);display:inline-block;transition:all .3s ease"></span>simplificado</button>
-              </div>
-              <div style="font-size:8px;color:var(--dim)">~10s</div>
+              <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--purp);font-weight:500">📍 Antes de entrar</div>
+              <button id="btn-modo-simpl" onclick="toggleTempoRestrito()" title="Modo simplificado: só campos essenciais" style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:5px 12px;min-height:38px;background:var(--s3);border:1px solid var(--b1);border-radius:8px;cursor:pointer;transition:all .25s ease;font-family:'Geist Mono',monospace"><span style="font-size:13px;line-height:1">⚡</span><span style="font-size:7px;letter-spacing:.5px;color:var(--dim);margin-top:2px;transition:color .25s" id="simpl-label">Simplificado</span></button>
             </div>
 
             <!-- Linha 1: horário, direção, E1 -->
@@ -786,12 +782,10 @@ tr:hover td{background:var(--s2)}
             <div style="background:var(--s2);border:1px solid var(--b1);border-radius:8px;padding:10px;margin-bottom:8px">
               <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Saída (Felling/PA)</div>
               <input class="add-inp" id="op-pts" type="number" placeholder="Pts (negativo se stop, ex: -10)" style="width:100%;margin-bottom:6px" oninput="calcOpResult()">
-              <div data-minimo-hide>
-              <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:4px">Saída PF (opcional — só se entrou nas 2 contas)</div>
+              <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:4px;margin-top:6px">Saída PF (tamanho diferente)</div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">
                 <input class="add-inp" id="op-pts-pf" type="number" step="0.5" placeholder="Pts PF" style="width:100%" oninput="calcOpResult()">
                 <input class="add-inp" id="op-lots-pf" type="number" placeholder="Lotes PF" min="1" step="1" style="width:100%" oninput="calcOpResult()">
-              </div>
               </div>
               <div id="op-calc-result" style="font-size:10px;color:var(--dim);margin-top:8px;padding:6px 9px;background:var(--s3);border-radius:6px;display:none">
                 Resultado: <span id="op-calc-val" style="color:var(--hi);font-weight:500">—</span>
@@ -953,8 +947,12 @@ tr:hover td{background:var(--s2)}
 
       <!-- HESITAÇÕES -->
       <div class="card">
-        <div class="card-lbl" style="color:var(--red)">⚠️ Trades lidos — não executados</div>
-        <div style="font-size:10px;color:var(--dim);margin-bottom:10px;line-height:1.5">Cada setup que você viu mas não entrou. Mede o custo real da hesitação.</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer" onclick="toggleHesSection()">
+          <div class="card-lbl" style="color:var(--red);margin-bottom:0">⚠️ Trades lidos — não executados</div>
+          <span id="hes-toggle-arrow" style="font-size:10px;color:var(--dim);transition:transform .2s">▸</span>
+        </div>
+        <div id="hes-section-body" style="display:none;margin-top:10px">
+        <div style="font-size:9px;color:var(--dim);margin-bottom:10px;line-height:1.5">Setup que viu mas não entrou — custo real da hesitação.</div>
         <div class="hes-list" id="hes-list"></div>
         <div style="display:grid;grid-template-columns:90px 56px 1fr auto;gap:6px;align-items:center;margin-bottom:8px">
           <input class="time-inp" id="hes-time" type="time" list="pregao-times" style="font-size:11px;padding:7px 6px">
@@ -980,6 +978,7 @@ tr:hover td{background:var(--s2)}
           <button class="os-btn" data-v="outro" onclick="toggleHesReason(this)">💬 Outro</button>
         </div>
         <!-- Segurança -->
+        <div data-minimo-hide>
         <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--gold);margin-bottom:6px">🛡️ Segurança</div>
         <div class="op-state-grid" id="hes-seg-btns" style="margin-bottom:8px">
           <button class="os-btn" data-v="1°2" onclick="toggleHesSeg(this)">1°2</button>
@@ -993,7 +992,9 @@ tr:hover td{background:var(--s2)}
           <button class="os-btn" data-v="D2" onclick="toggleHesSeg(this)">D2</button>
           <button class="os-btn" data-v="D10" onclick="toggleHesSeg(this)">D10</button>
         </div>
+        </div>
         <!-- IFR (hesitação) -->
+        <div data-minimo-hide>
         <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:6px">📊 IFR</div>
         <div class="op-state-grid" id="hes-ifr-btns" style="margin-bottom:8px">
           <button class="os-btn" data-v="5" onclick="toggleHesIfr(this)">5</button>
@@ -1006,10 +1007,12 @@ tr:hover td{background:var(--s2)}
           <button class="os-btn" data-v="BdR2" onclick="toggleHesIfr(this)">BdR2</button>
           <button class="os-btn" data-v="BdR10" onclick="toggleHesIfr(this)">BdR10</button>
         </div>
+        </div>
         <!-- Setup do trade não executado -->
         <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px">Setup que você viu</div>
         <input class="setup-search" id="hes-setup-search" type="text" placeholder="Buscar setup…" oninput="filterHesSetups(this.value)" style="margin-bottom:5px">
         <div style="max-height:80px;overflow-y:auto;margin-bottom:6px"><div class="setup-tags" id="hes-setup-tags"></div></div>
+        <div data-minimo-hide>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
           <div>
             <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--teal);margin-bottom:4px">MFE — máx a favor</div>
@@ -1021,6 +1024,7 @@ tr:hover td{background:var(--s2)}
           </div>
         </div>
         <textarea class="finp" id="hes-detail" placeholder="Detalhe: o pensamento exato, o contexto, o que travou internamente…" style="margin-bottom:8px;min-height:48px"></textarea>
+        </div>
         <button id="hes-add-btn" class="add-btn" onclick="addHes()" style="width:100%;padding:10px;margin-bottom:0">+ Registrar hesitação</button>
         <div id="hes-summary" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid rgba(232,64,64,.2)">
           <div style="display:flex;gap:10px;flex-wrap:wrap">
@@ -1030,6 +1034,7 @@ tr:hover td{background:var(--s2)}
             <div style="flex:1;text-align:center;min-width:55px"><div style="font-family:'Fraunces',serif;font-size:1.3rem;color:var(--dim)" id="hes-peak-val">—</div><div style="font-size:8px;color:var(--dim);text-transform:uppercase;margin-top:2px">Horário pico</div></div>
           </div>
         </div>
+        </div><!-- fim hes-section-body -->
       </div>
 
       <!-- RESULTADO FINANCEIRO -->
@@ -1539,18 +1544,18 @@ function toggleTempoRestrito(){
 }
 function applyTempoRestrito(){
   const btn=document.getElementById('btn-modo-simpl');
-  const dot=document.getElementById('simpl-dot');
+  const lbl=document.getElementById('simpl-label');
   if(btn){
     if(tempoRestritoHoje){
-      btn.style.color='var(--teal)';
-      btn.style.opacity='1';
-      btn.style.textShadow='0 0 10px rgba(46,196,160,.35)';
-      if(dot){dot.style.background='var(--teal)';dot.style.boxShadow='0 0 6px rgba(46,196,160,.5)';}
+      btn.style.background='rgba(46,196,160,.12)';
+      btn.style.borderColor='var(--teal)';
+      btn.style.boxShadow='0 0 12px rgba(46,196,160,.15)';
+      if(lbl){lbl.style.color='var(--teal)';lbl.textContent='Ativo';}
     } else {
-      btn.style.color='var(--dim)';
-      btn.style.opacity='.45';
-      btn.style.textShadow='none';
-      if(dot){dot.style.background='var(--dim)';dot.style.boxShadow='none';}
+      btn.style.background='var(--s3)';
+      btn.style.borderColor='var(--b1)';
+      btn.style.boxShadow='none';
+      if(lbl){lbl.style.color='var(--dim)';lbl.textContent='Simplificado';}
     }
   }
   document.querySelectorAll('[data-minimo-hide]').forEach(el=>{
@@ -3347,9 +3352,25 @@ function toggleHesIfr(btn){
 function renderHesSetupTags(filter){
   const grid=document.getElementById('hes-setup-tags');if(!grid) return;
   const f=(filter||'').toLowerCase();
-  const sorted=[...ALL_SETUPS].sort((a,b)=>{const ca=setupUsage[a]||0,cb=setupUsage[b]||0;if(cb!==ca)return cb-ca;return a.localeCompare(b);});
-  const filtered=f?sorted.filter(s=>s.toLowerCase().includes(f)):sorted;
-  grid.innerHTML=filtered.map(s=>{const c=setupUsage[s]||0,sel=hesSetups.includes(s);return`<button class="setup-tag${sel?' sel':''}" onclick="toggleHesSetup('${s}')">${esc(s)}${c>0?`<span class="stag-count">${c}</span>`:''}</button>`;}).join('');
+  const {stats,cutoff40d}=buildSetupStats();
+  const sorted=[...ALL_SETUPS].sort((a,b)=>{
+    const ca=(stats[a]||{count:0}).count,cb=(stats[b]||{count:0}).count;
+    if(cb!==ca) return cb-ca;
+    return a.localeCompare(b);
+  });
+  const filtered=sorted.filter(s=>{
+    if(f) return s.toLowerCase().includes(f);
+    if(hesSetups.includes(s)) return true;
+    const st=stats[s];
+    if(!st||!st.lastDate) return false;
+    if(st.lastDate<cutoff40d) return false;
+    return true;
+  });
+  grid.innerHTML=filtered.map(s=>{const c=(stats[s]||{count:0}).count,sel=hesSetups.includes(s);return`<button class="setup-tag${sel?' sel':''}" onclick="toggleHesSetup('${s}')">${esc(s)}${c>0?`<span class="stag-count">${c}</span>`:''}</button>`;}).join('');
+  const hidden=sorted.length-filtered.length;
+  let infoEl=document.getElementById('hes-setup-hidden-info');
+  if(!infoEl){infoEl=document.createElement('div');infoEl.id='hes-setup-hidden-info';infoEl.style.cssText='font-size:8px;color:var(--dim);margin-top:4px';grid.parentElement?.appendChild(infoEl);}
+  infoEl.textContent=hidden>0&&!f?`${hidden} setups ocultos (sem uso há 40+ dias · digite pra buscar)`:'';
 }
 function filterHesSetups(v){renderHesSetupTags(v);}
 function toggleHesSetup(name){const idx=hesSetups.indexOf(name);if(idx>=0)hesSetups.splice(idx,1);else hesSetups.push(name);renderHesSetupTags(document.getElementById('hes-setup-search')?.value||'');}
@@ -3369,6 +3390,16 @@ function clearHesForm(){
   const hs=document.getElementById('hes-setup-search');if(hs) hs.value='';
   const btn=document.getElementById('hes-add-btn');
   if(btn){btn.textContent='+ Registrar hesitação';btn.style.background='';}
+}
+
+// Toggle seção hesitações (colapsável)
+function toggleHesSection(){
+  const body=document.getElementById('hes-section-body');
+  const arrow=document.getElementById('hes-toggle-arrow');
+  if(!body) return;
+  const show=body.style.display==='none';
+  body.style.display=show?'':'none';
+  if(arrow) arrow.textContent=show?'▾':'▸';
 }
 
 function addHes(){
