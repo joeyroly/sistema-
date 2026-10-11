@@ -684,11 +684,8 @@ tr:hover td{background:var(--s2)}
         <!-- Form nova operação -->
         <div style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:11px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
-            <div style="display:flex;align-items:center;gap:8px">
-              <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)">Nova operação</div>
-              <div id="ops-counter-header" style="font-size:9px;font-weight:500;letter-spacing:.5px;color:var(--green)">Op 1/2 do dia</div>
-            </div>
-            <button id="btn-modo-simpl" onclick="toggleTempoRestrito()" title="Modo simplificado: só campos essenciais" style="padding:4px 10px;background:var(--s3);border:1px solid var(--b1);border-radius:20px;color:var(--dim);font-family:'Geist Mono',monospace;font-size:8px;cursor:pointer;transition:all .25s ease;letter-spacing:.3px;display:flex;align-items:center;gap:4px;white-space:nowrap"><span style="font-size:10px">⚡</span>Simplificado</button>
+            <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)">Nova operação</div>
+            <div id="ops-counter-header" style="font-size:9px;font-weight:500;letter-spacing:.5px;color:var(--green)">Op 1/2 do dia</div>
           </div>
 
           <!-- ═══════════════════════════════════════════════════════════
@@ -697,18 +694,22 @@ tr:hover td{background:var(--s2)}
           ═══════════════════════════════════════════════════════════ -->
           <div style="background:linear-gradient(180deg,var(--s2),var(--s1));border:1px solid rgba(140,100,240,.25);border-radius:10px;padding:12px;margin-bottom:11px">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px">
-              <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--purp);font-weight:500">📍 Antes de entrar</div>
-              <div style="font-size:8px;color:var(--dim)">tempo real · ~10s</div>
+              <div style="display:flex;align-items:center;gap:0">
+                <div style="font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--purp);font-weight:500">📍 Antes de entrar</div>
+                <span style="color:var(--b1);margin:0 7px;font-size:10px">·</span>
+                <button id="btn-modo-simpl" onclick="toggleTempoRestrito()" title="Modo simplificado: só campos essenciais" style="background:none;border:none;padding:0;font-family:'Geist Mono',monospace;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);cursor:pointer;transition:all .3s ease;opacity:.45;display:flex;align-items:center;gap:5px"><span id="simpl-dot" style="width:5px;height:5px;border-radius:50%;background:var(--dim);display:inline-block;transition:all .3s ease"></span>simplificado</button>
+              </div>
+              <div style="font-size:8px;color:var(--dim)">~10s</div>
             </div>
 
             <!-- Linha 1: horário, direção, E1 -->
-            <div style="display:grid;grid-template-columns:90px 50px 70px;gap:6px;margin-bottom:8px">
+            <div style="display:grid;grid-template-columns:90px 56px 1fr;gap:6px;margin-bottom:8px">
               <input class="time-inp" id="op-time" type="time" list="pregao-times" style="font-size:11px;padding:7px 6px">
               <select class="type-sel" id="op-dir">
                 <option value="C">▲ C</option>
                 <option value="V">▼ V</option>
               </select>
-              <input class="add-inp" id="op-e1-lots" type="number" placeholder="E1 *" min="1" step="1" style="min-width:0;text-align:center" oninput="onE1E2Change();checkPreEntry()">
+              <input class="add-inp" id="op-e1-lots" type="number" placeholder="E1 lotes *" min="1" step="1" style="min-width:0" oninput="onE1E2Change();checkPreEntry()">
             </div>
 
             <!-- Convicção -->
@@ -1538,17 +1539,18 @@ function toggleTempoRestrito(){
 }
 function applyTempoRestrito(){
   const btn=document.getElementById('btn-modo-simpl');
+  const dot=document.getElementById('simpl-dot');
   if(btn){
     if(tempoRestritoHoje){
-      btn.style.background='var(--teal)';
-      btn.style.borderColor='var(--teal)';
-      btn.style.color='#fff';
-      btn.style.boxShadow='0 0 14px rgba(46,196,160,.25)';
+      btn.style.color='var(--teal)';
+      btn.style.opacity='1';
+      btn.style.textShadow='0 0 10px rgba(46,196,160,.35)';
+      if(dot){dot.style.background='var(--teal)';dot.style.boxShadow='0 0 6px rgba(46,196,160,.5)';}
     } else {
-      btn.style.background='var(--s3)';
-      btn.style.borderColor='var(--b1)';
       btn.style.color='var(--dim)';
-      btn.style.boxShadow='none';
+      btn.style.opacity='.45';
+      btn.style.textShadow='none';
+      if(dot){dot.style.background='var(--dim)';dot.style.boxShadow='none';}
     }
   }
   document.querySelectorAll('[data-minimo-hide]').forEach(el=>{
