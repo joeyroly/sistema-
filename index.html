@@ -596,11 +596,7 @@ tr:hover td{background:var(--s2)}
       </div>
       <div style="font-size:9px;color:var(--dim);margin-bottom:14px;line-height:1.4" id="trade-date-notice" style="display:none"></div>
 
-      <!-- MODO MÍNIMO toggle -->
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:7px 10px;background:var(--s2);border:1px solid var(--b1);border-radius:8px">
-        <label style="font-size:9px;color:var(--dim);flex:1;cursor:pointer" for="tempo-restrito-toggle" title="Tempo curto? Ativa modo mínimo: só gatilho, convicção, violação, regime e erro">⏱ Modo mínimo (tempo restrito)</label>
-        <input type="checkbox" id="tempo-restrito-toggle" onchange="toggleTempoRestrito()" style="cursor:pointer;accent-color:var(--teal)">
-      </div>
+      <!-- MODO SIMPLIFICADO — toggle movido para header do form -->
 
       <!-- IMPORTAR OPS — botão one-shot -->
       <div id="import-ops-card" style="display:none;margin-bottom:10px;padding:9px 12px;background:linear-gradient(135deg,rgba(46,196,160,.08),rgba(78,124,248,.06));border:1px solid rgba(46,196,160,.25);border-radius:9px">
@@ -688,8 +684,11 @@ tr:hover td{background:var(--s2)}
         <!-- Form nova operação -->
         <div style="background:var(--s2);border:1px solid var(--b1);border-radius:9px;padding:11px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:9px">
-            <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)">Nova operação</div>
-            <div id="ops-counter-header" style="font-size:9px;font-weight:500;letter-spacing:.5px;color:var(--green)">Op 1/2 do dia</div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--dim)">Nova operação</div>
+              <div id="ops-counter-header" style="font-size:9px;font-weight:500;letter-spacing:.5px;color:var(--green)">Op 1/2 do dia</div>
+            </div>
+            <button id="btn-modo-simpl" onclick="toggleTempoRestrito()" title="Modo simplificado: só campos essenciais" style="padding:4px 10px;background:var(--s3);border:1px solid var(--b1);border-radius:20px;color:var(--dim);font-family:'Geist Mono',monospace;font-size:8px;cursor:pointer;transition:all .25s ease;letter-spacing:.3px;display:flex;align-items:center;gap:4px;white-space:nowrap"><span style="font-size:10px">⚡</span>Simplificado</button>
           </div>
 
           <!-- ═══════════════════════════════════════════════════════════
@@ -703,13 +702,13 @@ tr:hover td{background:var(--s2)}
             </div>
 
             <!-- Linha 1: horário, direção, E1 -->
-            <div style="display:grid;grid-template-columns:90px 56px 1fr;gap:6px;margin-bottom:8px">
+            <div style="display:grid;grid-template-columns:90px 50px 70px;gap:6px;margin-bottom:8px">
               <input class="time-inp" id="op-time" type="time" list="pregao-times" style="font-size:11px;padding:7px 6px">
               <select class="type-sel" id="op-dir">
                 <option value="C">▲ C</option>
                 <option value="V">▼ V</option>
               </select>
-              <input class="add-inp" id="op-e1-lots" type="number" placeholder="E1 lotes *" min="1" step="1" style="min-width:0" oninput="onE1E2Change();checkPreEntry()">
+              <input class="add-inp" id="op-e1-lots" type="number" placeholder="E1 *" min="1" step="1" style="min-width:0;text-align:center" oninput="onE1E2Change();checkPreEntry()">
             </div>
 
             <!-- Convicção -->
@@ -1525,7 +1524,7 @@ async function runImportOps(){
   }
 }
 
-// ── MODO MÍNIMO (tempo_restrito) ──────────────────────────
+// ── MODO SIMPLIFICADO (tempo_restrito) ──────────────────────────
 let tempoRestritoHoje=false;
 function loadTempoRestrito(){
   const saved=localStorage.getItem('sj_tempo_restrito_'+todayISO());
@@ -1535,14 +1534,23 @@ function toggleTempoRestrito(){
   tempoRestritoHoje=!tempoRestritoHoje;
   localStorage.setItem('sj_tempo_restrito_'+todayISO(),tempoRestritoHoje?'1':'0');
   applyTempoRestrito();
-  showToast(tempoRestritoHoje?'Modo mínimo ativado — só campos essenciais':'Modo mínimo desativado — formulário completo');
+  showToast(tempoRestritoHoje?'Modo simplificado ativado — só campos essenciais':'Modo simplificado desativado — formulário completo');
 }
 function applyTempoRestrito(){
-  const toggle=document.getElementById('tempo-restrito-toggle');
-  if(toggle) toggle.checked=tempoRestritoHoje;
-  // Em modo mínimo: oculta bloco pré-clique "Aderência ao plano" e todo o bloco pós-trade
-  // Mantém visível: Convicção, Gatilho psicológico, Direção Probabilista (regime), horário/direção/E1
-  // No bloco pós (quando aberto): mantém Erros e oculta o resto
+  const btn=document.getElementById('btn-modo-simpl');
+  if(btn){
+    if(tempoRestritoHoje){
+      btn.style.background='var(--teal)';
+      btn.style.borderColor='var(--teal)';
+      btn.style.color='#fff';
+      btn.style.boxShadow='0 0 14px rgba(46,196,160,.25)';
+    } else {
+      btn.style.background='var(--s3)';
+      btn.style.borderColor='var(--b1)';
+      btn.style.color='var(--dim)';
+      btn.style.boxShadow='none';
+    }
+  }
   document.querySelectorAll('[data-minimo-hide]').forEach(el=>{
     el.style.display=tempoRestritoHoje?'none':'';
   });
