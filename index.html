@@ -865,7 +865,8 @@ tr:hover td{background:var(--s2)}
               <button class="os-btn" data-v="D10" onclick="selNewOpSeg(this)">D10</button>
             </div>
 
-            <!-- IFR -->
+            <!-- IFR — OCULTO -->
+            <div style="display:none">
             <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:6px">📊 IFR</div>
             <div class="op-state-grid" id="new-op-ifr-btns" style="margin-bottom:8px">
               <button class="os-btn" data-v="5" onclick="selNewOpIfr(this)">5</button>
@@ -877,6 +878,7 @@ tr:hover td{background:var(--s2)}
               <button class="os-btn" data-v="2,10" onclick="selNewOpIfr(this)">2,10</button>
               <button class="os-btn" data-v="BdR2" onclick="selNewOpIfr(this)">BdR2</button>
               <button class="os-btn" data-v="BdR10" onclick="selNewOpIfr(this)">BdR10</button>
+            </div>
             </div>
 
             <!-- Parcial / Adição — só faz sentido se houve E2/E3 -->
@@ -890,7 +892,8 @@ tr:hover td{background:var(--s2)}
               <button class="os-btn" data-v="ParMedo" onclick="selNewOpPartial(this)">Par Medo</button>
             </div>
 
-            <!-- Autoavaliação: Tamanho + Ross-B (regra de honestidade radical) -->
+            <!-- Autoavaliação: Tamanho + Ross-B — OCULTOS -->
+            <div style="display:none">
             <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:6px">Autoavaliação</div>
             <div style="display:grid;grid-template-columns:1fr;gap:5px;margin-bottom:8px" id="new-op-adh-grid">
               <div class="adh-item" onclick="toggleOpAdh(this,'size')" data-k="size"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">Tamanho correto para a convicção</div></div>
@@ -901,6 +904,7 @@ tr:hover td{background:var(--s2)}
             <div style="background:rgba(232,64,64,.06);border:1px solid rgba(232,64,64,.3);border-radius:8px;padding:8px 10px;margin-bottom:8px">
               <div class="adh-item" onclick="toggleRossB(this)" data-k="ross_b" id="ross-b-item"><div class="adh-dot"></div><div class="adh-text" style="font-size:9px">A leitura desta entrada veio do Ross</div></div>
               <div style="font-size:8px;color:var(--dim);line-height:1.5;margin-top:6px">Marque APENAS se a leitura veio dele. Se você já tinha o setup e ele entrou junto, NÃO marque. Ross é gatilho banido — marcar aqui = falha no Score do dia.</div>
+            </div>
             </div>
             </div><!-- fim data-minimo-hide -->
 
@@ -991,8 +995,8 @@ tr:hover td{background:var(--s2)}
           <button class="os-btn" data-v="D10" onclick="toggleHesSeg(this)">D10</button>
         </div>
         </div>
-        <!-- IFR (hesitação) -->
-        <div data-minimo-hide>
+        <!-- IFR (hesitação) — OCULTO -->
+        <div style="display:none" data-minimo-hide>
         <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--blue);margin-bottom:6px">📊 IFR</div>
         <div class="op-state-grid" id="hes-ifr-btns" style="margin-bottom:8px">
           <button class="os-btn" data-v="5" onclick="toggleHesIfr(this)">5</button>
