@@ -1683,10 +1683,15 @@ function preEntryMissing(){
   const e1=parseInt(document.getElementById('op-e1-lots')?.value)||0;
   if(!e1) missing.push('E1 lotes');
   if(newOpConv==null) missing.push('Convicção');
-  if(!newOpPlan.length) missing.push('Aderência ao plano');
+  // Modo mínimo dispensa aderência e risco (campos escondidos)
+  if(!tempoRestritoHoje){
+    if(!newOpPlan.length) missing.push('Aderência ao plano');
+  }
   if(!newOpRegime) missing.push('Direção Probabilista');
-  const risk=parseFloat(document.getElementById('op-risk')?.value)||0;
-  if(!risk) missing.push('Risco planejado');
+  if(!tempoRestritoHoje){
+    const risk=parseFloat(document.getElementById('op-risk')?.value)||0;
+    if(!risk) missing.push('Risco planejado');
+  }
   return missing;
 }
 
