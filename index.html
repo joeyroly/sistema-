@@ -729,6 +729,7 @@ tr:hover td{background:var(--s2)}
             <!-- Gatilho psicológico (mantido pré-clique) -->
             <div style="font-size:8px;letter-spacing:1px;text-transform:uppercase;color:var(--dim);margin-bottom:5px">Gatilho psicológico</div>
             <div class="op-state-grid" id="new-op-state-btns" style="margin-bottom:8px">
+              <button class="os-btn" data-v="ego" onclick="selNewOpState(this)">🤡EGO☠️</button>
               <button class="os-btn" data-v="planejado" onclick="selNewOpState(this)">📋 Planejado</button>
               <button class="os-btn" data-v="leitura_regiao" onclick="selNewOpState(this)">🗺️ Leitura região</button>
               <button class="os-btn" data-v="oportunidade" onclick="selNewOpState(this)">💡 Oportunidade</button>
@@ -1340,14 +1341,14 @@ const ANCHOR_PHRASES=[
   {quote:"A calma é a maior manifestação de poder.",source:"James Allen — Como um homem pensa",activation:"Em qual momento desta semana você perdeu a calma? Reveja e ajuste.",dow:6}
 ];
 const ALL_SETUPS=['Op1','Op2','MetN','DupPr','DivOc','Cont','Emotivo','DnçVw','FlCtVw','MOLEQUE','RtMeSg','D-1','News','Aj','Aj 0,5','Aj 0,75','Aj 1,0','Aj 1,25','Aj 1,5','Fec','Fec 0,5','Fec 0,75','Fec 1,00','Fec 1,25','Fec 1,50','Ab','DvR 2','DvR 10','DvR 210','DvI 2','DvI 5','DvI 10','DvI 210','DvRI 2','DvRI 10','DvRI 210','Bseg 2','Bseg 10','Bseg 210','FOMO','Marc','SlAg','Fluxo','Vwap 0','Vwap 0,20','Vwap 0,25','Vwap 0,40','Vwap 0,50','Vwap 0,60','Vwap 0,75','Vwap 1,00','50%','1delta','2deltas','1MDelta','MRc2','MRc10','MIr2','MIf5','RtM5','Rt50I2','Rt50I5','Cirilo','BarraG','8-17','8 mm','PA','St10'];
-const ENTRY_STATES={planejado:{label:'📋 Planejado',cls:'sel-plan'},leitura_regiao:{label:'🗺️ Leitura região',cls:'sel-plan'},atrasado:{label:'⏰ Atrasado',cls:'sel-gold'},emotivo:{label:'🔥 Emotivo',cls:'sel-danger'},medo_falha:{label:'😨 Medo falha',cls:'sel-danger'},oportunidade:{label:'💡 Oportunidade',cls:'sel-gold'},cirilo:{label:'🎯 Cirilo',cls:'sel-cirilo'},cirilo_valida:{label:'🎯 Cirilo valida plano',cls:'sel-cirilo'},cirilo_puro:{label:'🎯 Cirilo puro',cls:'sel-cirilo'},desfocado:{label:'🌀 Desfocado',cls:'sel-danger'},revanche:{label:'⚡ Revanche',cls:'sel-danger'},ross:{label:'📐 Ross',cls:'sel-plan'}};
+const ENTRY_STATES={ego:{label:'🤡EGO☠️',cls:'sel-danger'},planejado:{label:'📋 Planejado',cls:'sel-plan'},leitura_regiao:{label:'🗺️ Leitura região',cls:'sel-plan'},atrasado:{label:'⏰ Atrasado',cls:'sel-gold'},emotivo:{label:'🔥 Emotivo',cls:'sel-danger'},medo_falha:{label:'😨 Medo falha',cls:'sel-danger'},oportunidade:{label:'💡 Oportunidade',cls:'sel-gold'},cirilo:{label:'🎯 Cirilo',cls:'sel-cirilo'},cirilo_valida:{label:'🎯 Cirilo valida plano',cls:'sel-cirilo'},cirilo_puro:{label:'🎯 Cirilo puro',cls:'sel-cirilo'},desfocado:{label:'🌀 Desfocado',cls:'sel-danger'},revanche:{label:'⚡ Revanche',cls:'sel-danger'},ross:{label:'📐 Ross',cls:'sel-plan'}};
 const ERROR_LABELS={entrou_cedo:'entrou cedo',entrou_tarde:'entrou tarde',saiu_cedo:'saiu cedo',saiu_tarde:'saiu tarde',adicionou_cedo:'adicionou cedo (E2/E3 perto do E1)',nao_entrou:'não entrou',moveu_stop:'moveu stop',tamanho_errado:'tamanho errado',revanche:'revanche',sem_erro:'sem erro'};
 // Gatilhos após refino da sessão 02/08/2026:
 //   VÁLIDOS (verde, no Score) — Planejado, Leitura de região, Cirilo valida plano, Cirilo puro
 //   NEUTROS (amarelo) — Oportunidade (impulso reativo puro)
-//   BANIDOS (vermelho) — Emotivo, Atrasado, Desfocado, Revanche, Ross, FOMO
+//   BANIDOS (vermelho) — EGO, Emotivo, Atrasado, Desfocado, Revanche, Ross, FOMO
 const VALID_TRIGGERS=['planejado','leitura_regiao','cirilo','cirilo_valida','cirilo_puro'];
-const BANNED_TRIGGERS=['emotivo','atrasado','desfocado','revanche','ross','fomo'];
+const BANNED_TRIGGERS=['ego','emotivo','atrasado','desfocado','revanche','ross','fomo'];
 const NEUTRAL_TRIGGERS=['oportunidade','medo_falha'];
 
 // ── STATE ─────────────────────────────────────
