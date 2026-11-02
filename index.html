@@ -1708,6 +1708,10 @@ function semanaMes(iso){
 }
 // Linha de base histórica — SÓ é exibida depois de testada em candles (null = não validada → nada aparece).
 // Formato: {ponta:{dir:0.61,n:140},meio:{dir:0.42,n:210},fonte:'WDOFUT 5min jan/24–out/26',def:'...'}
+// TESTE 02/11/2026 (174 pregões, 20/02–30/10, candles 5 min em preço real): hipótese NÃO confirmada.
+//   ER 9h–16h: ponta 0,427 × meio 0,458 (p=0,46); dias com ER≥0,5: 44% × 47% (p=0,76); ponta>meio em 3 de 9 meses.
+//   Pista pós-hoc: semana de FIM mais lateral (ER 0,363 × 0,470; p=0,025; Bonferroni p=0,076) — monitorar.
+//   Modelo simulado e operações reais: sem diferença ponta × meio (p 0,39–0,72).
 const SEMANA_BASE=null;
 function renderSemanaBase(){
   const el=document.getElementById('semana-base-line');if(!el) return;
@@ -6024,9 +6028,9 @@ function buildCtxFull(days){
   const cleanOps=allOps.filter(o=>(o.error_tags||[]).includes('sem_erro')).length;
 
   // ── SEMANA DO MÊS (hipótese ponta=direcional / meio=lateral) — derivado da data, zero input ──
-  const bySem={ponta:{n:0,w:0,pts:0,mfe:[],reg:{}},meio:{n:0,w:0,pts:0,mfe:[],reg:{}}};
-  allOps.filter(o=>!o.importado&&typeof o.pts==='number').forEach(o=>{const g=semanaMes(o.date).grupo;if(!g) return;const b=bySem[g];b.n++;b.pts+=o.pts;if(o.pts>0)b.w++;if(o.mfe!=null)b.mfe.push(o.mfe);if(o.regime)b.reg[o.regime]=(b.reg[o.regime]||0)+1;});
-  const semStr=['ponta','meio'].map(g=>{const b=bySem[g];if(!b.n) return `  ${g}: sem ops`;const regT=Object.values(b.reg).reduce((a,v)=>a+v,0);const regS=Object.entries(b.reg).sort((x,y)=>y[1]-x[1]).map(([k,v])=>`${k} ${pct(v,regT)}`).join(', ')||'—';return `  ${g}: n=${b.n} WR=${pct(b.w,b.n)} avg=${fmtN(b.pts/b.n)}pts MFE médio=${b.mfe.length?fmtN(avgArr(b.mfe)):'—'} (n=${b.mfe.length}) | sua leitura de regime: ${regS} (n=${regT})`;}).join('\n');
+  const bySem={inicio:{n:0,w:0,pts:0,mfe:[],reg:{}},meio:{n:0,w:0,pts:0,mfe:[],reg:{}},fim:{n:0,w:0,pts:0,mfe:[],reg:{}}};
+  allOps.filter(o=>!o.importado&&typeof o.pts==='number').forEach(o=>{const g=semanaMes(o.date).lado;if(!g) return;const b=bySem[g];b.n++;b.pts+=o.pts;if(o.pts>0)b.w++;if(o.mfe!=null)b.mfe.push(o.mfe);if(o.regime)b.reg[o.regime]=(b.reg[o.regime]||0)+1;});
+  const semStr=['inicio','meio','fim'].map(g=>{const b=bySem[g];if(!b.n) return `  ${g}: sem ops`;const regT=Object.values(b.reg).reduce((a,v)=>a+v,0);const regS=Object.entries(b.reg).sort((x,y)=>y[1]-x[1]).map(([k,v])=>`${k} ${pct(v,regT)}`).join(', ')||'—';return `  ${g}: n=${b.n} WR=${pct(b.w,b.n)} avg=${fmtN(b.pts/b.n)}pts MFE médio=${b.mfe.length?fmtN(avgArr(b.mfe)):'—'} (n=${b.mfe.length}) | sua leitura de regime: ${regS} (n=${regT})`;}).join('\n');
   // ── FELLING × PA (modelos independentes desde 02/11/2026) ──
   const fpaOps=allOps.filter(o=>o.pts_felling!=null&&!o.importado);
   const exitCount=k=>{const c={};fpaOps.forEach(o=>{const e=o[k];if(e)c[e]=(c[e]||0)+1;});return Object.entries(c).map(([e,v])=>`${e} ${v}`).join(' · ')||'—';};
@@ -6273,10 +6277,10 @@ ${famStr}
   → n<20 = amostra baixa, não tome decisão com base nisso ainda. Consolidação evita decidir com ruído.
 
 ════════════════════════════════════════
-18b. SEMANA DO MÊS — ponta (5 primeiros/5 últimos dias úteis) × meio
+18b. SEMANA DO MÊS — início (5 primeiros dias úteis) × meio × fim (5 últimos)
 ════════════════════════════════════════
 ${semStr}
-  → Hipótese não validada. MFE e regime são proxies fracos; teste definitivo = candles diários.
+  → Teste em candles (02/11/2026, 174 pregões): ponta × meio SEM efeito. Pista a monitorar: fim de mês mais lateral (p corrigido 0,076).
 
 ════════════════════════════════════════
 18c. FELLING × PA — modelos independentes
